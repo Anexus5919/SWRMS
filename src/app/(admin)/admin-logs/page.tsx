@@ -307,7 +307,7 @@ export default function AdminVerificationLogsPage() {
         <div className="space-y-3">
           {logs.map((log) => {
             const sevStyle = severityStyles[log.severity];
-            const statStyle = statusStyles[log.status];
+            const statStyle = statusStyles[log.resolution?.status as LogStatus] || statusStyles.open;
 
             return (
               <div
@@ -324,7 +324,7 @@ export default function AdminVerificationLogsPage() {
                     {typeLabels[log.type] ?? log.type}
                   </span>
                   <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${statStyle.text} ${statStyle.bg}`}>
-                    {log.status}
+                    {log.resolution?.status}
                   </span>
                   {log.wardName && (
                     <span className="text-[10px] font-medium text-bmc-700 bg-bmc-50 px-2 py-0.5 rounded">
@@ -356,7 +356,7 @@ export default function AdminVerificationLogsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {log.status === 'open' && (
+                  {log.resolution?.status === 'open' && (
                     <>
                       <button
                         onClick={() => updateLogStatus(log._id, 'acknowledged')}
@@ -381,7 +381,7 @@ export default function AdminVerificationLogsPage() {
                       </button>
                     </>
                   )}
-                  {log.status === 'acknowledged' && (
+                  {log.resolution?.status === 'acknowledged' && (
                     <>
                       <button
                         onClick={() => updateLogStatus(log._id, 'resolved')}

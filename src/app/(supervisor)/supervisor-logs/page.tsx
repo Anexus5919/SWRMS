@@ -294,7 +294,7 @@ export default function VerificationLogsPage() {
         <div className="space-y-3">
           {logs.map((log) => {
             const sevStyle = severityStyles[log.severity];
-            const statStyle = statusStyles[log.status];
+            const statStyle = statusStyles[log.resolution?.status as LogStatus] || statusStyles.open;
 
             return (
               <div
@@ -311,7 +311,7 @@ export default function VerificationLogsPage() {
                     {typeLabels[log.type] ?? log.type}
                   </span>
                   <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${statStyle.text} ${statStyle.bg}`}>
-                    {log.status}
+                    {log.resolution?.status}
                   </span>
                   <span className="ml-auto text-[10px] text-[var(--neutral-400)]">
                     {new Date(log.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
@@ -338,7 +338,7 @@ export default function VerificationLogsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {log.status === 'open' && (
+                  {log.resolution?.status === 'open' && (
                     <>
                       <button
                         onClick={() => updateLogStatus(log._id, 'acknowledged')}
@@ -363,7 +363,7 @@ export default function VerificationLogsPage() {
                       </button>
                     </>
                   )}
-                  {log.status === 'acknowledged' && (
+                  {log.resolution?.status === 'acknowledged' && (
                     <>
                       <button
                         onClick={() => updateLogStatus(log._id, 'resolved')}
