@@ -1,12 +1,9 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
-import { Route, Attendance, RouteProgress, User } from '@/lib/db/models';
+import { Route, Attendance, RouteProgress, User, VerificationLog } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 import { STAFFING_THRESHOLDS } from '@/lib/utils/constants';
-
-function todayString() {
-  return new Date().toISOString().split('T')[0];
-}
+import { todayIST } from '@/lib/utils/timezone';
 
 function getStatusLabel(ratio: number) {
   if (ratio >= STAFFING_THRESHOLDS.ADEQUATE) return 'adequate';
@@ -22,7 +19,7 @@ export async function GET() {
   if (error) return error;
 
   await connectDB();
-  const today = todayString();
+  const today = todayIST();
 
   // Get all active routes
   const routes = await Route.find({ status: 'active' }).sort({ code: 1 }).lean();
@@ -82,6 +79,19 @@ export async function GET() {
   const criticalRoutes = routeData.filter((r) => r.statusLabel === 'critical').length;
   const completedRoutes = routeData.filter((r) => r.routeProgress.status === 'completed').length;
 
+  // Verification alert counts
+  const [openCriticalLogs, openWarningLogs, pendingPhotoReviews] = await Promise.all([
+    VerificationLog.countDocuments({ date: today, severity: 'critical', 'resolution.status': 'open' }),
+    VerificationLog.countDocuments({ date: today, severity: 'warning', 'resolution.status': 'open' }),
+    // Count pending photo reviews if the GeoPhoto model exists
+    connectDB().then(() => {
+      try {
+        const GeoPhoto = require('@/lib/db/models').GeoPhoto;
+        return GeoPhoto.countDocuments({ date: today, 'manualReview.status': 'pending' });
+      } catch { return 0; }
+    }),
+  ]);
+
   return NextResponse.json({
     success: true,
     data: {
@@ -97,6 +107,12 @@ export async function GET() {
         overallAttendanceRate: totalStaffRequired > 0
           ? Math.round((totalPresent / totalStaffRequired) * 100)
           : 0,
+      },
+      alerts: {
+        critical: openCriticalLogs,
+        warnings: openWarningLogs,
+        pendingReviews: pendingPhotoReviews,
+        total: openCriticalLogs + openWarningLogs + pendingPhotoReviews,
       },
     },
   });

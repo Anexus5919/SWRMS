@@ -11,6 +11,8 @@ interface StaffMember {
   ward: string;
   assignedRouteId: { name: string; code: string } | null;
   isActive: boolean;
+  faceDescriptor: number[] | null;
+  faceRegisteredAt: string | null;
 }
 
 interface RouteOption {
@@ -166,13 +168,14 @@ export default function StaffManagementPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Role</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Phone</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Route</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Face</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {loading ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-xs text-[var(--neutral-400)]">Loading...</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-[var(--neutral-400)]">Loading...</td></tr>
               ) : staff.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-xs text-[var(--neutral-400)]">No staff registered.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-[var(--neutral-400)]">No staff registered.</td></tr>
               ) : (
                 staff.map((s) => (
                   <tr key={s._id} className="hover:bg-[var(--neutral-50)]">
@@ -190,6 +193,18 @@ export default function StaffManagementPage() {
                     <td className="px-4 py-3 text-xs text-[var(--neutral-500)]">{s.phone}</td>
                     <td className="px-4 py-3 text-xs font-mono text-[var(--neutral-500)]">
                       {s.assignedRouteId ? (s.assignedRouteId as any).code || '—' : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      {s.faceDescriptor && s.faceDescriptor.length === 128 ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-status-green bg-status-green-light px-2 py-0.5 rounded">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          Registered
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-status-red bg-status-red-light px-2 py-0.5 rounded">
+                          Not registered
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))

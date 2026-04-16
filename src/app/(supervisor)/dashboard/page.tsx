@@ -31,6 +31,12 @@ interface DashboardData {
     completedRoutes: number;
     overallAttendanceRate: number;
   };
+  alerts?: {
+    critical: number;
+    warnings: number;
+    pendingReviews: number;
+    total: number;
+  };
 }
 
 const statusColors: Record<string, { border: string; badge: string; badgeBg: string; bar: string }> = {
@@ -103,6 +109,33 @@ export default function DashboardPage() {
             className="ml-auto text-xs font-medium text-status-red underline whitespace-nowrap"
           >
             Reallocate
+          </Link>
+        </div>
+      )}
+
+      {/* Verification alerts banner */}
+      {data.alerts && data.alerts.total > 0 && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
+          <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+            <span className="text-sm font-bold text-amber-700">{data.alerts.total}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-amber-800">
+              Verification issues need attention
+            </p>
+            <p className="text-xs text-amber-600 mt-0.5">
+              {data.alerts.critical > 0 && `${data.alerts.critical} critical`}
+              {data.alerts.critical > 0 && data.alerts.warnings > 0 && ' · '}
+              {data.alerts.warnings > 0 && `${data.alerts.warnings} warnings`}
+              {(data.alerts.critical > 0 || data.alerts.warnings > 0) && data.alerts.pendingReviews > 0 && ' · '}
+              {data.alerts.pendingReviews > 0 && `${data.alerts.pendingReviews} photos pending review`}
+            </p>
+          </div>
+          <Link
+            href="/supervisor-logs"
+            className="flex-shrink-0 bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-amber-700"
+          >
+            Review
           </Link>
         </div>
       )}

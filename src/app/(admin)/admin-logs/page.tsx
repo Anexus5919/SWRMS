@@ -19,13 +19,12 @@ interface VerificationLog {
   _id: string;
   severity: Severity;
   type: LogType;
-  workerName: string;
-  employeeId: string;
-  routeName: string;
-  wardName?: string;
-  message: string;
-  status: LogStatus;
+  affectedUserId?: { employeeId: string; name: { first: string; last: string } };
+  routeId?: { name: string; code: string };
+  details: { message: string; faceDistance?: number; coordinates?: { lat: number; lng: number } };
+  resolution: { status: LogStatus; resolvedBy?: any; resolvedAt?: string; notes?: string };
   geoPhotoId?: string;
+  wardName?: string;
   createdAt: string;
 }
 
@@ -339,19 +338,19 @@ export default function AdminVerificationLogsPage() {
                 {/* Worker info */}
                 <div className="flex items-center gap-3 mb-1.5">
                   <p className="text-sm font-medium text-[var(--neutral-800)]">
-                    {log.workerName}
+                    {log.affectedUserId ? `${log.affectedUserId.name.first} ${log.affectedUserId.name.last}` : 'Unknown'}
                   </p>
                   <span className="text-[10px] font-mono text-[var(--neutral-400)]">
-                    {log.employeeId}
+                    {log.affectedUserId?.employeeId || '—'}
                   </span>
                   <span className="text-[10px] text-[var(--neutral-500)]">
-                    Route: <span className="font-medium text-[var(--neutral-700)]">{log.routeName}</span>
+                    Route: <span className="font-medium text-[var(--neutral-700)]">{log.routeId?.name || 'Unknown'}</span>
                   </span>
                 </div>
 
                 {/* Message */}
                 <p className="text-xs text-[var(--neutral-600)] mb-3 leading-relaxed">
-                  {log.message}
+                  {log.details.message}
                 </p>
 
                 {/* Actions */}

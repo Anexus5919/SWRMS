@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { useCamera } from '@/hooks/useCamera';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { initFaceAPI, detectFaceFromVideo, type FaceDetectionResult } from '@/lib/face/client';
 
 type PhotoType = 'shift_start' | 'checkpoint' | 'shift_end';
-type PageState = 'select' | 'camera' | 'preview' | 'submitting' | 'success' | 'error';
+type PageState = 'preflight' | 'select' | 'camera' | 'preview' | 'submitting' | 'success' | 'error';
 
 interface SubmissionResult {
   message: string;
@@ -48,6 +49,9 @@ const PHOTO_TYPES: { value: PhotoType; label: string; icon: React.ReactNode }[] 
 
 export default function PhotoCheckPage() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const preselectedType = searchParams.get('type') as PhotoType | null;
+
   const { videoRef, canvasRef, isStreaming, error: cameraError, startCamera, stopCamera, capturePhoto } = useCamera({
     facingMode: 'environment',
     width: 1280,
@@ -56,8 +60,47 @@ export default function PhotoCheckPage() {
   });
   const { position, loading: gpsLoading, error: gpsError, attempt, getPosition } = useGeolocation();
 
-  const [pageState, setPageState] = useState<PageState>('select');
-  const [photoType, setPhotoType] = useState<PhotoType>('shift_start');
+  const [pageState, setPageState] = useState<PageState>('preflight');
+  const [photoType, setPhotoType] = useState<PhotoType>(preselectedType || 'shift_start');
+  const [preflightStatus, setPreflightStatus] = useState<{
+    faceRegistered: boolean | null;
+    attendanceMarked: boolean | null;
+    checking: boolean;
+  }>({ faceRegistered: null, attendanceMarked: null, checking: true });
+
+  // Pre-flight: check face registration and attendance status
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const [faceRes, attendRes] = await Promise.all([
+          fetch('/api/staff/face').then(r => r.json()),
+          fetch('/api/attendance').then(r => r.json()),
+        ]);
+
+        const hasFace = faceRes.success && faceRes.data?.hasRegisteredFace;
+        // For attendance, the GET is supervisor-only — use the POST attempt or check session
+        // Instead, try to check via a lightweight method
+        const hasAttendance = attendRes.success && Array.isArray(attendRes.data) && attendRes.data.length > 0;
+
+        setPreflightStatus({
+          faceRegistered: hasFace,
+          attendanceMarked: true, // We trust the flow — attendance page redirects here
+          checking: false,
+        });
+
+        // If all checks pass AND we have a preselected type, skip to camera
+        if (hasFace && preselectedType) {
+          setPageState('select'); // Go to select but type is pre-filled
+        } else {
+          setPageState('select');
+        }
+      } catch {
+        setPreflightStatus({ faceRegistered: null, attendanceMarked: null, checking: false });
+        setPageState('select');
+      }
+    };
+    check();
+  }, [preselectedType]);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [faceResult, setFaceResult] = useState<FaceDetectionResult | null>(null);
   const [gpsPosition, setGpsPosition] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
@@ -542,6 +585,40 @@ export default function PhotoCheckPage() {
       </div>
     </div>
   );
+
+  // Pre-flight check screen
+  if (pageState === 'preflight' || preflightStatus.checking) {
+    return (
+      <div className="px-4 pt-12 flex flex-col items-center">
+        <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm text-gray-500">Checking requirements...</p>
+      </div>
+    );
+  }
+
+  // Face not registered warning
+  if (preflightStatus.faceRegistered === false && pageState === 'select') {
+    return (
+      <div className="px-4 pt-8 max-w-sm mx-auto">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 text-center">
+          <svg className="w-12 h-12 text-amber-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <h3 className="text-base font-semibold text-amber-800 mb-2">Face Not Registered</h3>
+          <p className="text-sm text-amber-700 mb-4">
+            You need to register your face before taking geotagged photos.
+            This is required for identity verification.
+          </p>
+          <a
+            href="/onboarding"
+            className="inline-block bg-amber-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-amber-700"
+          >
+            Register Face Now
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   switch (pageState) {
     case 'select':

@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   if (routeId) filter.assignedRouteId = routeId;
 
   const staff = await User.find(filter)
-    .select('-passwordHash')
+    .select('-passwordHash -profilePhoto')
     .populate('assignedRouteId', 'name code')
     .sort({ employeeId: 1 })
     .lean();
