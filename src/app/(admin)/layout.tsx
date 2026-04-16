@@ -5,6 +5,7 @@ const adminNav = [
   { href: '/staff', label: 'Staff Management' },
   { href: '/routes', label: 'Route Management' },
   { href: '/reports', label: 'Reports' },
+  { href: '/logs', label: 'Verification Logs' },
 ];
 
 export default function AdminLayout({

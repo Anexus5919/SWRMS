@@ -7,7 +7,7 @@ export default withAuth(
     const role = req.nextauth.token?.role as string;
 
     // Role-based route protection
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/routes') || pathname.startsWith('/reallocation') || pathname.startsWith('/attendance-log')) {
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/routes') || pathname.startsWith('/reallocation') || pathname.startsWith('/attendance-log') || pathname.startsWith('/logs')) {
       if (role !== 'supervisor' && role !== 'admin') {
         return NextResponse.redirect(new URL('/attendance', req.url));
       }

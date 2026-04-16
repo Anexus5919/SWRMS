@@ -50,9 +50,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Face verification against registered descriptor
-    let verificationResult = {
-      confidence: 'no_face' as const,
-      distance: null as number | null,
+    let verificationResult: {
+      confidence: 'high' | 'medium' | 'low' | 'no_match' | 'no_face';
+      distance: number | null;
+      verified: boolean;
+      requiresManualReview: boolean;
+      message: string;
+    } = {
+      confidence: 'no_face',
+      distance: null,
       verified: false,
       requiresManualReview: false,
       message: 'No face detected in photo',
