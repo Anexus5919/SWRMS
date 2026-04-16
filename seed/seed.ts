@@ -30,6 +30,9 @@ const UserSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   assignedRouteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', default: null },
   isActive: { type: Boolean, default: true },
+  profilePhoto: { type: String, default: null },
+  faceDescriptor: { type: [Number], default: null },
+  faceRegisteredAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -74,10 +77,27 @@ const RouteProgressSchema = new mongoose.Schema({
 }, { timestamps: true });
 RouteProgressSchema.index({ routeId: 1, date: 1 }, { unique: true });
 
+const VerificationLogSchema = new mongoose.Schema({
+  type: { type: String, enum: ['missing_photo', 'face_mismatch', 'no_face_detected', 'headcount_mismatch', 'location_anomaly', 'manual_override'], required: true },
+  severity: { type: String, enum: ['info', 'warning', 'critical'], required: true },
+  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', required: true },
+  date: { type: String, required: true },
+  affectedUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  geoPhotoId: { type: mongoose.Schema.Types.ObjectId, ref: 'GeoPhoto', default: null },
+  details: { message: String, expectedCount: Number, actualCount: Number, faceDistance: Number, coordinates: { lat: Number, lng: Number } },
+  resolution: {
+    status: { type: String, enum: ['open', 'acknowledged', 'resolved', 'dismissed'], default: 'open' },
+    resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    resolvedAt: { type: Date, default: null },
+    notes: { type: String, default: null },
+  },
+}, { timestamps: true });
+
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Route = mongoose.models.Route || mongoose.model('Route', RouteSchema);
 const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', AttendanceSchema);
 const RouteProgress = mongoose.models.RouteProgress || mongoose.model('RouteProgress', RouteProgressSchema);
+const VerificationLog = mongoose.models.VerificationLog || mongoose.model('VerificationLog', VerificationLogSchema);
 
 // ── Chembur Ward Routes (realistic Mumbai coordinates) ──
 
@@ -186,7 +206,7 @@ const lastNames = [
 
 async function seed() {
   console.log('Connecting to MongoDB...');
-  await mongoose.connect(MONGODB_URI);
+  await mongoose.connect(MONGODB_URI!);
   console.log('Connected.');
 
   // Clear existing data
@@ -195,6 +215,12 @@ async function seed() {
   await mongoose.connection.collection('attendances').deleteMany({});
   await mongoose.connection.collection('routeprogresses').deleteMany({});
   await mongoose.connection.collection('reallocations').deleteMany({});
+  if ((await mongoose.connection.db!.listCollections({ name: 'geophotos' }).toArray()).length > 0) {
+    await mongoose.connection.collection('geophotos').deleteMany({});
+  }
+  if ((await mongoose.connection.db!.listCollections({ name: 'verificationlogs' }).toArray()).length > 0) {
+    await mongoose.connection.collection('verificationlogs').deleteMany({});
+  }
   console.log('Cleared existing data.');
 
   // Hash a common password for all demo accounts
@@ -452,6 +478,88 @@ async function seed() {
   await Attendance.insertMany(attendanceRecords);
   await RouteProgress.insertMany(progressRecords);
 
+  // ── Seed Verification Logs (demo alerts) ──
+  const verificationLogs = [];
+
+  // Missing photo alerts for workers on critical routes
+  for (const route of createdRoutes) {
+    const rid = route._id.toString();
+    const workers = staffByRoute[rid] || [];
+    const routeIdx = createdRoutes.indexOf(route);
+
+    // On critical routes R05, R06 — flag missing shift_start photos
+    if (routeIdx === 4 || routeIdx === 5) {
+      for (const worker of workers.slice(0, 2)) {
+        verificationLogs.push({
+          type: 'missing_photo',
+          severity: 'warning',
+          routeId: route._id,
+          date: today,
+          affectedUserId: worker._id,
+          details: {
+            message: `${worker.name.first} ${worker.name.last} (${worker.employeeId}) has not submitted shift start photo`,
+            coordinates: { lat: route.startPoint.lat, lng: route.startPoint.lng },
+          },
+          resolution: { status: 'open' },
+        });
+      }
+    }
+
+    // Face mismatch alert on R03 (simulated)
+    if (routeIdx === 2 && workers.length > 0) {
+      verificationLogs.push({
+        type: 'face_mismatch',
+        severity: 'critical',
+        routeId: route._id,
+        date: today,
+        affectedUserId: workers[0]._id,
+        details: {
+          message: `Face mismatch detected for ${workers[0].name.first} ${workers[0].name.last} (${workers[0].employeeId}) — distance: 0.73`,
+          faceDistance: 0.73,
+          coordinates: { lat: route.startPoint.lat + 0.0003, lng: route.startPoint.lng + 0.0002 },
+        },
+        resolution: { status: 'open' },
+      });
+    }
+
+    // No face detected on R07
+    if (routeIdx === 6 && workers.length > 1) {
+      verificationLogs.push({
+        type: 'no_face_detected',
+        severity: 'warning',
+        routeId: route._id,
+        date: today,
+        affectedUserId: workers[1]._id,
+        details: {
+          message: `No face detected in checkpoint photo from ${workers[1].name.first} ${workers[1].name.last} (${workers[1].employeeId})`,
+          coordinates: { lat: route.startPoint.lat + 0.001, lng: route.startPoint.lng },
+        },
+        resolution: { status: 'open' },
+      });
+    }
+
+    // Headcount mismatch on R04
+    if (routeIdx === 3) {
+      verificationLogs.push({
+        type: 'headcount_mismatch',
+        severity: 'info',
+        routeId: route._id,
+        date: today,
+        details: {
+          message: `Expected ${route.requiredStaff} workers on ${route.name}, only ${Math.max(1, workers.length - 1)} present in group photo`,
+          expectedCount: route.requiredStaff,
+          actualCount: Math.max(1, workers.length - 1),
+        },
+        resolution: { status: 'open' },
+      });
+    }
+  }
+
+  if (verificationLogs.length > 0) {
+    await VerificationLog.insertMany(verificationLogs);
+    console.log(`Created ${verificationLogs.length} verification log entries`);
+  }
+
   const verified = attendanceRecords.filter(a => a.status === 'verified').length;
   const rejected = attendanceRecords.filter(a => a.status === 'rejected').length;
   console.log(`Created ${attendanceRecords.length} attendance records (${verified} verified, ${rejected} rejected)`);
@@ -461,6 +569,7 @@ async function seed() {
   console.log('  R05, R06      — CRITICAL understaffing (reallocation needed!)');
   console.log('  R04, R09      — marginal staffing');
   console.log('  R03, R07, R10 — adequate, in progress');
+  console.log('  Verification logs: missing photos, face mismatch, headcount issues');
 
   console.log('\n--- Seed Complete ---');
   console.log('Demo Credentials:');
