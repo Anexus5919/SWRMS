@@ -49,8 +49,35 @@ const RouteSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+const AttendanceSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', required: true },
+  date: { type: String, required: true },
+  checkInTime: { type: Date, required: true },
+  coordinates: { lat: Number, lng: Number, accuracy: Number },
+  distanceFromRoute: { type: Number, required: true },
+  status: { type: String, enum: ['verified', 'rejected'], required: true },
+  rejectionReason: String,
+  attempts: { type: Number, default: 1 },
+  deviceInfo: { userAgent: String, platform: String },
+  isOfflineSync: { type: Boolean, default: false },
+}, { timestamps: true });
+AttendanceSchema.index({ userId: 1, date: 1 }, { unique: true });
+
+const RouteProgressSchema = new mongoose.Schema({
+  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', required: true },
+  date: { type: String, required: true },
+  status: { type: String, enum: ['not_started', 'in_progress', 'completed', 'stalled'], default: 'not_started' },
+  completionPercentage: { type: Number, default: 0 },
+  staffingSnapshot: { required: Number, present: Number, ratio: Number },
+  updates: [{ time: Date, percentage: Number, updatedBy: mongoose.Schema.Types.ObjectId, note: String }],
+}, { timestamps: true });
+RouteProgressSchema.index({ routeId: 1, date: 1 }, { unique: true });
+
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Route = mongoose.models.Route || mongoose.model('Route', RouteSchema);
+const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', AttendanceSchema);
+const RouteProgress = mongoose.models.RouteProgress || mongoose.model('RouteProgress', RouteProgressSchema);
 
 // ── Chembur Ward Routes (realistic Mumbai coordinates) ──
 
@@ -165,6 +192,9 @@ async function seed() {
   // Clear existing data
   await User.deleteMany({});
   await Route.deleteMany({});
+  await mongoose.connection.collection('attendances').deleteMany({});
+  await mongoose.connection.collection('routeprogresses').deleteMany({});
+  await mongoose.connection.collection('reallocations').deleteMany({});
   console.log('Cleared existing data.');
 
   // Hash a common password for all demo accounts
@@ -246,8 +276,191 @@ async function seed() {
     staffIndex++;
   }
 
-  await User.insertMany(staffMembers);
-  console.log(`Created ${staffMembers.length} staff members: BMC-CHB-001 to BMC-CHB-030 / bmc123`);
+  const createdStaff = await User.insertMany(staffMembers);
+  console.log(`Created ${createdStaff.length} staff members: BMC-CHB-001 to BMC-CHB-030 / bmc123`);
+
+  // ── Seed demo attendance for TODAY ──
+  // Creates a realistic scenario where some routes are overstaffed/completed
+  // and others are critically understaffed, triggering the reallocation engine.
+
+  const today = new Date().toISOString().split('T')[0];
+  const attendanceRecords = [];
+  const progressRecords = [];
+
+  // Build a map: routeId -> list of staff assigned to it
+  const staffByRoute: Record<string, typeof createdStaff> = {};
+  for (const s of createdStaff) {
+    const rid = s.assignedRouteId!.toString();
+    if (!staffByRoute[rid]) staffByRoute[rid] = [];
+    staffByRoute[rid].push(s);
+  }
+
+  for (let i = 0; i < createdRoutes.length; i++) {
+    const route = createdRoutes[i];
+    const rid = route._id.toString();
+    const workers = staffByRoute[rid] || [];
+
+    // Scenario per route:
+    // R01 (needs 4): ALL 4 present + route completed → surplus after completion
+    // R02 (needs 3): ALL 3 present + route completed → surplus after completion
+    // R03 (needs 3): ALL 3 present, 75% done → adequate, in progress
+    // R04 (needs 3): 2 present → marginal
+    // R05 (needs 5): only 1 present → CRITICAL (needs reallocation!)
+    // R06 (needs 4): only 1 present → CRITICAL
+    // R07 (needs 4): ALL 4 present, 50% done → adequate
+    // R08 (needs 2): ALL 2 present + route completed → surplus after completion
+    // R09 (needs 3): 2 present → marginal
+    // R10 (needs 2): ALL 2 present, 25% done → adequate
+
+    let presentCount: number;
+    let routeStatus: string;
+    let completionPct: number;
+
+    switch (i) {
+      case 0: // R01 - completed, full staff
+        presentCount = workers.length;
+        routeStatus = 'completed';
+        completionPct = 100;
+        break;
+      case 1: // R02 - completed, full staff
+        presentCount = workers.length;
+        routeStatus = 'completed';
+        completionPct = 100;
+        break;
+      case 2: // R03 - in progress, full
+        presentCount = workers.length;
+        routeStatus = 'in_progress';
+        completionPct = 75;
+        break;
+      case 3: // R04 - marginal
+        presentCount = Math.max(1, workers.length - 1);
+        routeStatus = 'in_progress';
+        completionPct = 40;
+        break;
+      case 4: // R05 - CRITICAL, only 1 of 5
+        presentCount = 1;
+        routeStatus = 'in_progress';
+        completionPct = 10;
+        break;
+      case 5: // R06 - CRITICAL, only 1 of 4
+        presentCount = 1;
+        routeStatus = 'stalled';
+        completionPct = 5;
+        break;
+      case 6: // R07 - adequate, in progress
+        presentCount = workers.length;
+        routeStatus = 'in_progress';
+        completionPct = 50;
+        break;
+      case 7: // R08 - completed, full staff
+        presentCount = workers.length;
+        routeStatus = 'completed';
+        completionPct = 100;
+        break;
+      case 8: // R09 - marginal
+        presentCount = Math.max(1, workers.length - 1);
+        routeStatus = 'in_progress';
+        completionPct = 30;
+        break;
+      case 9: // R10 - adequate
+        presentCount = workers.length;
+        routeStatus = 'in_progress';
+        completionPct = 25;
+        break;
+      default:
+        presentCount = workers.length;
+        routeStatus = 'not_started';
+        completionPct = 0;
+    }
+
+    // Create attendance records for present workers
+    const presentWorkers = workers.slice(0, presentCount);
+    for (const worker of presentWorkers) {
+      // Simulate GPS near the route start (within geofence)
+      const jitterLat = (Math.random() - 0.5) * 0.001; // ~50m
+      const jitterLng = (Math.random() - 0.5) * 0.001;
+      const workerLat = route.startPoint.lat + jitterLat;
+      const workerLng = route.startPoint.lng + jitterLng;
+
+      // Random check-in time between 05:50 and 06:20
+      const checkInHour = 5 + Math.floor(Math.random() * 1);
+      const checkInMin = 50 + Math.floor(Math.random() * 30);
+      const checkInTime = new Date();
+      checkInTime.setHours(checkInHour, checkInMin, 0, 0);
+
+      attendanceRecords.push({
+        userId: worker._id,
+        routeId: route._id,
+        date: today,
+        checkInTime,
+        coordinates: { lat: workerLat, lng: workerLng, accuracy: 8 + Math.random() * 10 },
+        distanceFromRoute: Math.floor(Math.random() * 120), // within 200m
+        status: 'verified',
+        attempts: 3,
+        deviceInfo: { userAgent: 'Android/Chrome', platform: 'Linux armv8l' },
+        isOfflineSync: false,
+      });
+    }
+
+    // Also create 1-2 rejected records for absent workers trying from wrong location (on some routes)
+    if (i === 4 || i === 5) {
+      const absentWorkers = workers.slice(presentCount, presentCount + 1);
+      for (const worker of absentWorkers) {
+        const farLat = route.startPoint.lat + 0.005; // ~500m away
+        const farLng = route.startPoint.lng + 0.003;
+        const checkInTime = new Date();
+        checkInTime.setHours(6, 5 + Math.floor(Math.random() * 15), 0, 0);
+
+        attendanceRecords.push({
+          userId: worker._id,
+          routeId: route._id,
+          date: today,
+          checkInTime,
+          coordinates: { lat: farLat, lng: farLng, accuracy: 25 },
+          distanceFromRoute: 350 + Math.floor(Math.random() * 200),
+          status: 'rejected',
+          rejectionReason: 'Distance exceeds 200m geofence radius',
+          attempts: 3,
+          deviceInfo: { userAgent: 'Android/Chrome', platform: 'Linux armv8l' },
+          isOfflineSync: false,
+        });
+      }
+    }
+
+    // Create route progress
+    const ratio = route.requiredStaff > 0 ? presentCount / route.requiredStaff : 0;
+    progressRecords.push({
+      routeId: route._id,
+      date: today,
+      status: routeStatus,
+      completionPercentage: completionPct,
+      staffingSnapshot: {
+        required: route.requiredStaff,
+        present: presentCount,
+        ratio: Math.round(ratio * 100) / 100,
+      },
+      updates: [{
+        time: new Date(),
+        percentage: completionPct,
+        note: routeStatus === 'completed' ? 'Route collection completed' :
+              routeStatus === 'stalled' ? 'Insufficient staff, route stalled' :
+              `Progress update: ${completionPct}%`,
+      }],
+    });
+  }
+
+  await Attendance.insertMany(attendanceRecords);
+  await RouteProgress.insertMany(progressRecords);
+
+  const verified = attendanceRecords.filter(a => a.status === 'verified').length;
+  const rejected = attendanceRecords.filter(a => a.status === 'rejected').length;
+  console.log(`Created ${attendanceRecords.length} attendance records (${verified} verified, ${rejected} rejected)`);
+  console.log(`Created ${progressRecords.length} route progress records`);
+  console.log('\nDemo scenario:');
+  console.log('  R01, R02, R08 — completed with full staff (surplus workers available)');
+  console.log('  R05, R06      — CRITICAL understaffing (reallocation needed!)');
+  console.log('  R04, R09      — marginal staffing');
+  console.log('  R03, R07, R10 — adequate, in progress');
 
   console.log('\n--- Seed Complete ---');
   console.log('Demo Credentials:');
