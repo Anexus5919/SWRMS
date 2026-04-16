@@ -32,7 +32,7 @@ export async function GET(
 }
 
 /**
- * PUT /api/staff/[staffId] — Update staff
+ * PUT /api/staff/[staffId] — Update staff (whitelisted fields only)
  */
 export async function PUT(
   req: NextRequest,
@@ -41,26 +41,45 @@ export async function PUT(
   const { error } = await requireRole('admin');
   if (error) return error;
 
-  await connectDB();
-  const { staffId } = await params;
-  const body = await req.json();
+  try {
+    await connectDB();
+    const { staffId } = await params;
+    const body = await req.json();
 
-  // Don't allow password updates through this endpoint
-  delete body.passwordHash;
-  delete body.password;
+    // Whitelist allowed fields — prevents role escalation and password tampering
+    const ALLOWED_FIELDS = ['name', 'phone', 'ward', 'assignedRouteId', 'isActive'];
+    const sanitized: Record<string, unknown> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (body[key] !== undefined) {
+        sanitized[key] = body[key];
+      }
+    }
 
-  const user = await User.findByIdAndUpdate(staffId, body, { new: true })
-    .select('-passwordHash')
-    .lean();
+    if (Object.keys(sanitized).length === 0) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NO_CHANGES', message: 'No valid fields to update' } },
+        { status: 400 }
+      );
+    }
 
-  if (!user) {
+    const user = await User.findByIdAndUpdate(staffId, sanitized, { new: true })
+      .select('-passwordHash -faceDescriptor')
+      .lean();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Staff not found' } },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: user });
+  } catch (err) {
     return NextResponse.json(
-      { success: false, error: { code: 'NOT_FOUND', message: 'Staff not found' } },
-      { status: 404 }
+      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to update staff' } },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json({ success: true, data: user });
 }
 
 /**

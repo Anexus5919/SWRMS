@@ -20,9 +20,9 @@ export default withAuth(
       }
     }
 
-    if (pathname.startsWith('/attendance') || pathname.startsWith('/my-route') || pathname.startsWith('/progress')) {
+    if (pathname.startsWith('/attendance') || pathname.startsWith('/my-route') || pathname.startsWith('/progress') || pathname.startsWith('/photo-check')) {
       if (role !== 'staff') {
-        const redirect = role === 'supervisor' ? '/dashboard' : '/staff';
+        const redirect = role === 'supervisor' ? '/dashboard' : '/reports';
         return NextResponse.redirect(new URL(redirect, req.url));
       }
     }
@@ -45,7 +45,9 @@ export const config = {
     '/attendance/:path*',
     '/my-route/:path*',
     '/progress/:path*',
+    '/photo-check/:path*',
     '/staff/:path*',
     '/reports/:path*',
+    '/logs/:path*',
   ],
 };

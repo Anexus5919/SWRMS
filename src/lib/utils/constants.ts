@@ -10,7 +10,20 @@ export const ATTENDANCE_WINDOW_MINUTES = 30;
 export const STAFFING_THRESHOLDS = {
   CRITICAL: 0.5,   // RED — fewer than half showed up
   MARGINAL: 0.75,  // AMBER — operational but strained
-  ADEQUATE: 0.75,  // GREEN — at or above this
+  ADEQUATE: 1.0,   // GREEN — fully staffed or above
+} as const;
+
+export const FACE_VERIFICATION = {
+  HIGH_CONFIDENCE: 0.5,    // Auto-verified
+  MEDIUM_CONFIDENCE: 0.65, // Verified but flagged for spot-check
+  LOW_CONFIDENCE: 0.8,     // Mandatory manual review
+  // > 0.8 = No match, rejected
+} as const;
+
+export const PHOTO_TYPES = {
+  SHIFT_START: 'shift_start',
+  CHECKPOINT: 'checkpoint',
+  SHIFT_END: 'shift_end',
 } as const;
 
 export const GPS_CONFIG = {

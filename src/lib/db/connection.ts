@@ -30,9 +30,18 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI!, {
       bufferCommands: false,
+    }).catch((err) => {
+      // Reset the cached promise so the next call retries the connection
+      cached.promise = null;
+      throw err;
     });
   }
 
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (err) {
+    cached.conn = null;
+    throw err;
+  }
   return cached.conn;
 }

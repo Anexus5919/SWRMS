@@ -10,6 +10,9 @@ export interface IUser extends Document {
   passwordHash: string;
   assignedRouteId: mongoose.Types.ObjectId | null;
   isActive: boolean;
+  profilePhoto: string | null;        // base64 compressed reference photo
+  faceDescriptor: number[] | null;     // 128-d face embedding for verification
+  faceRegisteredAt: Date | null;
   createdAt: Date;
 }
 
@@ -50,6 +53,18 @@ const UserSchema = new Schema<IUser>({
   isActive: {
     type: Boolean,
     default: true,
+  },
+  profilePhoto: {
+    type: String,
+    default: null,
+  },
+  faceDescriptor: {
+    type: [Number],
+    default: null,
+  },
+  faceRegisteredAt: {
+    type: Date,
+    default: null,
   },
   createdAt: {
     type: Date,

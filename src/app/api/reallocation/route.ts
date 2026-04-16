@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     workerId,
     supervisorId: session!.user.id,
     date: todayString(),
-    reason: 'understaffed',
+    reason: body.reason || 'understaffed',
     status: 'approved',
     distanceBetweenRoutes,
     previousStaffingRatio,
