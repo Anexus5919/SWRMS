@@ -7,13 +7,13 @@ export default withAuth(
     const role = req.nextauth.token?.role as string;
 
     // Role-based route protection
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/routes') || pathname.startsWith('/reallocation') || pathname.startsWith('/attendance-log') || pathname.startsWith('/logs')) {
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/routes') || pathname.startsWith('/reallocation') || pathname.startsWith('/attendance-log') || pathname.startsWith('/supervisor-logs')) {
       if (role !== 'supervisor' && role !== 'admin') {
         return NextResponse.redirect(new URL('/attendance', req.url));
       }
     }
 
-    if (pathname.startsWith('/staff') || pathname.startsWith('/reports')) {
+    if (pathname.startsWith('/staff') || pathname.startsWith('/reports') || pathname.startsWith('/admin-logs')) {
       if (role !== 'admin') {
         const redirect = role === 'supervisor' ? '/dashboard' : '/attendance';
         return NextResponse.redirect(new URL(redirect, req.url));
@@ -48,6 +48,7 @@ export const config = {
     '/photo-check/:path*',
     '/staff/:path*',
     '/reports/:path*',
-    '/logs/:path*',
+    '/supervisor-logs/:path*',
+    '/admin-logs/:path*',
   ],
 };

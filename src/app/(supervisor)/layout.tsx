@@ -5,7 +5,7 @@ const supervisorNav = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/reallocation', label: 'Reallocation' },
   { href: '/attendance-log', label: 'Attendance Log' },
-  { href: '/logs', label: 'Verification Logs' },
+  { href: '/supervisor-logs', label: 'Verification Logs' },
 ];
 
 export default function SupervisorLayout({
