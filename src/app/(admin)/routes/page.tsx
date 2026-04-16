@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 interface RoutePoint {
   lat: number;
@@ -21,6 +21,13 @@ interface RouteItem {
   shiftStart: string;
   shiftEnd: string;
   status: 'active' | 'inactive' | 'suspended';
+}
+
+interface StaffMember {
+  _id: string;
+  employeeId: string;
+  name: { first: string; last: string };
+  faceDescriptor?: number[] | null;
 }
 
 const emptyForm = {
@@ -51,12 +58,55 @@ export default function RouteManagementPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
+  const [staffByRoute, setStaffByRoute] = useState<Record<string, StaffMember[]>>({});
+  const [staffLoading, setStaffLoading] = useState<string | null>(null);
+  const [staffCounts, setStaffCounts] = useState<Record<string, number>>({});
+
+  const fetchStaffForRoute = useCallback(async (routeId: string) => {
+    if (staffByRoute[routeId]) return;
+    setStaffLoading(routeId);
+    try {
+      const res = await fetch(`/api/staff?routeId=${routeId}`);
+      const data = await res.json();
+      if (data.success) {
+        setStaffByRoute((prev) => ({ ...prev, [routeId]: data.data }));
+        setStaffCounts((prev) => ({ ...prev, [routeId]: data.data.length }));
+      }
+    } catch {
+      // staff fetch failed
+    } finally {
+      setStaffLoading(null);
+    }
+  }, [staffByRoute]);
+
+  const toggleExpand = (routeId: string) => {
+    if (expandedRouteId === routeId) {
+      setExpandedRouteId(null);
+    } else {
+      setExpandedRouteId(routeId);
+      fetchStaffForRoute(routeId);
+    }
+  };
 
   const fetchRoutes = async () => {
     try {
       const res = await fetch('/api/routes');
       const data = await res.json();
-      if (data.success) setRoutes(data.data);
+      if (data.success) {
+        setRoutes(data.data);
+        // Fetch staff counts for all routes
+        for (const route of data.data) {
+          fetch(`/api/staff?routeId=${route._id}`)
+            .then((r) => r.json())
+            .then((d) => {
+              if (d.success) {
+                setStaffCounts((prev) => ({ ...prev, [route._id]: d.data.length }));
+              }
+            })
+            .catch(() => {});
+        }
+      }
     } catch {
       // silent
     } finally {
@@ -310,66 +360,124 @@ export default function RouteManagementPage() {
                   </td>
                 </tr>
               ) : (
-                routes.map((r) => (
-                  <tr key={r._id} className="hover:bg-[var(--neutral-50)]">
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-[var(--neutral-700)]">
-                      {r.code}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-[var(--neutral-800)]">
-                      {r.name}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-[var(--neutral-500)]">
-                      {r.ward || '\u2014'}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-[var(--neutral-600)]">
-                      {r.requiredStaff}
-                    </td>
-                    <td className="px-4 py-3 text-xs font-mono text-[var(--neutral-500)] whitespace-nowrap">
-                      {r.shiftStart} \u2014 {r.shiftEnd}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-[var(--neutral-500)]">
-                      {r.geofenceRadius}m
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
-                          r.status === 'active'
-                            ? 'text-emerald-700 bg-emerald-50'
-                            : r.status === 'suspended'
-                            ? 'text-status-amber bg-status-amber-light'
-                            : 'text-[var(--neutral-500)] bg-[var(--neutral-100)]'
-                        }`}
+                routes.map((r) => {
+                  const count = staffCounts[r._id] ?? null;
+                  const isExpanded = expandedRouteId === r._id;
+                  const routeStaff = staffByRoute[r._id];
+                  return (
+                    <React.Fragment key={r._id}>
+                      <tr
+                        className="hover:bg-[var(--neutral-50)] cursor-pointer"
+                        onClick={() => toggleExpand(r._id)}
                       >
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openEdit(r)}
-                          className="text-[10px] font-medium text-emerald-700 hover:text-emerald-900 uppercase tracking-wider"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => toggleStatus(r)}
-                          disabled={togglingId === r._id}
-                          className={`text-[10px] font-medium uppercase tracking-wider ${
-                            r.status === 'active'
-                              ? 'text-[var(--neutral-500)] hover:text-status-red'
-                              : 'text-emerald-600 hover:text-emerald-800'
-                          } disabled:opacity-50`}
-                        >
-                          {togglingId === r._id
-                            ? '...'
-                            : r.status === 'active'
-                            ? 'Deactivate'
-                            : 'Activate'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        <td className="px-4 py-3 text-xs font-mono font-semibold text-[var(--neutral-700)]">
+                          {r.code}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-[var(--neutral-800)]">
+                          {r.name}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-[var(--neutral-500)]">
+                          {r.ward || '\u2014'}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-[var(--neutral-600)]">
+                          <span>{r.requiredStaff}</span>
+                          {count !== null && (
+                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700">
+                              {count} assigned
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs font-mono text-[var(--neutral-500)] whitespace-nowrap">
+                          {r.shiftStart} \u2014 {r.shiftEnd}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-[var(--neutral-500)]">
+                          {r.geofenceRadius}m
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
+                              r.status === 'active'
+                                ? 'text-emerald-700 bg-emerald-50'
+                                : r.status === 'suspended'
+                                ? 'text-status-amber bg-status-amber-light'
+                                : 'text-[var(--neutral-500)] bg-[var(--neutral-100)]'
+                            }`}
+                          >
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => openEdit(r)}
+                              className="text-[10px] font-medium text-emerald-700 hover:text-emerald-900 uppercase tracking-wider"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => toggleStatus(r)}
+                              disabled={togglingId === r._id}
+                              className={`text-[10px] font-medium uppercase tracking-wider ${
+                                r.status === 'active'
+                                  ? 'text-[var(--neutral-500)] hover:text-status-red'
+                                  : 'text-emerald-600 hover:text-emerald-800'
+                              } disabled:opacity-50`}
+                            >
+                              {togglingId === r._id
+                                ? '...'
+                                : r.status === 'active'
+                                ? 'Deactivate'
+                                : 'Activate'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-3 bg-[var(--neutral-50)]">
+                            <div className="text-xs font-semibold text-[var(--neutral-700)] mb-2 uppercase tracking-wider">
+                              Assigned Staff
+                            </div>
+                            {staffLoading === r._id ? (
+                              <p className="text-xs text-[var(--neutral-400)]">Loading staff...</p>
+                            ) : !routeStaff || routeStaff.length === 0 ? (
+                              <p className="text-xs text-[var(--neutral-400)]">No staff assigned to this route.</p>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                {routeStaff.map((staff) => (
+                                  <div
+                                    key={staff._id}
+                                    className="flex items-center gap-2 bg-white border border-[var(--border)] rounded px-3 py-2"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-[var(--neutral-800)] truncate">
+                                        {staff.name.first} {staff.name.last}
+                                      </p>
+                                      <p className="text-[10px] font-mono text-[var(--neutral-400)]">
+                                        {staff.employeeId}
+                                      </p>
+                                    </div>
+                                    <span
+                                      className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                                        staff.faceDescriptor && staff.faceDescriptor.length > 0
+                                          ? 'text-emerald-700 bg-emerald-50'
+                                          : 'text-red-700 bg-red-50'
+                                      }`}
+                                    >
+                                      {staff.faceDescriptor && staff.faceDescriptor.length > 0
+                                        ? 'Face registered'
+                                        : 'No face'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>

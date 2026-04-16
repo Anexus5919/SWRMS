@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
 import { Reallocation, User } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
+import { createReallocationSchema } from '@/lib/validators/schemas';
 
 function todayString() {
   return new Date().toISOString().split('T')[0];
@@ -16,15 +17,25 @@ export async function POST(req: NextRequest) {
 
   await connectDB();
 
-  const body = await req.json();
-  const { workerId, fromRouteId, toRouteId, distanceBetweenRoutes, previousStaffingRatio, newStaffingRatio } = body;
-
-  if (!workerId || !fromRouteId || !toRouteId) {
+  let body;
+  try {
+    body = await req.json();
+  } catch {
     return NextResponse.json(
-      { success: false, error: { code: 'MISSING_FIELDS', message: 'workerId, fromRouteId, toRouteId are required' } },
+      { success: false, error: { code: 'INVALID_JSON', message: 'Invalid request body' } },
       { status: 400 }
     );
   }
+
+  const parsed = createReallocationSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0].message } },
+      { status: 400 }
+    );
+  }
+
+  const { workerId, fromRouteId, toRouteId, distanceBetweenRoutes, previousStaffingRatio, newStaffingRatio } = parsed.data;
 
   // Update worker's assigned route
   await User.findByIdAndUpdate(workerId, { assignedRouteId: toRouteId });

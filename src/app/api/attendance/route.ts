@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db/connection';
 import { Attendance, Route, User } from '@/lib/db/models';
 import { verifyGeofence } from '@/lib/geo/geofence';
 import { requireRole } from '@/lib/auth/middleware';
+import { markAttendanceSchema } from '@/lib/validators/schemas';
 
 function todayString() {
   return new Date().toISOString().split('T')[0];
@@ -17,15 +18,30 @@ export async function POST(req: NextRequest) {
 
   await connectDB();
 
-  const body = await req.json();
-  const { coordinates, deviceInfo } = body;
-
-  if (!coordinates?.lat || !coordinates?.lng) {
+  let body;
+  try {
+    body = await req.json();
+  } catch {
     return NextResponse.json(
-      { success: false, error: { code: 'INVALID_COORDINATES', message: 'GPS coordinates are required' } },
+      { success: false, error: { code: 'INVALID_JSON', message: 'Invalid request body' } },
       { status: 400 }
     );
   }
+
+  const parsed = markAttendanceSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0].message } },
+      { status: 400 }
+    );
+  }
+
+  const { coordinates, deviceInfo } = parsed.data;
+  // `attempts` is not part of the validated schema but may be sent by the client
+  const attempts = (body as Record<string, unknown>).coordinates &&
+    typeof (body.coordinates as Record<string, unknown>).attempts === 'number'
+    ? (body.coordinates as Record<string, unknown>).attempts as number
+    : 1;
 
   const userId = session!.user.id;
   const today = todayString();
@@ -73,12 +89,12 @@ export async function POST(req: NextRequest) {
     coordinates: {
       lat: coordinates.lat,
       lng: coordinates.lng,
-      accuracy: coordinates.accuracy || null,
+      accuracy: coordinates.accuracy ?? undefined,
     },
     distanceFromRoute: geofenceResult.distance,
     status: geofenceResult.verified ? 'verified' : 'rejected',
     rejectionReason: geofenceResult.verified ? undefined : geofenceResult.message,
-    attempts: coordinates.attempts || 1,
+    attempts,
     deviceInfo: deviceInfo || {},
     isOfflineSync: false,
   });

@@ -22,6 +22,7 @@ export default function MyRoutePage() {
   const { data: session } = useSession();
   const [route, setRoute] = useState<RouteData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!session?.user?.assignedRouteId) {
@@ -34,7 +35,7 @@ export default function MyRoutePage() {
       .then((data) => {
         if (data.success) setRoute(data.data);
       })
-      .catch(() => {})
+      .catch(() => setError('Failed to load route'))
       .finally(() => setLoading(false));
   }, [session]);
 
@@ -42,6 +43,19 @@ export default function MyRoutePage() {
     return (
       <div className="px-4 pt-6 flex items-center justify-center h-48">
         <p className="text-sm text-[var(--neutral-400)]">Loading route...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="px-4 pt-6">
+        <h2 className="text-lg font-semibold text-[var(--neutral-800)] mb-4">
+          My Assigned Route
+        </h2>
+        <div className="bg-white border border-status-red/20 rounded-lg p-6 text-center">
+          <p className="text-sm text-status-red">{error}</p>
+        </div>
       </div>
     );
   }

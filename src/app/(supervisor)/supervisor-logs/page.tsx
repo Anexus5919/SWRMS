@@ -36,10 +36,23 @@ interface LogSummary {
 
 interface PhotoData {
   _id: string;
-  url: string;
-  profilePhotoUrl?: string;
-  workerName: string;
-  capturedAt: string;
+  photo: string; // base64 image
+  userId: { employeeId: string; name: { first: string; last: string }; profilePhoto?: string };
+  routeId: { name: string; code: string };
+  type: string;
+  date: string;
+  coordinates: { lat: number; lng: number; accuracy?: number };
+  faceDetected: boolean;
+  facesCount: number;
+  verificationResult: {
+    confidence: string;
+    distance: number | null;
+    verified: boolean;
+    requiresManualReview: boolean;
+    message: string;
+  };
+  manualReview: { status: string; reviewedBy?: any; reviewedAt?: string; notes?: string };
+  createdAt: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -143,7 +156,7 @@ export default function VerificationLogsPage() {
       });
       if (res.ok) {
         setLogs((prev) =>
-          prev.map((l) => (l._id === logId ? { ...l, status: newStatus } : l)),
+          prev.map((l) => (l._id === logId ? { ...l, resolution: { ...l.resolution, status: newStatus } } : l)),
         );
         // update summary counts locally
         fetchLogs();
@@ -170,11 +183,22 @@ export default function VerificationLogsPage() {
 
   const handlePhotoAction = async (photoId: string, action: 'approved' | 'rejected') => {
     try {
-      await fetch(`/api/photos/${photoId}`, {
+      const res = await fetch(`/api/photos/${photoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: action }),
       });
+      if (res.ok) {
+        // Also resolve the associated verification log
+        const matchingLog = logs.find((l) => l.geoPhotoId === photoId);
+        if (matchingLog) {
+          await fetch('/api/verification', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logId: matchingLog._id, status: 'resolved', notes: 'Photo ' + action }),
+          });
+        }
+      }
       setPhotoModal(null);
       fetchLogs();
     } catch {
@@ -422,11 +446,11 @@ export default function VerificationLogsPage() {
       {/* Photo review modal */}
       {photoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
               <h3 className="text-sm font-semibold text-[var(--neutral-800)]">
-                Photo Review &mdash; {photoModal.workerName}
+                Photo Review &mdash; {photoModal.userId?.name ? `${photoModal.userId.name.first} ${photoModal.userId.name.last}` : 'Unknown'}
               </h3>
               <button
                 onClick={() => setPhotoModal(null)}
@@ -444,9 +468,9 @@ export default function VerificationLogsPage() {
                 <div>
                   <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider mb-2">Geotagged Photo</p>
                   <div className="aspect-square bg-[var(--neutral-100)] rounded-lg overflow-hidden flex items-center justify-center">
-                    {photoModal.url ? (
+                    {photoModal.photo ? (
                       <img
-                        src={photoModal.url}
+                        src={photoModal.photo.startsWith('data:') ? photoModal.photo : `data:image/jpeg;base64,${photoModal.photo}`}
                         alt="Geotagged attendance photo"
                         className="w-full h-full object-cover"
                       />
@@ -455,21 +479,79 @@ export default function VerificationLogsPage() {
                     )}
                   </div>
                   <p className="text-[10px] text-[var(--neutral-400)] mt-1">
-                    Captured: {new Date(photoModal.capturedAt).toLocaleString('en-IN')}
+                    Captured: {new Date(photoModal.createdAt).toLocaleString('en-IN')}
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider mb-2">Profile Photo</p>
                   <div className="aspect-square bg-[var(--neutral-100)] rounded-lg overflow-hidden flex items-center justify-center">
-                    {photoModal.profilePhotoUrl ? (
+                    {photoModal.userId?.profilePhoto ? (
                       <img
-                        src={photoModal.profilePhotoUrl}
+                        src={photoModal.userId.profilePhoto.startsWith('data:') ? photoModal.userId.profilePhoto : `data:image/jpeg;base64,${photoModal.userId.profilePhoto}`}
                         alt="Worker profile photo"
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <p className="text-xs text-[var(--neutral-400)]">No profile photo</p>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Metadata section */}
+              <div className="bg-[var(--neutral-50)] border border-[var(--border)] rounded-lg p-4 mb-4">
+                <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider mb-3 font-semibold">Verification Details</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--neutral-500)]">Photo Type</span>
+                    <span className="font-medium text-[var(--neutral-700)]">{photoModal.type?.replace(/_/g, ' ') || '---'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--neutral-500)]">Face Detected</span>
+                    <span className={`font-medium ${photoModal.faceDetected ? 'text-status-green' : 'text-status-red'}`}>
+                      {photoModal.faceDetected ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--neutral-500)]">Faces Count</span>
+                    <span className="font-medium text-[var(--neutral-700)]">{photoModal.facesCount ?? 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--neutral-500)]">Confidence</span>
+                    <span className={`font-semibold px-1.5 py-0.5 rounded text-[10px] ${
+                      photoModal.verificationResult?.confidence === 'high' ? 'bg-status-green-light text-status-green' :
+                      photoModal.verificationResult?.confidence === 'medium' ? 'bg-status-amber-light text-status-amber' :
+                      photoModal.verificationResult?.confidence === 'low' ? 'bg-status-red-light text-status-red' :
+                      photoModal.verificationResult?.confidence === 'no_match' ? 'bg-status-red-light text-status-red' :
+                      photoModal.verificationResult?.confidence === 'no_face' ? 'bg-[var(--neutral-100)] text-[var(--neutral-500)]' :
+                      'bg-[var(--neutral-100)] text-[var(--neutral-500)]'
+                    }`}>
+                      {photoModal.verificationResult?.confidence || '---'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--neutral-500)]">Distance Score</span>
+                    <span className="font-medium text-[var(--neutral-700)]">
+                      {photoModal.verificationResult?.distance != null ? photoModal.verificationResult.distance.toFixed(2) : '---'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--neutral-500)]">GPS Coordinates</span>
+                    <span className="font-medium text-[var(--neutral-700)] font-mono text-[10px]">
+                      {photoModal.coordinates ? `${photoModal.coordinates.lat.toFixed(5)}, ${photoModal.coordinates.lng.toFixed(5)}` : '---'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--neutral-500)]">GPS Accuracy</span>
+                    <span className="font-medium text-[var(--neutral-700)]">
+                      {photoModal.coordinates?.accuracy != null ? `${photoModal.coordinates.accuracy.toFixed(1)}m` : '---'}
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex justify-between">
+                    <span className="text-[var(--neutral-500)]">Verification Message</span>
+                    <span className="font-medium text-[var(--neutral-700)] text-right max-w-[60%]">
+                      {photoModal.verificationResult?.message || '---'}
+                    </span>
                   </div>
                 </div>
               </div>

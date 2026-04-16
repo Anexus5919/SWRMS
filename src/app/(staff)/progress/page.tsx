@@ -17,6 +17,7 @@ export default function ProgressPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [note, setNote] = useState('');
+  const [error, setError] = useState('');
 
   const routeId = session?.user?.assignedRouteId;
 
@@ -31,7 +32,7 @@ export default function ProgressPage() {
       .then((data) => {
         if (data.success) setProgress(data.data);
       })
-      .catch(() => {})
+      .catch(() => setError('Failed to load progress'))
       .finally(() => setLoading(false));
   }, [routeId]);
 
@@ -55,7 +56,7 @@ export default function ProgressPage() {
         setNote('');
       }
     } catch {
-      // Handle offline
+      setError('Failed to update progress');
     } finally {
       setUpdating(false);
     }
@@ -65,6 +66,19 @@ export default function ProgressPage() {
     return (
       <div className="px-4 pt-6 flex items-center justify-center h-48">
         <p className="text-sm text-[var(--neutral-400)]">Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="px-4 pt-6">
+        <h2 className="text-lg font-semibold text-[var(--neutral-800)] mb-4">
+          Route Progress
+        </h2>
+        <div className="bg-white border border-status-red/20 rounded-lg p-6 text-center">
+          <p className="text-sm text-status-red">{error}</p>
+        </div>
       </div>
     );
   }
@@ -92,6 +106,12 @@ export default function ProgressPage() {
       <p className="text-xs text-[var(--neutral-500)] mb-6">
         Update your collection progress for today
       </p>
+
+      {error && (
+        <div className="mb-4 text-xs text-status-red bg-status-red-light border border-status-red/20 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="bg-white border border-[var(--border)] rounded-lg p-4 mb-4">

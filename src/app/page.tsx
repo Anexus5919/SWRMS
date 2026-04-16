@@ -16,7 +16,7 @@ export default async function HomePage() {
     case 'supervisor':
       redirect('/dashboard');
     case 'staff':
-      redirect('/attendance');
+      redirect('/home');
     default:
       redirect('/login');
   }

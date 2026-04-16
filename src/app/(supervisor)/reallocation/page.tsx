@@ -26,6 +26,7 @@ export default function ReallocationPage() {
   const [history, setHistory] = useState<ReallocationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   const fetchData = async () => {
     try {
@@ -40,7 +41,7 @@ export default function ReallocationPage() {
       if (sugData.success) setSuggestions(sugData.data);
       if (histData.success) setHistory(histData.data);
     } catch {
-      // Will retry
+      setError('Failed to load reallocation data');
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,7 @@ export default function ReallocationPage() {
         fetchData();
       }
     } catch {
-      // Handle error
+      setError('Failed to approve reallocation');
     } finally {
       setProcessing(null);
     }
@@ -104,6 +105,12 @@ export default function ReallocationPage() {
           Refresh Suggestions
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 text-xs text-status-red bg-status-red-light border border-status-red/20 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
 
       {/* Suggestions */}
       <div className="mb-8">

@@ -9,18 +9,18 @@ export default withAuth(
     // Role-based route protection
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/routes') || pathname.startsWith('/reallocation') || pathname.startsWith('/attendance-log') || pathname.startsWith('/supervisor-logs')) {
       if (role !== 'supervisor' && role !== 'admin') {
-        return NextResponse.redirect(new URL('/attendance', req.url));
+        return NextResponse.redirect(new URL('/home', req.url));
       }
     }
 
     if (pathname.startsWith('/staff') || pathname.startsWith('/reports') || pathname.startsWith('/admin-logs')) {
       if (role !== 'admin') {
-        const redirect = role === 'supervisor' ? '/dashboard' : '/attendance';
+        const redirect = role === 'supervisor' ? '/dashboard' : '/home';
         return NextResponse.redirect(new URL(redirect, req.url));
       }
     }
 
-    if (pathname.startsWith('/onboarding') || pathname.startsWith('/attendance') || pathname.startsWith('/my-route') || pathname.startsWith('/progress') || pathname.startsWith('/photo-check')) {
+    if (pathname.startsWith('/home') || pathname.startsWith('/onboarding') || pathname.startsWith('/attendance') || pathname.startsWith('/my-route') || pathname.startsWith('/progress') || pathname.startsWith('/photo-check')) {
       if (role !== 'staff') {
         const redirect = role === 'supervisor' ? '/dashboard' : '/reports';
         return NextResponse.redirect(new URL(redirect, req.url));
@@ -42,6 +42,7 @@ export const config = {
     '/routes/:path*',
     '/reallocation/:path*',
     '/attendance-log/:path*',
+    '/home/:path*',
     '/attendance/:path*',
     '/my-route/:path*',
     '/progress/:path*',
