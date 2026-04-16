@@ -8,9 +8,16 @@
 
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { config } from 'dotenv';
 
-// Direct imports since we run this standalone
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://your-connection-string-here';
+// Load .env.local for standalone script execution
+config({ path: '.env.local' });
+
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI not found. Make sure .env.local exists.');
+  process.exit(1);
+}
 
 // ── Schemas (inline to avoid path alias issues in standalone script) ──
 
