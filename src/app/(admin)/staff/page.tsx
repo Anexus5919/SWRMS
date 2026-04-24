@@ -1,6 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import {
+  Badge,
+  Breadcrumbs,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  useToast,
+  useConfirm,
+} from '@/components/ui';
+import { SanitationWorker } from '@/components/brand/Illustrations';
 
 interface StaffMember {
   _id: string;
@@ -38,6 +50,9 @@ export default function StaffManagementPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
+  const toast = useToast();
+  const confirm = useConfirm();
+
   useEffect(() => {
     Promise.all([
       fetch('/api/staff').then((r) => r.json()),
@@ -50,6 +65,11 @@ export default function StaffManagementPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const refreshStaff = async () => {
+    const refreshed = await fetch('/api/staff').then((r) => r.json());
+    if (refreshed.success) setStaff(refreshed.data);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,78 +85,167 @@ export default function StaffManagementPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setFormError(data.error?.message || 'Failed to register');
+        const message = data.error?.message || 'Failed to register';
+        setFormError(message);
+        toast.error('Failed to create staff', message);
         return;
       }
 
-      // Refresh list
-      const refreshed = await fetch('/api/staff').then((r) => r.json());
-      if (refreshed.success) setStaff(refreshed.data);
+      await refreshStaff();
+      toast.success('Staff member created', `${formData.employeeId} added`);
 
       setShowForm(false);
       setFormData({ employeeId: '', firstName: '', lastName: '', role: 'staff', phone: '', password: '', assignedRouteId: '' });
     } catch {
       setFormError('Network error');
+      toast.error('Failed to create staff', 'Network error');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleDeactivate = async (member: StaffMember) => {
+    const ok = await confirm({
+      title: 'Deactivate staff?',
+      description: 'They will lose access immediately.',
+      variant: 'destructive',
+      confirmLabel: 'Deactivate',
+    });
+    if (!ok) return;
+
+    try {
+      const res = await fetch(`/api/staff/${member._id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        toast.error('Could not deactivate', data.error?.message || 'Please try again.');
+        return;
+      }
+      toast.success('Staff deactivated', `${member.employeeId} no longer has access`);
+      await refreshStaff();
+    } catch {
+      toast.error('Could not deactivate', 'Network error');
+    }
+  };
+
+  const roleBadgeVariant = (role: string): 'blue' | 'amber' | 'neutral' => {
+    if (role === 'admin') return 'blue';
+    if (role === 'supervisor') return 'amber';
+    return 'neutral';
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-semibold text-[var(--neutral-800)]">
-            Staff Management
-          </h2>
-          <p className="text-sm text-[var(--neutral-500)]">
-            {staff.length} registered staff members
-          </p>
+      <div className="mb-6">
+        <Breadcrumbs
+          items={[{ label: 'Home', href: '/' }, { label: 'Staff Management' }]}
+          className="mb-4"
+        />
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-bmc-700">
+              Workforce
+            </p>
+            <h1 className="font-display text-3xl font-bold text-[var(--neutral-900)] mt-1">
+              Staff Management
+            </h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
+              Manage BMC SWM personnel across all wards
+            </p>
+            <div className="divider-gold w-24 my-4" />
+            <p className="text-xs text-[var(--text-muted)]">
+              {staff.length} registered staff members
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link href="/staff/bulk-import">
+              <Button variant="secondary">Bulk Import</Button>
+            </Link>
+            <Button variant="primary" onClick={() => setShowForm(!showForm)}>
+              {showForm ? 'Cancel' : '+ Register Staff'}
+            </Button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 text-xs font-medium text-white bg-bmc-700 rounded hover:bg-bmc-800 transition-colors"
-        >
-          {showForm ? 'Cancel' : '+ Register Staff'}
-        </button>
       </div>
 
       {/* Registration form */}
       {showForm && (
-        <div className="bg-white border border-[var(--border)] rounded-lg p-6 mb-6">
-          <h3 className="text-sm font-semibold text-[var(--neutral-700)] mb-4">Register New Staff</h3>
+        <Card padded className="mb-6">
+          <h3 className="font-display text-base font-semibold text-[var(--neutral-800)] mb-4">
+            Register New Staff
+          </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              id="staff-employee-id"
+              label="Employee ID"
+              type="text"
+              value={formData.employeeId}
+              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+              placeholder="BMC-CHB-031"
+              required
+            />
+            <Input
+              id="staff-first-name"
+              label="First Name"
+              type="text"
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+              required
+            />
+            <Input
+              id="staff-last-name"
+              label="Last Name"
+              type="text"
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              required
+            />
             <div>
-              <label className="block text-xs font-medium text-[var(--neutral-600)] mb-1 uppercase tracking-wider">Employee ID</label>
-              <input type="text" value={formData.employeeId} onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })} placeholder="BMC-CHB-031" required className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded bg-[var(--neutral-50)] focus:outline-none focus:ring-2 focus:ring-bmc-500/30" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--neutral-600)] mb-1 uppercase tracking-wider">First Name</label>
-              <input type="text" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded bg-[var(--neutral-50)] focus:outline-none focus:ring-2 focus:ring-bmc-500/30" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--neutral-600)] mb-1 uppercase tracking-wider">Last Name</label>
-              <input type="text" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded bg-[var(--neutral-50)] focus:outline-none focus:ring-2 focus:ring-bmc-500/30" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--neutral-600)] mb-1 uppercase tracking-wider">Role</label>
-              <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded bg-[var(--neutral-50)] focus:outline-none focus:ring-2 focus:ring-bmc-500/30">
+              <label
+                htmlFor="staff-role"
+                className="block text-[11px] font-bold text-[var(--neutral-700)] mb-1.5 uppercase tracking-wider"
+              >
+                Role
+              </label>
+              <select
+                id="staff-role"
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="w-full px-3 py-2.5 text-sm border border-[var(--border-strong)] rounded-md bg-white text-[var(--text-primary)] focus:outline-none focus:border-bmc-600 focus:ring-2 focus:ring-bmc-500/20 transition-all"
+              >
                 <option value="staff">Staff</option>
                 <option value="supervisor">Supervisor</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--neutral-600)] mb-1 uppercase tracking-wider">Phone</label>
-              <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded bg-[var(--neutral-50)] focus:outline-none focus:ring-2 focus:ring-bmc-500/30" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--neutral-600)] mb-1 uppercase tracking-wider">Password</label>
-              <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded bg-[var(--neutral-50)] focus:outline-none focus:ring-2 focus:ring-bmc-500/30" />
-            </div>
+            <Input
+              id="staff-phone"
+              label="Phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required
+            />
+            <Input
+              id="staff-password"
+              label="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
+            />
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-[var(--neutral-600)] mb-1 uppercase tracking-wider">Assigned Route</label>
-              <select value={formData.assignedRouteId} onChange={(e) => setFormData({ ...formData, assignedRouteId: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded bg-[var(--neutral-50)] focus:outline-none focus:ring-2 focus:ring-bmc-500/30">
+              <label
+                htmlFor="staff-route"
+                className="block text-[11px] font-bold text-[var(--neutral-700)] mb-1.5 uppercase tracking-wider"
+              >
+                Assigned Route
+              </label>
+              <select
+                id="staff-route"
+                value={formData.assignedRouteId}
+                onChange={(e) => setFormData({ ...formData, assignedRouteId: e.target.value })}
+                className="w-full px-3 py-2.5 text-sm border border-[var(--border-strong)] rounded-md bg-white text-[var(--text-primary)] focus:outline-none focus:border-bmc-600 focus:ring-2 focus:ring-bmc-500/20 transition-all"
+              >
                 <option value="">None</option>
                 {routes.map((r) => (
                   <option key={r._id} value={r._id}>{r.code} — {r.name}</option>
@@ -149,16 +258,16 @@ export default function StaffManagementPage() {
               </div>
             )}
             <div className="sm:col-span-2">
-              <button type="submit" disabled={submitting} className="px-6 py-2 text-xs font-medium text-white bg-bmc-700 rounded hover:bg-bmc-800 disabled:opacity-60 transition-colors">
+              <Button type="submit" variant="primary" loading={submitting}>
                 {submitting ? 'Registering...' : 'Register Staff'}
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
       {/* Staff table */}
-      <div className="bg-white border border-[var(--border)] rounded-lg overflow-hidden">
+      <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -169,41 +278,52 @@ export default function StaffManagementPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Phone</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Route</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Face</th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {loading ? (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-[var(--neutral-400)]">Loading...</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-xs text-[var(--neutral-400)]">Loading...</td></tr>
               ) : staff.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-[var(--neutral-400)]">No staff registered.</td></tr>
+                <tr>
+                  <td colSpan={7} className="px-0 py-0">
+                    <EmptyState
+                      title="No staff registered"
+                      description="Add your first staff member with the Register button above, or import a roster in bulk."
+                      illustration={<SanitationWorker className="w-full h-full" />}
+                    />
+                  </td>
+                </tr>
               ) : (
                 staff.map((s) => (
                   <tr key={s._id} className="hover:bg-[var(--neutral-50)]">
                     <td className="px-4 py-3 text-xs font-mono font-semibold text-[var(--neutral-700)]">{s.employeeId}</td>
                     <td className="px-4 py-3 text-xs text-[var(--neutral-800)]">{s.name.first} {s.name.last}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
-                        s.role === 'admin' ? 'text-bmc-700 bg-bmc-50' :
-                        s.role === 'supervisor' ? 'text-status-amber bg-status-amber-light' :
-                        'text-[var(--neutral-600)] bg-[var(--neutral-100)]'
-                      }`}>
-                        {s.role}
-                      </span>
+                      <Badge variant={roleBadgeVariant(s.role)}>{s.role}</Badge>
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--neutral-500)]">{s.phone}</td>
                     <td className="px-4 py-3 text-xs font-mono text-[var(--neutral-500)]">
-                      {s.assignedRouteId ? (s.assignedRouteId as any).code || '—' : '—'}
+                      {s.assignedRouteId ? s.assignedRouteId.code || '—' : '—'}
                     </td>
                     <td className="px-4 py-3">
                       {s.faceDescriptor && s.faceDescriptor.length === 128 ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-status-green bg-status-green-light px-2 py-0.5 rounded">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          Registered
-                        </span>
+                        <Badge variant="green">Registered</Badge>
                       ) : (
-                        <span className="text-[10px] font-semibold text-status-red bg-status-red-light px-2 py-0.5 rounded">
-                          Not registered
-                        </span>
+                        <Badge variant="red">Not registered</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {s.isActive ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeactivate(s)}
+                        >
+                          Deactivate
+                        </Button>
+                      ) : (
+                        <Badge variant="neutral">Inactive</Badge>
                       )}
                     </td>
                   </tr>
@@ -212,7 +332,7 @@ export default function StaffManagementPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -3,7 +3,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import DynamicRouteMap from '@/components/maps/DynamicRouteMap';
-import { CHEMBUR_CENTER } from '@/lib/utils/constants';
+import {
+  Badge,
+  Breadcrumbs,
+  Button,
+  Card,
+  EmptyState,
+  SkeletonCard,
+} from '@/components/ui';
+import { RoutePin } from '@/components/brand/Illustrations';
 
 interface RouteItem {
   _id: string;
@@ -39,10 +47,22 @@ interface DashboardData {
   };
 }
 
-const statusColors: Record<string, { border: string; badge: string; badgeBg: string; bar: string }> = {
-  adequate: { border: 'border-l-status-green', badge: 'text-status-green', badgeBg: 'bg-status-green-light', bar: 'bg-status-green' },
-  marginal: { border: 'border-l-status-amber', badge: 'text-status-amber', badgeBg: 'bg-status-amber-light', bar: 'bg-status-amber' },
-  critical: { border: 'border-l-status-red', badge: 'text-status-red', badgeBg: 'bg-status-red-light', bar: 'bg-status-red' },
+const statusToBadge: Record<RouteItem['statusLabel'], 'green' | 'amber' | 'red'> = {
+  adequate: 'green',
+  marginal: 'amber',
+  critical: 'red',
+};
+
+const statusToCardBorder: Record<RouteItem['statusLabel'], 'green' | 'amber' | 'red'> = {
+  adequate: 'green',
+  marginal: 'amber',
+  critical: 'red',
+};
+
+const statusToBar: Record<RouteItem['statusLabel'], string> = {
+  adequate: 'bg-status-green',
+  marginal: 'bg-status-amber',
+  critical: 'bg-status-red',
 };
 
 export default function DashboardPage() {
@@ -69,18 +89,65 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [fetchDashboard]);
 
+  // Page header (always rendered, even during loading)
+  const PageHeader = ({ subtitle }: { subtitle: string }) => (
+    <div className="mb-6">
+      <Breadcrumbs
+        items={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]}
+        className="mb-4"
+      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-bmc-700">
+            Live Operations
+          </p>
+          <h1 className="font-display text-3xl font-bold text-[var(--neutral-900)] mt-1">
+            Route Dashboard
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">{subtitle}</p>
+          <div className="divider-gold w-24 my-4" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs text-status-green">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
+            Live
+          </span>
+          <Button variant="ghost" size="sm" onClick={fetchDashboard}>
+            Refresh now
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-sm text-[var(--neutral-400)]">Loading dashboard...</p>
+      <div>
+        <PageHeader subtitle="Loading latest field telemetry..." />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="text-center py-12">
-        <p className="text-sm text-[var(--neutral-500)]">Could not load dashboard data.</p>
+      <div>
+        <PageHeader subtitle="Dashboard data unavailable" />
+        <Card padded>
+          <EmptyState
+            title="Could not load dashboard"
+            description="There was a problem reaching the dashboard service. Please try refreshing in a moment."
+            action={
+              <Button variant="primary" onClick={fetchDashboard}>
+                Try again
+              </Button>
+            }
+          />
+        </Card>
       </div>
     );
   }
@@ -90,6 +157,8 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <PageHeader subtitle={`Chembur Ward — ${data.date}`} />
+
       {/* Alert banner for critical routes */}
       {criticalRoutes.length > 0 && (
         <div className="mb-4 p-3 bg-status-red-light border border-status-red/20 rounded-lg flex items-start gap-3">
@@ -140,70 +209,53 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Header with stats and view toggle */}
-      <div className="flex items-start justify-between mb-5">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-[var(--neutral-800)]">
-              Route Dashboard
-            </h2>
-            <span className="inline-flex items-center gap-1.5 text-xs text-status-green">
-              <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
-              Live
-            </span>
-          </div>
-          <p className="text-sm text-[var(--neutral-500)] mt-0.5">
-            Chembur Ward — {data.date}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setView('grid')}
-            className={`px-3 py-1.5 text-xs rounded transition-colors ${
-              view === 'grid' ? 'bg-bmc-700 text-white' : 'bg-[var(--neutral-100)] text-[var(--neutral-600)]'
-            }`}
-          >
-            Grid
-          </button>
-          <button
-            onClick={() => setView('map')}
-            className={`px-3 py-1.5 text-xs rounded transition-colors ${
-              view === 'map' ? 'bg-bmc-700 text-white' : 'bg-[var(--neutral-100)] text-[var(--neutral-600)]'
-            }`}
-          >
-            Map
-          </button>
-        </div>
+      {/* View toggle */}
+      <div className="flex items-center justify-end gap-2 mb-5">
+        <button
+          onClick={() => setView('grid')}
+          className={`px-3 py-1.5 text-xs rounded transition-colors ${
+            view === 'grid' ? 'bg-bmc-700 text-white' : 'bg-[var(--neutral-100)] text-[var(--neutral-600)]'
+          }`}
+        >
+          Grid
+        </button>
+        <button
+          onClick={() => setView('map')}
+          className={`px-3 py-1.5 text-xs rounded transition-colors ${
+            view === 'map' ? 'bg-bmc-700 text-white' : 'bg-[var(--neutral-100)] text-[var(--neutral-600)]'
+          }`}
+        >
+          Map
+        </button>
       </div>
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white border border-[var(--border)] rounded-lg px-4 py-3">
+        <Card statusBorder="blue" className="px-4 py-3">
           <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Attendance</p>
-          <p className="text-xl font-bold text-[var(--neutral-800)] mt-0.5">
+          <p className="text-xl font-bold text-[var(--neutral-800)] mt-0.5 font-display">
             {summary.totalPresent}
             <span className="text-sm font-normal text-[var(--neutral-400)]">/{summary.totalStaffRequired}</span>
           </p>
           <p className="text-[10px] text-bmc-600">{summary.overallAttendanceRate}% present</p>
-        </div>
-        <div className="bg-white border border-[var(--border)] rounded-lg px-4 py-3">
+        </Card>
+        <Card statusBorder="green" className="px-4 py-3">
           <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Routes Active</p>
-          <p className="text-xl font-bold text-[var(--neutral-800)] mt-0.5">{summary.totalRoutes}</p>
+          <p className="text-xl font-bold text-[var(--neutral-800)] mt-0.5 font-display">{summary.totalRoutes}</p>
           <p className="text-[10px] text-status-green">{summary.completedRoutes} completed</p>
-        </div>
-        <div className="bg-white border border-[var(--border)] rounded-lg px-4 py-3">
+        </Card>
+        <Card statusBorder="red" className="px-4 py-3">
           <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Critical</p>
-          <p className={`text-xl font-bold mt-0.5 ${summary.criticalRoutes > 0 ? 'text-status-red' : 'text-[var(--neutral-800)]'}`}>
+          <p className={`text-xl font-bold mt-0.5 font-display ${summary.criticalRoutes > 0 ? 'text-status-red' : 'text-[var(--neutral-800)]'}`}>
             {summary.criticalRoutes}
           </p>
           <p className="text-[10px] text-[var(--neutral-400)]">understaffed routes</p>
-        </div>
-        <div className="bg-white border border-[var(--border)] rounded-lg px-4 py-3">
+        </Card>
+        <Card statusBorder="amber" className="px-4 py-3">
           <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Rejected</p>
-          <p className="text-xl font-bold text-[var(--neutral-800)] mt-0.5">{summary.totalRejected}</p>
+          <p className="text-xl font-bold text-[var(--neutral-800)] mt-0.5 font-display">{summary.totalRejected}</p>
           <p className="text-[10px] text-[var(--neutral-400)]">geofence failures</p>
-        </div>
+        </Card>
       </div>
 
       {/* Map view */}
@@ -218,69 +270,72 @@ export default function DashboardPage() {
       )}
 
       {/* Route cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {routes.map((route) => {
-          const colors = statusColors[route.statusLabel] || statusColors.adequate;
+      {routes.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {routes.map((route) => {
+            const badgeVariant = statusToBadge[route.statusLabel] || 'green';
+            const cardBorder = statusToCardBorder[route.statusLabel] || 'green';
+            const barColor = statusToBar[route.statusLabel] || 'bg-status-green';
 
-          return (
-            <Link
-              key={route._id}
-              href={`/routes/${route._id}`}
-              className={`block bg-white border border-[var(--border)] border-l-4 ${colors.border} rounded-lg p-4 hover:bg-[var(--neutral-50)] transition-colors`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-mono font-bold text-[var(--neutral-600)]">
-                  {route.code}
-                </span>
-                <span className={`text-[10px] font-semibold uppercase tracking-wider ${colors.badge} ${colors.badgeBg} px-2 py-0.5 rounded`}>
-                  {route.statusLabel}
-                </span>
-              </div>
+            return (
+              <Link key={route._id} href={`/routes/${route._id}`} className="block">
+                <Card statusBorder={cardBorder} hoverable className="p-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-mono font-bold text-[var(--neutral-600)]">
+                      {route.code}
+                    </span>
+                    <Badge variant={badgeVariant}>{route.statusLabel}</Badge>
+                  </div>
 
-              <p className="text-sm font-medium text-[var(--neutral-800)] mb-3 leading-snug">
-                {route.name}
-              </p>
+                  <p className="text-sm font-medium text-[var(--neutral-800)] mb-3 leading-snug">
+                    {route.name}
+                  </p>
 
-              <div className="flex items-center justify-between text-xs text-[var(--neutral-500)] mb-2">
-                <span>
-                  Staff: <span className="font-semibold text-[var(--neutral-700)]">{route.presentStaff}/{route.requiredStaff}</span>
-                </span>
-                <span>
-                  {route.routeProgress.completionPercentage}%
-                  {route.routeProgress.status === 'completed' && (
-                    <svg className="w-3.5 h-3.5 inline ml-1 text-status-green" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  )}
-                </span>
-              </div>
+                  <div className="flex items-center justify-between text-xs text-[var(--neutral-500)] mb-2">
+                    <span>
+                      Staff: <span className="font-semibold text-[var(--neutral-700)]">{route.presentStaff}/{route.requiredStaff}</span>
+                    </span>
+                    <span>
+                      {route.routeProgress.completionPercentage}%
+                      {route.routeProgress.status === 'completed' && (
+                        <svg className="w-3.5 h-3.5 inline ml-1 text-status-green" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </span>
+                  </div>
 
-              {/* Progress bar */}
-              <div className="h-1.5 bg-[var(--neutral-100)] rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${colors.bar}`}
-                  style={{ width: `${route.routeProgress.completionPercentage}%` }}
-                />
-              </div>
+                  {/* Progress bar */}
+                  <div className="h-1.5 bg-[var(--neutral-100)] rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                      style={{ width: `${route.routeProgress.completionPercentage}%` }}
+                    />
+                  </div>
 
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-[10px] text-[var(--neutral-400)]">
-                  {route.estimatedLengthKm} km
-                </span>
-                <span className="text-[10px] text-[var(--neutral-400)] capitalize">
-                  {route.routeProgress.status.replace('_', ' ')}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {routes.length === 0 && (
-        <div className="text-center py-12 bg-white border border-[var(--border)] rounded-lg">
-          <p className="text-sm text-[var(--neutral-500)]">No active routes found.</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[10px] text-[var(--neutral-400)]">
+                      {route.estimatedLengthKm} km
+                    </span>
+                    <span className="text-[10px] text-[var(--neutral-400)] capitalize">
+                      {route.routeProgress.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
+      ) : (
+        <Card>
+          <EmptyState
+            title="No active routes today"
+            description="When supervisors activate collection routes, they will appear here in real time."
+            illustration={<RoutePin className="w-full h-full" />}
+          />
+        </Card>
       )}
     </div>
   );
 }
+

@@ -12,6 +12,9 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import { Breadcrumbs, Button } from '@/components/ui';
+import PrintHeader from '@/components/layout/PrintHeader';
+import PrintFooter from '@/components/layout/PrintFooter';
 
 type ReportTab = 'daily_summary' | 'attendance_trend' | 'route_performance' | 'verification_summary';
 
@@ -158,77 +161,105 @@ export default function ReportsPage() {
   const labelCls =
     'text-xs font-medium text-[var(--neutral-600)] uppercase tracking-wider';
 
+  const currentTabLabel = TABS.find((t) => t.key === activeTab)?.label ?? 'Report';
+  const reportDateForPrint = activeTab === 'attendance_trend' ? `${startDate} → ${endDate}` : date;
+
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-[var(--neutral-800)]">
-          System Reports
-        </h2>
-        <p className="text-sm text-[var(--neutral-500)]">
-          Attendance analytics, route completion rates, and verification history.
-        </p>
-      </div>
+      {/* Print-only letterhead */}
+      <PrintHeader
+        title={currentTabLabel}
+        reportType="Operational Report"
+        reportDate={reportDateForPrint}
+      />
 
-      {/* Date pickers */}
-      <div className="bg-white border border-[var(--border)] rounded-lg p-4 mb-6">
-        <div className="flex flex-wrap items-end gap-4">
-          {activeTab === 'attendance_trend' ? (
-            <>
-              <div>
-                <label className={labelCls}>Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className={inputCls + ' block mt-1'}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className={inputCls + ' block mt-1'}
-                />
-              </div>
-            </>
-          ) : (
+      {/* Screen-only page chrome */}
+      <div className="no-print">
+        <div className="mb-6">
+          <Breadcrumbs
+            items={[{ label: 'Home', href: '/' }, { label: 'Reports' }]}
+            className="mb-4"
+          />
+          <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <label className={labelCls}>Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={inputCls + ' block mt-1'}
-              />
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-bmc-700">
+                Analytics
+              </p>
+              <h1 className="font-display text-3xl font-bold text-[var(--neutral-900)] mt-1">
+                Reports & Analytics
+              </h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
+                Attendance analytics, route completion rates, and verification history.
+              </p>
+              <div className="divider-gold w-24 my-4" />
             </div>
-          )}
-          <button
-            onClick={fetchReport}
-            disabled={loading}
-            className="px-4 py-2 text-xs font-medium text-white bg-emerald-600 rounded hover:bg-emerald-700 disabled:opacity-60 transition-colors"
-          >
-            {loading ? 'Loading...' : 'Refresh'}
-          </button>
+            <Button variant="secondary" onClick={() => window.print()}>
+              Print Report
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Tab navigation */}
-      <div className="flex flex-wrap gap-1 mb-6 bg-[var(--neutral-100)] rounded-lg p-1">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-xs font-medium rounded transition-colors ${
-              activeTab === tab.key
-                ? 'bg-white text-emerald-700 shadow-sm'
-                : 'text-[var(--neutral-500)] hover:text-[var(--neutral-700)]'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {/* Date pickers */}
+        <div className="bg-white border border-[var(--border)] rounded-lg p-4 mb-6">
+          <div className="flex flex-wrap items-end gap-4">
+            {activeTab === 'attendance_trend' ? (
+              <>
+                <div>
+                  <label className={labelCls}>Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={inputCls + ' block mt-1'}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className={inputCls + ' block mt-1'}
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <label className={labelCls}>Date</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className={inputCls + ' block mt-1'}
+                />
+              </div>
+            )}
+            <button
+              onClick={fetchReport}
+              disabled={loading}
+              className="px-4 py-2 text-xs font-medium text-white bg-emerald-600 rounded hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+            >
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+
+        {/* Tab navigation */}
+        <div className="flex flex-wrap gap-1 mb-6 bg-[var(--neutral-100)] rounded-lg p-1">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 text-xs font-medium rounded transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-white text-emerald-700 shadow-sm'
+                  : 'text-[var(--neutral-500)] hover:text-[var(--neutral-700)]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Error */}
@@ -262,6 +293,9 @@ export default function ReportsPage() {
           )}
         </>
       )}
+
+      {/* Print-only footer */}
+      <PrintFooter />
     </div>
   );
 }
