@@ -7,6 +7,7 @@ const adminNav = [
   { href: '/routes', label: 'Route Management' },
   { href: '/reports', label: 'Reports' },
   { href: '/admin-logs', label: 'Verification Logs' },
+  { href: '/audit', label: 'Audit Log' },
 ];
 
 export default function AdminLayout({

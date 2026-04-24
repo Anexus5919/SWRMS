@@ -13,7 +13,7 @@ export default withAuth(
       }
     }
 
-    if (pathname.startsWith('/staff') || pathname.startsWith('/reports') || pathname.startsWith('/admin-logs')) {
+    if (pathname.startsWith('/staff') || pathname.startsWith('/reports') || pathname.startsWith('/admin-logs') || pathname.startsWith('/audit')) {
       if (role !== 'admin') {
         const redirect = role === 'supervisor' ? '/dashboard' : '/home';
         return NextResponse.redirect(new URL(redirect, req.url));
@@ -52,5 +52,6 @@ export const config = {
     '/reports/:path*',
     '/supervisor-logs/:path*',
     '/admin-logs/:path*',
+    '/audit/:path*',
   ],
 };

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/db/connection';
 import { User } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
+import { logAudit } from '@/lib/audit';
 
 /**
  * GET /api/staff — List staff members
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
  * POST /api/staff — Register new staff
  */
 export async function POST(req: NextRequest) {
-  const { error } = await requireRole('admin');
+  const { session, error } = await requireRole('admin');
   if (error) return error;
 
   await connectDB();
@@ -67,6 +68,20 @@ export async function POST(req: NextRequest) {
     phone,
     passwordHash,
     assignedRouteId: assignedRouteId || null,
+  });
+
+  // Audit log
+  await logAudit({
+    action: 'user.created',
+    category: 'user',
+    actorId: session!.user.id,
+    actorEmployeeId: (session!.user as any).employeeId,
+    actorRole: 'admin',
+    targetType: 'user',
+    targetId: user._id.toString(),
+    targetLabel: `${employeeId} · ${firstName} ${lastName} (${role})`,
+    metadata: { role, hasRoute: !!assignedRouteId },
+    req,
   });
 
   return NextResponse.json(

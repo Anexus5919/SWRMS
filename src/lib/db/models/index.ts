@@ -5,6 +5,7 @@ export { default as Reallocation } from './Reallocation';
 export { default as RouteProgress } from './RouteProgress';
 export { default as GeoPhoto } from './GeoPhoto';
 export { default as VerificationLog } from './VerificationLog';
+export { default as AuditLog } from './AuditLog';
 
 export type { IUser } from './User';
 export type { IRoute } from './Route';
@@ -13,3 +14,4 @@ export type { IReallocation } from './Reallocation';
 export type { IRouteProgress } from './RouteProgress';
 export type { IGeoPhoto } from './GeoPhoto';
 export type { IVerificationLog } from './VerificationLog';
+export type { IAuditLog, AuditAction } from './AuditLog';
