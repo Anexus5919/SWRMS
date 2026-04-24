@@ -1,0 +1,103 @@
+import type { Metadata } from 'next';
+import PublicHeader from '@/components/layout/PublicHeader';
+import PublicFooter from '@/components/layout/PublicFooter';
+
+export const metadata: Metadata = { title: 'Privacy Policy' };
+
+export default function PrivacyPage() {
+  return (
+    <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
+      <PublicHeader />
+
+      <section className="bg-bmc-900 text-white py-12 sm:py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">Legal</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold">Privacy Policy</h1>
+          <p className="text-sm text-white/70 mt-3">Effective date: April 2026 · Pilot Deployment</p>
+        </div>
+      </section>
+
+      <section className="py-12 max-w-4xl mx-auto px-4 sm:px-6 w-full">
+        <article className="bg-white border border-[var(--border)] rounded-xl shadow-doc p-8 sm:p-10 space-y-6 text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">1. Scope</h2>
+            <p>
+              This Privacy Policy applies to the Smart Workforce &amp; Route Management System (SWRMS),
+              a pilot deployment operated by the Brihanmumbai Municipal Corporation (BMC) Solid Waste
+              Management Department for Chembur Ward.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">2. Data we collect</h2>
+            <ul className="space-y-2 list-disc list-inside marker:text-gold-600">
+              <li><strong>Identity:</strong> Employee ID, name, role, ward assignment, contact phone.</li>
+              <li><strong>Authentication:</strong> Password (stored as bcrypt hash, never in plain text).</li>
+              <li><strong>Biometric (face embedding):</strong> 128-dimensional numeric vector derived from your enrollment photo, used for identity verification at field photo submissions.</li>
+              <li><strong>Location:</strong> GPS coordinates captured only at the moment of attendance check-in and at each photo submission. No continuous tracking.</li>
+              <li><strong>Device metadata:</strong> User agent and platform string, for audit purposes.</li>
+              <li><strong>Operational records:</strong> Attendance logs, route progress updates, geotagged photos.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">3. How we use it</h2>
+            <p>
+              All data is used solely for verifying field staff presence at assigned routes, monitoring
+              waste collection completion, and supporting workforce reallocation decisions by authorized
+              supervisors. Data is not sold, rented, or shared with third parties.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">4. Who can access your data</h2>
+            <ul className="space-y-2 list-disc list-inside marker:text-gold-600">
+              <li>You (your own attendance, photos, and route data via your account).</li>
+              <li>Your assigned supervisor (your attendance, photos, and verification flags for your route).</li>
+              <li>BMC SWM administrators (aggregate data and verification logs across all wards in pilot scope).</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">5. Data retention</h2>
+            <p>
+              Operational data (attendance, photos, logs) is retained for 365 days for audit purposes,
+              after which it is archived or deleted per BMC records policy. Face embeddings are retained
+              for the duration of your active employment in SWRMS.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">6. Security</h2>
+            <p>
+              Passwords are hashed using bcrypt. Sessions use signed JWT tokens with 24-hour expiry.
+              All API calls are protected by role-based access control. The system runs on encrypted
+              MongoDB Atlas infrastructure.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">7. Your rights</h2>
+            <p>
+              Under applicable Indian data protection regulations including the Digital Personal Data
+              Protection Act 2023, you have the right to access, correct, or request deletion of your
+              personal data. Contact the M-East Ward SWM Office to exercise these rights.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">8. Contact</h2>
+            <address className="not-italic">
+              Data Protection Officer<br />
+              M-East Ward Office, BMC SWM Department<br />
+              19B, 20A, Rd No. 1, Chembur Gaothan, Mumbai 400 071<br />
+              Helpdesk: 1916
+            </address>
+          </div>
+        </article>
+      </section>
+
+      <PublicFooter />
+    </div>
+  );
+}

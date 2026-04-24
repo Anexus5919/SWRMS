@@ -1,18 +1,42 @@
 @import "tailwindcss";
 
-/* BMC Design System Tokens */
-:root {
-  /* BMC Primary Blues */
-  --bmc-900: #0c2340;
-  --bmc-800: #122d4f;
-  --bmc-700: #1a4480;
-  --bmc-600: #1e5199;
-  --bmc-500: #2563eb;
-  --bmc-400: #5b8def;
-  --bmc-100: #dbeafe;
-  --bmc-50: #eff6ff;
+/* ────────────────────────────────────────────────────────── */
+/*  BMC SWRMS Design System                                    */
+/*  Government-grade visual language for Brihanmumbai          */
+/*  Municipal Corporation Solid Waste Management                */
+/* ────────────────────────────────────────────────────────── */
 
-  /* Warm Neutrals (not cold grays) */
+:root {
+  /* ── BMC Municipal Navy (deep, official) ─────────── */
+  --bmc-950: #050d1c;
+  --bmc-900: #0a1832;
+  --bmc-800: #0f244a;
+  --bmc-700: #143164;
+  --bmc-600: #1a4080;
+  --bmc-500: #2056a0;
+  --bmc-400: #4a7bc1;
+  --bmc-300: #84a3d6;
+  --bmc-200: #c2d0e7;
+  --bmc-100: #e0e8f3;
+  --bmc-50:  #f1f5fa;
+
+  /* ── BMC Crest Gold (from the official seal) ───────── */
+  --gold-900: #5c4216;
+  --gold-700: #8a6020;
+  --gold-600: #b27e2a;
+  --gold-500: #d29944;
+  --gold-400: #e0b766;
+  --gold-300: #ecd193;
+  --gold-200: #f3e2b9;
+  --gold-100: #faf0d6;
+  --gold-50:  #fdf8ec;
+
+  /* ── BMC Crest Red (from the official seal) ───────── */
+  --crest-red: #c8202d;
+  --crest-red-dark: #9c1822;
+
+  /* ── Warm document neutrals ──────────────────────────── */
+  --neutral-950: #0a0908;
   --neutral-900: #1c1917;
   --neutral-800: #292524;
   --neutral-700: #44403c;
@@ -22,68 +46,254 @@
   --neutral-300: #d6d3d1;
   --neutral-200: #e7e5e4;
   --neutral-100: #f5f5f4;
-  --neutral-50: #fafaf9;
+  --neutral-50:  #fafaf9;
 
-  /* Status Colors */
-  --status-green: #16a34a;
-  --status-green-light: #dcfce7;
-  --status-amber: #d97706;
-  --status-amber-light: #fef3c7;
-  --status-red: #dc2626;
-  --status-red-light: #fee2e2;
+  /* ── Semantic status colors ──────────────────────────── */
+  --status-green:        #15803d;
+  --status-green-light:  #dcfce7;
+  --status-green-dark:   #14532d;
+  --status-amber:        #b45309;
+  --status-amber-light:  #fef3c7;
+  --status-amber-dark:   #78350f;
+  --status-red:          #b91c1c;
+  --status-red-light:    #fee2e2;
+  --status-red-dark:     #7f1d1d;
+  --status-blue:         #1d4ed8;
+  --status-blue-light:   #dbeafe;
 
-  /* Functional */
-  --surface: #ffffff;
-  --border: #e7e5e4;
-  --text-primary: #1c1917;
-  --text-secondary: #57534e;
-  --text-muted: #78716c;
+  /* ── Functional tokens ──────────────────────────────── */
+  --page-bg:        #f7f6f1;     /* warm paper-cream — not stark white */
+  --surface:        #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #faf9f5;
+  --border:         #e5e0d3;     /* warm border, not cold gray */
+  --border-strong:  #c9c2af;
+  --text-primary:   #1c1917;
+  --text-secondary: #44403c;
+  --text-muted:     #78716c;
+  --text-inverse:   #ffffff;
+
+  /* ── Shadows (subtle, document-like) ──────────────── */
+  --shadow-sm: 0 1px 2px 0 rgba(10, 24, 50, 0.04), 0 1px 3px 0 rgba(10, 24, 50, 0.04);
+  --shadow:    0 2px 4px 0 rgba(10, 24, 50, 0.05), 0 4px 8px -2px rgba(10, 24, 50, 0.06);
+  --shadow-md: 0 4px 8px -1px rgba(10, 24, 50, 0.07), 0 8px 16px -4px rgba(10, 24, 50, 0.08);
+  --shadow-lg: 0 8px 24px -4px rgba(10, 24, 50, 0.10), 0 12px 32px -8px rgba(10, 24, 50, 0.12);
+  --shadow-xl: 0 16px 48px -8px rgba(10, 24, 50, 0.16);
+  --shadow-inset: inset 0 1px 2px 0 rgba(10, 24, 50, 0.06);
+
+  /* ── Typography ───────────────────────────────────── */
+  --font-display-stack: var(--font-poppins), var(--font-inter), system-ui, sans-serif;
+  --font-serif-stack:   var(--font-serif), Georgia, 'Times New Roman', serif;
 }
 
+/* ── Tailwind theme integration ──────────────────────── */
 @theme inline {
+  --color-bmc-950: var(--bmc-950);
   --color-bmc-900: var(--bmc-900);
   --color-bmc-800: var(--bmc-800);
   --color-bmc-700: var(--bmc-700);
   --color-bmc-600: var(--bmc-600);
   --color-bmc-500: var(--bmc-500);
   --color-bmc-400: var(--bmc-400);
+  --color-bmc-300: var(--bmc-300);
+  --color-bmc-200: var(--bmc-200);
   --color-bmc-100: var(--bmc-100);
-  --color-bmc-50: var(--bmc-50);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-status-green: var(--status-green);
+  --color-bmc-50:  var(--bmc-50);
+
+  --color-gold-700: var(--gold-700);
+  --color-gold-600: var(--gold-600);
+  --color-gold-500: var(--gold-500);
+  --color-gold-400: var(--gold-400);
+  --color-gold-300: var(--gold-300);
+  --color-gold-200: var(--gold-200);
+  --color-gold-100: var(--gold-100);
+  --color-gold-50:  var(--gold-50);
+
+  --color-crest-red: var(--crest-red);
+  --color-page-bg:   var(--page-bg);
+  --color-surface:   var(--surface);
+  --color-border:    var(--border);
+
+  --color-status-green:       var(--status-green);
   --color-status-green-light: var(--status-green-light);
-  --color-status-amber: var(--status-amber);
+  --color-status-amber:       var(--status-amber);
   --color-status-amber-light: var(--status-amber-light);
-  --color-status-red: var(--status-red);
-  --color-status-red-light: var(--status-red-light);
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-status-red:         var(--status-red);
+  --color-status-red-light:   var(--status-red-light);
+  --color-status-blue:        var(--status-blue);
+
+  --font-sans:    var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-poppins), var(--font-inter), system-ui, sans-serif;
+  --font-serif:   var(--font-serif), Georgia, 'Times New Roman', serif;
+  --font-mono:    var(--font-jetbrains), 'Courier New', monospace;
+}
+
+/* ── Base styles ─────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--neutral-50);
+  background-color: var(--page-bg);
+  background-image:
+    radial-gradient(at 10% 0%, rgba(20, 49, 100, 0.03) 0px, transparent 50%),
+    radial-gradient(at 90% 100%, rgba(178, 126, 42, 0.03) 0px, transparent 50%);
   color: var(--text-primary);
-  font-family: var(--font-sans);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Utility: status border colors for route cards */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-poppins), var(--font-inter), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.011em;
+  color: var(--text-primary);
+}
+
+.font-display { font-family: var(--font-poppins), var(--font-inter), sans-serif; }
+.font-serif   { font-family: var(--font-serif), Georgia, serif; }
+.font-mono    { font-family: var(--font-jetbrains), monospace; }
+
+/* ── Status utility classes ──────────────────────────── */
 .border-status-green { border-color: var(--status-green); }
 .border-status-amber { border-color: var(--status-amber); }
-.border-status-red { border-color: var(--status-red); }
+.border-status-red   { border-color: var(--status-red); }
 
 .bg-status-green-light { background-color: var(--status-green-light); }
 .bg-status-amber-light { background-color: var(--status-amber-light); }
-.bg-status-red-light { background-color: var(--status-red-light); }
+.bg-status-red-light   { background-color: var(--status-red-light); }
+.bg-status-blue-light  { background-color: var(--status-blue-light); }
 
 .text-status-green { color: var(--status-green); }
 .text-status-amber { color: var(--status-amber); }
-.text-status-red { color: var(--status-red); }
+.text-status-red   { color: var(--status-red); }
+.text-status-blue  { color: var(--status-blue); }
 
-/* Print stylesheet for government report printing */
-@media print {
-  .no-print { display: none !important; }
-  body { background: white; font-size: 12pt; }
+/* ── Custom shadows (document-grade) ─────────────────── */
+.shadow-doc      { box-shadow: var(--shadow); }
+.shadow-doc-md   { box-shadow: var(--shadow-md); }
+.shadow-doc-lg   { box-shadow: var(--shadow-lg); }
+.shadow-doc-xl   { box-shadow: var(--shadow-xl); }
+.shadow-inset    { box-shadow: var(--shadow-inset); }
+
+/* ── Government document patterns ────────────────────── */
+.bmc-paper {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(rgba(20, 49, 100, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 49, 100, 0.012) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
+
+.bmc-grain {
+  position: relative;
+}
+.bmc-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ── Gold accent line (used on cards, dividers) ───── */
+.divider-gold {
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--gold-400) 20%,
+    var(--gold-500) 50%,
+    var(--gold-400) 80%,
+    transparent 100%
+  );
+}
+
+.divider-bmc {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--bmc-700) 50%,
+    transparent 100%
+  );
+}
+
+/* ── Official badge (with gold border) ──────────────── */
+.bmc-badge-official {
+  background: linear-gradient(135deg, var(--bmc-800) 0%, var(--bmc-900) 100%);
+  border: 1px solid var(--gold-500);
+  color: var(--gold-200);
+  box-shadow: 0 0 0 2px var(--bmc-900), inset 0 1px 0 rgba(212, 169, 86, 0.2);
+}
+
+/* ── Focus ring (accessibility) ──────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--bmc-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
+}
+
+/* ── Smooth scroll bar (subtle, not flashy) ────────── */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--surface-sunken); }
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-300);
+  border-radius: 4px;
+  border: 2px solid var(--surface-sunken);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--neutral-400); }
+
+/* ── Animations ──────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(20, 49, 100, 0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(20, 49, 100, 0); }
+}
+.animate-pulse-glow { animation: pulse-glow 2s ease-out infinite; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 4px;
+}
+
+/* ── Print styles (for official reports) ──────────── */
+@media print {
+  body {
+    background: white;
+    background-image: none;
+    font-size: 11pt;
+  }
+  header, footer, nav, .no-print { display: none !important; }
+  .bmc-paper { background: white !important; }
+  .print-only { display: block !important; }
+  @page { margin: 1.8cm; size: A4; }
+}
+.print-only { display: none; }
+
+/* ── Utility: hide scrollbar but allow scroll ─────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
