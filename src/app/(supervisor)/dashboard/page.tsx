@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import DynamicRouteMap from '@/components/maps/DynamicRouteMap';
+import DashboardOverviewMap from '@/components/maps/DynamicDashboardOverviewMap';
 import {
   Badge,
   Breadcrumbs,
@@ -258,14 +258,26 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Map view */}
-      {view === 'map' && routes.length > 0 && (
+      {/* Map view: every active route, color-coded by staffing status */}
+      {view === 'map' && (
         <div className="mb-6">
-          <DynamicRouteMap
-            startPoint={routes[0].startPoint}
-            endPoint={routes[0].endPoint}
-            height="350px"
-          />
+          <DashboardOverviewMap routes={routes} height="450px" />
+          {routes.length > 0 && (
+            <div className="mt-2 flex items-center gap-4 text-[10px] text-[var(--neutral-500)]">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#15803d' }} />
+                Adequate
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#b45309' }} />
+                Marginal
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#b91c1c' }} />
+                Critical
+              </span>
+            </div>
+          )}
         </div>
       )}
 

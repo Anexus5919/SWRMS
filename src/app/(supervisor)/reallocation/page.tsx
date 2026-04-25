@@ -12,6 +12,15 @@ interface Suggestion {
   toRatio: number;
 }
 
+interface Staffing {
+  totalRoutes: number;
+  critical: number;
+  marginal: number;
+  adequate: number;
+  surplus: number;
+  criticalRouteCodes: string[];
+}
+
 interface ReallocationRecord {
   _id: string;
   workerId: { employeeId: string; name: { first: string; last: string } };
@@ -23,6 +32,7 @@ interface ReallocationRecord {
 
 export default function ReallocationPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [staffing, setStaffing] = useState<Staffing | null>(null);
   const [history, setHistory] = useState<ReallocationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -38,7 +48,10 @@ export default function ReallocationPage() {
       const sugData = await sugRes.json();
       const histData = await histRes.json();
 
-      if (sugData.success) setSuggestions(sugData.data);
+      if (sugData.success) {
+        setSuggestions(sugData.data.suggestions ?? []);
+        setStaffing(sugData.data.staffing ?? null);
+      }
       if (histData.success) setHistory(histData.data);
     } catch {
       setError('Failed to load reallocation data');
@@ -112,6 +125,28 @@ export default function ReallocationPage() {
         </div>
       )}
 
+      {/* Staffing summary strip - gives context for the suggestions below */}
+      {staffing && (
+        <div className="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white border border-[var(--border)] rounded-lg px-3 py-2">
+            <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Total Routes</p>
+            <p className="text-lg font-bold text-[var(--neutral-800)] mt-0.5 font-display">{staffing.totalRoutes}</p>
+          </div>
+          <div className="bg-white border border-[var(--border)] rounded-lg px-3 py-2">
+            <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Critical</p>
+            <p className={`text-lg font-bold mt-0.5 font-display ${staffing.critical > 0 ? 'text-status-red' : 'text-[var(--neutral-800)]'}`}>{staffing.critical}</p>
+          </div>
+          <div className="bg-white border border-[var(--border)] rounded-lg px-3 py-2">
+            <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Marginal</p>
+            <p className="text-lg font-bold text-status-amber mt-0.5 font-display">{staffing.marginal}</p>
+          </div>
+          <div className="bg-white border border-[var(--border)] rounded-lg px-3 py-2">
+            <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Surplus</p>
+            <p className="text-lg font-bold text-bmc-700 mt-0.5 font-display">{staffing.surplus}</p>
+          </div>
+        </div>
+      )}
+
       {/* Suggestions */}
       <div className="mb-8">
         <h3 className="text-sm font-semibold text-[var(--neutral-700)] mb-3 uppercase tracking-wider">
@@ -119,14 +154,43 @@ export default function ReallocationPage() {
         </h3>
 
         {suggestions.length === 0 ? (
-          <div className="bg-white border border-[var(--border)] rounded-lg p-6 text-center">
-            <svg className="w-8 h-8 mx-auto text-status-green mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-sm text-[var(--neutral-600)]">
-              No reallocation needed - all routes are adequately staffed.
-            </p>
-          </div>
+          staffing && staffing.critical === 0 ? (
+            // True green state - everyone is fine
+            <div className="bg-white border border-[var(--border)] rounded-lg p-6 text-center">
+              <svg className="w-8 h-8 mx-auto text-status-green mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-[var(--neutral-600)]">
+                No reallocation needed - all routes are adequately staffed.
+              </p>
+            </div>
+          ) : staffing && staffing.critical > 0 ? (
+            // Critical exists but nobody available to reallocate
+            <div className="bg-status-amber-light border border-status-amber/30 rounded-lg p-6">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-status-amber flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-status-amber">
+                    {staffing.critical} route{staffing.critical > 1 ? 's' : ''} critically understaffed - but no surplus workers available.
+                  </p>
+                  <p className="text-xs text-[var(--neutral-700)] mt-1.5">
+                    {staffing.criticalRouteCodes.join(', ')}
+                  </p>
+                  <p className="text-xs text-[var(--neutral-600)] mt-2 leading-relaxed">
+                    Reallocation needs at least one route with surplus staff (ratio &gt; 1.0) to redistribute from.
+                    Consider escalating to ward administration for emergency staffing or contacting absent workers directly.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Loading or no staffing data yet
+            <div className="bg-white border border-[var(--border)] rounded-lg p-6 text-center">
+              <p className="text-sm text-[var(--neutral-500)]">No suggestions to display.</p>
+            </div>
+          )
         ) : (
           <div className="space-y-3">
             {suggestions.map((s) => (

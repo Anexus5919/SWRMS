@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
 import { Route } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
+import { updateRouteSchema } from '@/lib/validators/schemas';
+import { logAudit } from '@/lib/audit';
 
 /**
  * GET /api/routes/[routeId] - Get a single route
@@ -28,42 +30,120 @@ export async function GET(
 }
 
 /**
- * PUT /api/routes/[routeId] - Update route (admin)
+ * Computes a field-level diff between the previous route document and the
+ * patch the admin submitted. Used for govt-grade audit trail.
+ */
+function diffChanges(before: Record<string, unknown>, patch: Record<string, unknown>) {
+  const changes: Record<string, { from: unknown; to: unknown }> = {};
+  for (const key of Object.keys(patch)) {
+    const a = (before as Record<string, unknown>)[key];
+    const b = patch[key];
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+      changes[key] = { from: a, to: b };
+    }
+  }
+  return changes;
+}
+
+/**
+ * PUT /api/routes/[routeId] - Update route (admin only).
+ * Validates body against updateRouteSchema (whitelisted fields only) and
+ * writes a tamper-evident audit log entry with field-level diff.
  */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ routeId: string }> }
 ) {
-  const { error } = await requireRole('admin');
+  const { session, error } = await requireRole('admin');
   if (error) return error;
 
   await connectDB();
   const { routeId } = await params;
-  const body = await req.json();
 
-  const route = await Route.findByIdAndUpdate(routeId, body, { new: true }).lean();
-  if (!route) {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: { code: 'INVALID_JSON', message: 'Request body must be valid JSON' } },
+      { status: 400 }
+    );
+  }
+
+  const parsed = updateRouteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid route update payload',
+          issues: parsed.error.issues,
+        },
+      },
+      { status: 400 }
+    );
+  }
+
+  const before = await Route.findById(routeId).lean();
+  if (!before) {
     return NextResponse.json(
       { success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } },
       { status: 404 }
     );
   }
 
+  const route = await Route.findByIdAndUpdate(
+    routeId,
+    parsed.data,
+    { new: true, runValidators: true }
+  ).lean();
+
+  if (!route) {
+    return NextResponse.json(
+      { success: false, error: { code: 'NOT_FOUND', message: 'Route not found after update' } },
+      { status: 404 }
+    );
+  }
+
+  await logAudit({
+    action: 'route.updated',
+    category: 'route',
+    actorId: session?.user?.id as string | undefined,
+    actorEmployeeId: (session?.user as { employeeId?: string } | undefined)?.employeeId,
+    actorRole: ((session?.user as { role?: 'admin' | 'supervisor' | 'staff' } | undefined)?.role) ?? 'admin',
+    targetType: 'route',
+    targetId: routeId,
+    targetLabel: `${route.code} ${route.name}`,
+    changes: diffChanges(before as unknown as Record<string, unknown>, parsed.data),
+    ward: route.ward,
+    req,
+  });
+
   return NextResponse.json({ success: true, data: route });
 }
 
 /**
- * DELETE /api/routes/[routeId] - Deactivate route (admin)
+ * DELETE /api/routes/[routeId] - Soft-deactivate route (admin only).
+ * Sets status='inactive'. Always writes an audit log entry.
  */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ routeId: string }> }
 ) {
-  const { error } = await requireRole('admin');
+  const { session, error } = await requireRole('admin');
   if (error) return error;
 
   await connectDB();
   const { routeId } = await params;
+
+  const before = await Route.findById(routeId).lean();
+  if (!before) {
+    return NextResponse.json(
+      { success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } },
+      { status: 404 }
+    );
+  }
 
   const route = await Route.findByIdAndUpdate(
     routeId,
@@ -73,10 +153,24 @@ export async function DELETE(
 
   if (!route) {
     return NextResponse.json(
-      { success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } },
+      { success: false, error: { code: 'NOT_FOUND', message: 'Route not found after update' } },
       { status: 404 }
     );
   }
+
+  await logAudit({
+    action: 'route.status_changed',
+    category: 'route',
+    actorId: session?.user?.id as string | undefined,
+    actorEmployeeId: (session?.user as { employeeId?: string } | undefined)?.employeeId,
+    actorRole: ((session?.user as { role?: 'admin' | 'supervisor' | 'staff' } | undefined)?.role) ?? 'admin',
+    targetType: 'route',
+    targetId: routeId,
+    targetLabel: `${route.code} ${route.name}`,
+    changes: { status: { from: before.status, to: 'inactive' } },
+    ward: route.ward,
+    req,
+  });
 
   return NextResponse.json({ success: true, data: route });
 }

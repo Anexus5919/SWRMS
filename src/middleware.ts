@@ -1,30 +1,70 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
+// Route-table-driven role gating.
+// Each entry's prefix matches the path itself OR any sub-path under it,
+// but NOT siblings that happen to share a leading substring (e.g. `/attendance`
+// must NOT match `/attendance-log`). This is the bug that previously redirected
+// supervisors clicking "Attendance Log" back to the staff `/home` page and then
+// to `/dashboard`.
+const SUPERVISOR_PREFIXES = [
+  '/dashboard',
+  '/routes',
+  '/reallocation',
+  '/attendance-log',
+  '/supervisor-logs',
+] as const;
+
+const ADMIN_PREFIXES = [
+  '/staff',
+  '/reports',
+  '/admin-logs',
+  '/audit',
+] as const;
+
+const STAFF_PREFIXES = [
+  '/home',
+  '/onboarding',
+  '/attendance',
+  '/my-route',
+  '/progress',
+  '/photo-check',
+] as const;
+
+function matchesPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(prefix + '/');
+}
+
+function matchesAny(pathname: string, prefixes: readonly string[]): boolean {
+  return prefixes.some((p) => matchesPrefix(pathname, p));
+}
+
 export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
     const role = req.nextauth.token?.role as string;
 
-    // Role-based route protection
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/routes') || pathname.startsWith('/reallocation') || pathname.startsWith('/attendance-log') || pathname.startsWith('/supervisor-logs')) {
+    if (matchesAny(pathname, SUPERVISOR_PREFIXES)) {
       if (role !== 'supervisor' && role !== 'admin') {
         return NextResponse.redirect(new URL('/home', req.url));
       }
+      return NextResponse.next();
     }
 
-    if (pathname.startsWith('/staff') || pathname.startsWith('/reports') || pathname.startsWith('/admin-logs') || pathname.startsWith('/audit')) {
+    if (matchesAny(pathname, ADMIN_PREFIXES)) {
       if (role !== 'admin') {
         const redirect = role === 'supervisor' ? '/dashboard' : '/home';
         return NextResponse.redirect(new URL(redirect, req.url));
       }
+      return NextResponse.next();
     }
 
-    if (pathname.startsWith('/home') || pathname.startsWith('/onboarding') || pathname.startsWith('/attendance') || pathname.startsWith('/my-route') || pathname.startsWith('/progress') || pathname.startsWith('/photo-check')) {
+    if (matchesAny(pathname, STAFF_PREFIXES)) {
       if (role !== 'staff') {
         const redirect = role === 'supervisor' ? '/dashboard' : '/reports';
         return NextResponse.redirect(new URL(redirect, req.url));
       }
+      return NextResponse.next();
     }
 
     return NextResponse.next();

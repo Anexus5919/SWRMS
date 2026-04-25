@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
 import { GeoPhoto, User, VerificationLog, Attendance, Route } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
-import { uploadPhotoSchema } from '@/lib/validators/schemas';
+import { uploadPhotoSchema, MAX_PHOTO_BASE64_LENGTH } from '@/lib/validators/schemas';
 import { compareFaceDescriptors } from '@/lib/face/compare';
 import { todayIST } from '@/lib/utils/timezone';
 
@@ -13,10 +13,32 @@ export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('staff');
   if (error) return error;
 
+  // Defensive payload-size check before parsing JSON. ~1.4MB photo + ~3KB
+  // descriptor + envelope. Anything over 1.6MB is rejected up-front to
+  // avoid OOM on giant uploads.
+  const contentLength = Number(req.headers.get('content-length') ?? 0);
+  if (contentLength > MAX_PHOTO_BASE64_LENGTH + 200_000) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: 'PAYLOAD_TOO_LARGE', message: 'Photo exceeds size limit' },
+      },
+      { status: 413 }
+    );
+  }
+
   try {
     await connectDB();
 
-    const body = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Request body must be valid JSON' } },
+        { status: 400 }
+      );
+    }
     const parsed = uploadPhotoSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
