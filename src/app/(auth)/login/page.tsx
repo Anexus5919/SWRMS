@@ -116,8 +116,12 @@ export default function LoginPage() {
         {/* ── Bottom: Sanskrit motto ──────────────────────────── */}
         <div className="relative z-10 mt-auto pt-6 -mb-6 xl:-mb-10 text-center">
           <p
-            className="text-[28px] xl:text-[34px] font-bold tracking-wide opacity-[0.55]"
-            style={{ color: '#ebd093', fontFamily: 'var(--font-display, serif)' }}
+            className="text-[28px] xl:text-[34px] font-bold tracking-wide"
+            style={{
+              color: 'rgba(235, 208, 147, 0.48)',
+              WebkitTextStroke: '0.7px #dcae63',
+              fontFamily: 'var(--font-display, serif)',
+            }}
           >
             यतो धर्मस्ततो जयः
           </p>
