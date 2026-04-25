@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import BMCSeal from '@/components/brand/BMCSeal';
 
 export default function ForgotPasswordPage() {
   const [employeeId, setEmployeeId] = useState('');
@@ -34,8 +33,17 @@ export default function ForgotPasswordPage() {
         />
 
         {/* BMC HQ building backdrop - actual sketch (invert + screen so
-            only the line strokes show, no visible background patch) */}
-        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none">
+            only the line strokes show). Mask fades the sketch out behind
+            the upper title block so it does not collide with the emblem. */}
+        <div
+          className="absolute inset-x-0 bottom-0 top-0 pointer-events-none"
+          style={{
+            maskImage:
+              'linear-gradient(to bottom, transparent 0%, transparent 36%, rgba(0,0,0,0.55) 52%, black 70%)',
+            WebkitMaskImage:
+              'linear-gradient(to bottom, transparent 0%, transparent 36%, rgba(0,0,0,0.55) 52%, black 70%)',
+          }}
+        >
           <Image
             src="/bmc_complex.png"
             alt=""
@@ -46,37 +54,52 @@ export default function ForgotPasswordPage() {
             style={{
               filter: 'invert(1) brightness(1.4) contrast(1.05)',
               mixBlendMode: 'screen',
+              transform: 'scale(1.08) translateX(-2%)',
+              transformOrigin: 'bottom center',
             }}
           />
         </div>
 
-        {/* Top: Government identifier */}
-        <div className="relative z-10 flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-12 bg-gold-500 rounded-full" />
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-gold-300 font-semibold">
-                Government of Maharashtra
-              </p>
-              <p className="text-xs text-white/70 mt-0.5">Brihanmumbai Municipal Corporation</p>
-            </div>
-          </div>
-        </div>
+        {/* Top: Full identity stack, centered */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-lg mx-auto">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-gold-300 font-semibold">
+            Government of Maharashtra
+          </p>
+          <p className="text-xs text-white/70 mt-0.5">
+            Brihanmumbai Municipal Corporation
+          </p>
 
-        {/* Center: Seal + title - sits in upper third */}
-        <div className="relative z-10 flex flex-col items-center text-center max-w-lg mx-auto mt-16 xl:mt-24">
-          <BMCSeal size={88} variant="full" />
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-300 font-semibold mt-5">
+          <Image
+            src="/bmc_logo.png"
+            alt="Brihanmumbai Municipal Corporation"
+            width={76}
+            height={76}
+            priority
+            className="mt-4 drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+          />
+
+          <p className="text-[9px] uppercase tracking-[0.28em] text-gold-300 font-semibold mt-3">
             Account Recovery
           </p>
-          <div className="w-20 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-4" />
-          <h1 className="font-display text-4xl xl:text-5xl font-bold tracking-tight text-white">
+          <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-2.5" />
+
+          <h1 className="font-display text-3xl xl:text-4xl font-bold tracking-tight text-white">
             Reset your access
           </h1>
-          <p className="text-sm text-white/70 mt-4 leading-relaxed max-w-md">
+          <p className="text-xs text-white/70 mt-3 leading-relaxed max-w-md">
             For audit and security reasons, password resets in SWRMS require
             administrator approval. Submit your request below - your ward
             administrator will be notified.
+          </p>
+        </div>
+
+        {/* Bottom: Sanskrit motto */}
+        <div className="relative z-10 mt-auto pt-6 -mb-6 xl:-mb-10 text-center">
+          <p
+            className="text-[28px] xl:text-[34px] font-bold tracking-wide opacity-[0.55]"
+            style={{ color: '#ebd093', fontFamily: 'var(--font-display, serif)' }}
+          >
+            यतो धर्मस्ततो जयः
           </p>
         </div>
 
@@ -85,7 +108,7 @@ export default function ForgotPasswordPage() {
       {/* Form */}
       <div className="relative flex flex-col">
         <div className="lg:hidden bg-bmc-900 text-white px-5 py-4 flex items-center gap-3">
-          <BMCSeal size={40} variant="minimal" />
+          <Image src="/bmc_logo.png" alt="BMC" width={40} height={40} priority />
           <p className="text-sm font-display font-bold">SWRMS · Reset Password</p>
         </div>
 

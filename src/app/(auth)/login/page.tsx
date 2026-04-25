@@ -5,7 +5,6 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import BMCSeal from '@/components/brand/BMCSeal';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,13 +13,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const today = new Date().toLocaleDateString('en-IN', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,9 +50,18 @@ export default function LoginPage() {
         />
 
         {/* BMC HQ Heritage Building - actual sketch image as backdrop.
-            invert + screen blend makes only the line strokes visible,
-            so the white PNG background does NOT create a visible patch. */}
-        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none">
+            invert + screen blend shows only the line strokes; a vertical
+            mask fades the sketch out behind the emblem/title block so it
+            does not visually collide with them. */}
+        <div
+          className="absolute inset-x-0 bottom-0 top-0 pointer-events-none"
+          style={{
+            maskImage:
+              'linear-gradient(to bottom, transparent 0%, transparent 36%, rgba(0,0,0,0.55) 52%, black 70%)',
+            WebkitMaskImage:
+              'linear-gradient(to bottom, transparent 0%, transparent 36%, rgba(0,0,0,0.55) 52%, black 70%)',
+          }}
+        >
           <Image
             src="/bmc_complex.png"
             alt=""
@@ -71,40 +72,54 @@ export default function LoginPage() {
             style={{
               filter: 'invert(1) brightness(1.4) contrast(1.05)',
               mixBlendMode: 'screen',
+              // Scale slightly past container, then shift right so the
+              // building's apex sits at panel center. Excess on the left
+              // is clipped by the parent's overflow-hidden; the right
+              // edge stays fully covered (no blue gap).
+              transform: 'scale(1.08) translateX(-2%)',
+              transformOrigin: 'bottom center',
             }}
           />
         </div>
 
-        {/* ── Top: Government identifier ───────────────── */}
-        <div className="relative z-10 flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-12 bg-gold-500 rounded-full" />
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-gold-300 font-semibold">
-                Government of Maharashtra
-              </p>
-              <p className="text-xs text-white/70 mt-0.5">
-                Brihanmumbai Municipal Corporation
-              </p>
-            </div>
-          </div>
-          <p className="text-[11px] text-white/50">{today}</p>
-        </div>
+        {/* ── Top: Full identity stack, centered ──────────────── */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-lg mx-auto">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-gold-300 font-semibold">
+            Government of Maharashtra
+          </p>
+          <p className="text-xs text-white/70 mt-0.5">
+            Brihanmumbai Municipal Corporation
+          </p>
 
-        {/* ── Center: Seal + Title block - sits in upper third ─── */}
-        <div className="relative z-10 flex flex-col items-center text-center max-w-lg mx-auto mt-16 xl:mt-24">
-          <BMCSeal size={88} variant="full" />
+          <Image
+            src="/bmc_logo.png"
+            alt="Brihanmumbai Municipal Corporation"
+            width={76}
+            height={76}
+            priority
+            className="mt-4 drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+          />
 
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-300 font-semibold mt-5">
+          <p className="text-[9px] uppercase tracking-[0.28em] text-gold-300 font-semibold mt-3">
             Solid Waste Management Department
           </p>
-          <div className="w-20 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-4" />
+          <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-2.5" />
 
-          <h1 className="font-display text-5xl xl:text-6xl font-bold tracking-tight text-white">
+          <h1 className="font-display text-4xl xl:text-5xl font-bold tracking-tight text-white">
             SWRMS
           </h1>
-          <p className="font-display text-base text-white/80 mt-2 font-medium">
+          <p className="font-display text-sm text-white/80 mt-1.5 font-medium">
             Smart Workforce &amp; Route Management
+          </p>
+        </div>
+
+        {/* ── Bottom: Sanskrit motto ──────────────────────────── */}
+        <div className="relative z-10 mt-auto pt-6 -mb-6 xl:-mb-10 text-center">
+          <p
+            className="text-[28px] xl:text-[34px] font-bold tracking-wide opacity-[0.55]"
+            style={{ color: '#ebd093', fontFamily: 'var(--font-display, serif)' }}
+          >
+            यतो धर्मस्ततो जयः
           </p>
         </div>
 
@@ -114,7 +129,13 @@ export default function LoginPage() {
       <div className="relative flex flex-col">
         {/* Mobile-only top header */}
         <div className="lg:hidden bg-bmc-900 text-white px-5 py-4 flex items-center gap-3">
-          <BMCSeal size={40} variant="minimal" />
+          <Image
+            src="/bmc_logo.png"
+            alt="BMC"
+            width={40}
+            height={40}
+            priority
+          />
           <div className="leading-tight">
             <p className="text-[9px] uppercase tracking-[0.18em] text-gold-300 font-semibold">
               BMC · SWM
