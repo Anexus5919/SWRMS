@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BMCSeal from '@/components/brand/BMCSeal';
-import { MumbaiSkyline, WasteCollectionTruck } from '@/components/brand/Illustrations';
+import { BMCHeritageBuilding } from '@/components/brand/Illustrations';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,38 +47,38 @@ export default function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_1fr] bg-[var(--page-bg)]">
       {/* ─── LEFT: BMC Branded Panel ──────────────────────────── */}
       <div className="relative bg-bmc-900 text-white overflow-hidden hidden lg:flex flex-col justify-between p-10 xl:p-14">
-        {/* Decorative background pattern */}
+        {/* Subtle dot grid background */}
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.05]"
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M30 0 L60 30 L30 60 L0 30 Z' fill='none' stroke='white' stroke-width='1'/></svg>\")",
-            backgroundSize: '60px 60px',
+              "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            backgroundSize: '24px 24px',
           }}
         />
 
-        {/* Top-right gold radial */}
+        {/* Top-right warm gold radial */}
         <div
-          className="absolute -top-20 -right-20 w-96 h-96 rounded-full opacity-20"
-          style={{
-            background: 'radial-gradient(circle, var(--gold-500) 0%, transparent 70%)',
-          }}
+          className="absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full opacity-25"
+          style={{ background: 'radial-gradient(circle, var(--gold-500) 0%, transparent 70%)' }}
         />
 
-        {/* Bottom-left blue glow */}
-        <div
-          className="absolute -bottom-24 -left-24 w-[28rem] h-[28rem] rounded-full opacity-30"
-          style={{
-            background: 'radial-gradient(circle, var(--bmc-500) 0%, transparent 70%)',
-          }}
+        {/* BMC HQ Heritage Building — anchored to bottom, full-width architectural backdrop */}
+        <div className="absolute inset-x-0 bottom-0 h-[58%] flex items-end justify-center pointer-events-none text-bmc-700">
+          <BMCHeritageBuilding className="w-full max-w-[760px] opacity-60" />
+        </div>
+
+        {/* Soft gradient at bottom blends building into navy floor */}
+        <div className="absolute bottom-0 inset-x-0 h-32 pointer-events-none"
+          style={{ background: 'linear-gradient(to top, var(--bmc-900) 0%, transparent 100%)' }}
         />
 
-        {/* Header */}
+        {/* ── Top: Government identifier ───────────────── */}
         <div className="relative z-10 flex items-start justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div className="w-1 h-12 bg-gold-500 rounded-full" />
             <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-gold-300 font-semibold">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-gold-300 font-semibold">
                 Government of Maharashtra
               </p>
               <p className="text-xs text-white/70 mt-0.5">
@@ -89,47 +89,63 @@ export default function LoginPage() {
           <p className="text-[11px] text-white/50">{today}</p>
         </div>
 
-        {/* Center: Seal + Title */}
-        <div className="relative z-10 flex flex-col items-center text-center max-w-md mx-auto">
-          {/* Glow behind seal */}
-          <div className="relative">
+        {/* ── Center: Seal + Title block ──────────────── */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-lg mx-auto pt-4">
+          {/* Compact seal */}
+          <div className="relative inline-block">
             <div
-              className="absolute inset-0 blur-2xl opacity-40"
-              style={{ background: 'radial-gradient(circle, var(--gold-400) 0%, transparent 70%)' }}
+              className="absolute -inset-3 blur-xl opacity-50"
+              style={{ background: 'radial-gradient(circle, var(--gold-400) 0%, transparent 65%)' }}
             />
-            <BMCSeal size={140} variant="full" className="relative" />
+            <BMCSeal size={96} variant="full" className="relative" />
           </div>
 
-          <div className="mt-6">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-gold-300 font-semibold">
-              Solid Waste Management Department
-            </p>
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-3" />
-            <h1 className="font-display text-3xl xl:text-4xl font-bold tracking-tight text-white">
-              SWRMS
-            </h1>
-            <p className="font-display text-base text-white/80 mt-1">
-              Smart Workforce &amp; Route Management
-            </p>
-            <p className="text-xs text-white/50 mt-2 leading-relaxed">
-              Geo-fenced attendance · AI-verified field photos · Real-time route tracking
-            </p>
-          </div>
+          {/* Department label */}
+          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-300 font-semibold mt-5">
+            Solid Waste Management Department
+          </p>
+          <div className="w-20 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-4" />
 
-          {/* Truck illustration */}
-          <div className="mt-8 w-full max-w-xs text-bmc-300">
-            <WasteCollectionTruck className="w-full" />
+          {/* Wordmark */}
+          <h1 className="font-display text-5xl xl:text-6xl font-bold tracking-tight text-white">
+            SWRMS
+          </h1>
+          <p className="font-display text-lg text-white/85 mt-2 font-medium">
+            Smart Workforce &amp; Route Management
+          </p>
+          <p className="text-xs text-white/55 mt-3 leading-relaxed max-w-md">
+            Geo-fenced attendance · AI-verified field photos · Real-time route tracking
+          </p>
+
+          {/* Three sub-pillars with gold dividers */}
+          <div className="mt-8 grid grid-cols-3 gap-2 max-w-md w-full">
+            {[
+              { num: '24', label: 'BMC Wards' },
+              { num: '9000', label: 'Tonnes / day' },
+              { num: '11', label: 'UN SDG' },
+            ].map((s, i) => (
+              <div key={s.label} className={i === 1 ? 'border-x border-white/10' : ''}>
+                <p className="font-display text-2xl font-bold text-gold-400">{s.num}</p>
+                <p className="text-[10px] text-white/50 uppercase tracking-wider mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Bottom skyline + footer */}
-        <div className="relative z-10">
-          <div className="text-bmc-400 mb-4">
-            <MumbaiSkyline className="w-full opacity-50" />
-          </div>
-          <div className="flex items-center justify-between text-[10px] text-white/40 pt-4 border-t border-white/10">
-            <p>Chembur Ward Office · Mumbai 400071</p>
-            <p>SDG 11 · Sustainable Cities</p>
+        {/* ── Bottom: Address + SDG strip ─────────────── */}
+        <div className="relative z-10 mt-auto">
+          <div className="flex items-center justify-between text-[10px] text-white/45 pt-4 border-t border-white/10">
+            <div className="flex items-center gap-1.5">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              </svg>
+              <span>Chembur Ward Office · Mumbai 400 071</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-gold-400" />
+              <span>SDG 11 · Sustainable Cities</span>
+            </div>
           </div>
         </div>
       </div>
