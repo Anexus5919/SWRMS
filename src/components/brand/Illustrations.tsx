@@ -10,6 +10,265 @@ interface IllustrationProps {
 }
 
 /**
+ * BMCHeritageBuilding — line drawing of the iconic
+ * Brihanmumbai Municipal Corporation HQ (Indo-Saracenic style,
+ * central tower with onion dome, flanking spires, arched arcades,
+ * statue of "Urbs Prima in Indis" on the central facade).
+ *
+ * Built as a single-color stroked SVG so it works as a watermark
+ * in any color (just set className text-color).
+ */
+export function BMCHeritageBuilding({ className = '' }: IllustrationProps) {
+  return (
+    <svg
+      viewBox="0 0 800 480"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+    >
+      {/* ── Ground line ─────────────────────────────── */}
+      <line x1="0" y1="470" x2="800" y2="470" strokeWidth="1.5" />
+
+      {/* ── Left side wing ─────────────────────────── */}
+      <g>
+        {/* Main mass */}
+        <rect x="80" y="280" width="180" height="190" />
+        {/* Roofline crenellations */}
+        <line x1="80" y1="280" x2="260" y2="280" strokeWidth="1.5" />
+        <line x1="80" y1="275" x2="260" y2="275" />
+        {/* Window arches row 1 (lower) */}
+        <g strokeWidth="0.9">
+          {[100, 132, 164, 196, 228].map((x) => (
+            <g key={`l1-${x}`}>
+              <path d={`M ${x} 430 Q ${x} 410 ${x + 14} 410 Q ${x + 28} 410 ${x + 28} 430 Z`} />
+              <line x1={x + 14} y1="410" x2={x + 14} y2="430" />
+            </g>
+          ))}
+        </g>
+        {/* Window arches row 2 (middle) */}
+        <g strokeWidth="0.9">
+          {[100, 132, 164, 196, 228].map((x) => (
+            <g key={`l2-${x}`}>
+              <path d={`M ${x} 380 Q ${x} 358 ${x + 14} 358 Q ${x + 28} 358 ${x + 28} 380 Z`} />
+              <line x1={x + 14} y1="358" x2={x + 14} y2="380" />
+            </g>
+          ))}
+        </g>
+        {/* Window arches row 3 (upper) */}
+        <g strokeWidth="0.9">
+          {[100, 132, 164, 196, 228].map((x) => (
+            <path key={`l3-${x}`} d={`M ${x} 320 Q ${x} 300 ${x + 14} 300 Q ${x + 28} 300 ${x + 28} 320 Z`} />
+          ))}
+        </g>
+        {/* Floor divider lines */}
+        <line x1="80" y1="343" x2="260" y2="343" strokeWidth="0.8" />
+        <line x1="80" y1="395" x2="260" y2="395" strokeWidth="0.8" />
+      </g>
+
+      {/* ── Left flanking tower (small dome) ──────── */}
+      <g>
+        <rect x="240" y="220" width="56" height="220" />
+        {/* Dome base */}
+        <rect x="232" y="208" width="72" height="14" />
+        {/* Onion dome */}
+        <path d="M 240 208 Q 240 175 250 165 Q 256 158 268 158 Q 280 158 286 165 Q 296 175 296 208" strokeWidth="1.3" />
+        {/* Dome ribs */}
+        <line x1="252" y1="170" x2="252" y2="208" strokeWidth="0.6" />
+        <line x1="268" y1="158" x2="268" y2="208" strokeWidth="0.6" />
+        <line x1="284" y1="170" x2="284" y2="208" strokeWidth="0.6" />
+        {/* Spire on dome */}
+        <line x1="268" y1="158" x2="268" y2="142" strokeWidth="1.5" />
+        <circle cx="268" cy="142" r="3" />
+        <line x1="268" y1="139" x2="268" y2="130" strokeWidth="0.8" />
+        {/* Tower window */}
+        <rect x="252" y="270" width="32" height="30" />
+        <line x1="268" y1="270" x2="268" y2="300" strokeWidth="0.6" />
+        <line x1="252" y1="285" x2="284" y2="285" strokeWidth="0.6" />
+        {/* Tower arches */}
+        <path d="M 252 360 Q 252 340 268 340 Q 284 340 284 360 Z" />
+        <path d="M 252 410 Q 252 390 268 390 Q 284 390 284 410 Z" />
+      </g>
+
+      {/* ── CENTRAL TOWER (the iconic one) ─────────── */}
+      <g>
+        {/* Central mass base */}
+        <rect x="320" y="260" width="160" height="210" />
+
+        {/* Triangular pediment with statue */}
+        <path d="M 320 260 L 400 200 L 480 260 Z" strokeWidth="1.3" />
+        {/* Pediment inner line */}
+        <path d="M 332 256 L 400 210 L 468 256" strokeWidth="0.7" />
+
+        {/* Statue niche on pediment */}
+        <g transform="translate(400, 240)">
+          <ellipse cx="0" cy="-3" rx="3" ry="4" />
+          <line x1="0" y1="1" x2="0" y2="11" strokeWidth="1.4" />
+          <line x1="0" y1="3" x2="-5" y2="7" strokeWidth="0.7" />
+          <line x1="0" y1="3" x2="5" y2="7" strokeWidth="0.7" />
+          <line x1="-3" y1="11" x2="-3" y2="18" strokeWidth="1" />
+          <line x1="3" y1="11" x2="3" y2="18" strokeWidth="1" />
+        </g>
+
+        {/* Sign band */}
+        <rect x="335" y="265" width="130" height="10" strokeWidth="0.8" />
+
+        {/* Central tower body (above pediment, the main rising tower) */}
+        <rect x="350" y="120" width="100" height="80" strokeWidth="1.3" />
+        {/* Sub-pediment trim */}
+        <rect x="345" y="118" width="110" height="4" />
+        {/* Tower windows (vertical narrow arched) */}
+        <g strokeWidth="0.9">
+          <path d="M 365 175 Q 365 145 375 145 Q 385 145 385 175 Z" />
+          <path d="M 395 175 Q 395 145 405 145 Q 415 145 415 175 Z" />
+          <path d="M 425 175 Q 425 145 435 145 Q 445 145 445 175 Z" />
+        </g>
+
+        {/* Tower upper section (where the dome sits) */}
+        <rect x="362" y="78" width="76" height="44" strokeWidth="1.3" />
+        {/* Clock face */}
+        <circle cx="400" cy="100" r="14" strokeWidth="1.2" />
+        <circle cx="400" cy="100" r="11" strokeWidth="0.6" />
+        {/* Clock hands */}
+        <line x1="400" y1="100" x2="400" y2="92" strokeWidth="1" />
+        <line x1="400" y1="100" x2="406" y2="103" strokeWidth="1" />
+        <circle cx="400" cy="100" r="1.2" fill="currentColor" stroke="none" />
+        {/* Clock tick marks */}
+        {[0, 90, 180, 270].map((deg) => {
+          const rad = (deg * Math.PI) / 180;
+          const x1 = 400 + Math.cos(rad) * 12;
+          const y1 = 100 + Math.sin(rad) * 12;
+          const x2 = 400 + Math.cos(rad) * 14;
+          const y2 = 100 + Math.sin(rad) * 14;
+          return <line key={deg} x1={x1} y1={y1} x2={x2} y2={y2} strokeWidth="0.7" />;
+        })}
+
+        {/* Dome base / drum */}
+        <rect x="356" y="60" width="88" height="20" strokeWidth="1.2" />
+        {/* Decorative mini-arches on drum */}
+        <g strokeWidth="0.6">
+          {[366, 380, 394, 408, 422, 436].map((x, i) => (
+            <path key={i} d={`M ${x} 78 Q ${x} 68 ${x + 6} 68 Q ${x + 12} 68 ${x + 12} 78`} />
+          ))}
+        </g>
+
+        {/* MAIN ONION DOME */}
+        <path d="M 360 60 Q 360 25 380 12 Q 400 0 420 0 Q 420 0 440 12 Q 460 25 460 60" strokeWidth="1.6" />
+        {/* Dome ribs (vertical detail lines) */}
+        <line x1="378" y1="15" x2="378" y2="60" strokeWidth="0.7" />
+        <line x1="395" y1="6" x2="395" y2="60" strokeWidth="0.7" />
+        <line x1="410" y1="0" x2="410" y2="60" strokeWidth="0.7" />
+        <line x1="425" y1="6" x2="425" y2="60" strokeWidth="0.7" />
+        <line x1="442" y1="15" x2="442" y2="60" strokeWidth="0.7" />
+
+        {/* Main spire on top of dome */}
+        <line x1="410" y1="0" x2="410" y2="-32" strokeWidth="2" />
+        <circle cx="410" cy="-12" r="4" strokeWidth="1.2" />
+        <circle cx="410" cy="-22" r="2" strokeWidth="1" />
+        <line x1="410" y1="-32" x2="410" y2="-42" strokeWidth="0.8" />
+        <path d="M 405 -38 L 410 -42 L 415 -38" strokeWidth="0.8" />
+
+        {/* Lower main facade arches */}
+        <g strokeWidth="0.9">
+          <path d="M 332 425 Q 332 395 346 395 Q 360 395 360 425 Z" />
+          <line x1="346" y1="395" x2="346" y2="425" />
+          <path d="M 372 425 Q 372 395 386 395 Q 400 395 400 425 Z" />
+          <line x1="386" y1="395" x2="386" y2="425" />
+          <path d="M 412 425 Q 412 395 426 395 Q 440 395 440 425 Z" />
+          <line x1="426" y1="395" x2="426" y2="425" />
+          <path d="M 452 425 Q 452 395 466 395 Q 478 395 478 425" />
+          <line x1="466" y1="395" x2="466" y2="425" />
+        </g>
+
+        {/* Floor divider on main facade */}
+        <line x1="320" y1="380" x2="480" y2="380" strokeWidth="0.8" />
+
+        {/* Secondary windows (round) on main facade */}
+        <g strokeWidth="0.9">
+          <circle cx="346" cy="345" r="9" />
+          <circle cx="386" cy="345" r="9" />
+          <circle cx="426" cy="345" r="9" />
+          <circle cx="466" cy="345" r="9" />
+          {/* Crosses inside (window mullions) */}
+          <line x1="337" y1="345" x2="355" y2="345" strokeWidth="0.5" />
+          <line x1="346" y1="336" x2="346" y2="354" strokeWidth="0.5" />
+          <line x1="377" y1="345" x2="395" y2="345" strokeWidth="0.5" />
+          <line x1="386" y1="336" x2="386" y2="354" strokeWidth="0.5" />
+          <line x1="417" y1="345" x2="435" y2="345" strokeWidth="0.5" />
+          <line x1="426" y1="336" x2="426" y2="354" strokeWidth="0.5" />
+          <line x1="457" y1="345" x2="475" y2="345" strokeWidth="0.5" />
+          <line x1="466" y1="336" x2="466" y2="354" strokeWidth="0.5" />
+        </g>
+
+        {/* Decorative cornice */}
+        <line x1="320" y1="318" x2="480" y2="318" strokeWidth="0.6" />
+      </g>
+
+      {/* ── Right flanking tower (mirror of left) ───── */}
+      <g>
+        <rect x="504" y="220" width="56" height="220" />
+        <rect x="496" y="208" width="72" height="14" />
+        <path d="M 504 208 Q 504 175 514 165 Q 520 158 532 158 Q 544 158 550 165 Q 560 175 560 208" strokeWidth="1.3" />
+        <line x1="516" y1="170" x2="516" y2="208" strokeWidth="0.6" />
+        <line x1="532" y1="158" x2="532" y2="208" strokeWidth="0.6" />
+        <line x1="548" y1="170" x2="548" y2="208" strokeWidth="0.6" />
+        <line x1="532" y1="158" x2="532" y2="142" strokeWidth="1.5" />
+        <circle cx="532" cy="142" r="3" />
+        <line x1="532" y1="139" x2="532" y2="130" strokeWidth="0.8" />
+        <rect x="516" y="270" width="32" height="30" />
+        <line x1="532" y1="270" x2="532" y2="300" strokeWidth="0.6" />
+        <line x1="516" y1="285" x2="548" y2="285" strokeWidth="0.6" />
+        <path d="M 516 360 Q 516 340 532 340 Q 548 340 548 360 Z" />
+        <path d="M 516 410 Q 516 390 532 390 Q 548 410 548 410 Z" />
+      </g>
+
+      {/* ── Right wing (mirror of left) ─────────────── */}
+      <g>
+        <rect x="540" y="280" width="180" height="190" />
+        <line x1="540" y1="280" x2="720" y2="280" strokeWidth="1.5" />
+        <line x1="540" y1="275" x2="720" y2="275" />
+        <g strokeWidth="0.9">
+          {[560, 592, 624, 656, 688].map((x) => (
+            <g key={`r1-${x}`}>
+              <path d={`M ${x} 430 Q ${x} 410 ${x + 14} 410 Q ${x + 28} 410 ${x + 28} 430 Z`} />
+              <line x1={x + 14} y1="410" x2={x + 14} y2="430" />
+            </g>
+          ))}
+        </g>
+        <g strokeWidth="0.9">
+          {[560, 592, 624, 656, 688].map((x) => (
+            <g key={`r2-${x}`}>
+              <path d={`M ${x} 380 Q ${x} 358 ${x + 14} 358 Q ${x + 28} 358 ${x + 28} 380 Z`} />
+              <line x1={x + 14} y1="358" x2={x + 14} y2="380" />
+            </g>
+          ))}
+        </g>
+        <g strokeWidth="0.9">
+          {[560, 592, 624, 656, 688].map((x) => (
+            <path key={`r3-${x}`} d={`M ${x} 320 Q ${x} 300 ${x + 14} 300 Q ${x + 28} 300 ${x + 28} 320 Z`} />
+          ))}
+        </g>
+        <line x1="540" y1="343" x2="720" y2="343" strokeWidth="0.8" />
+        <line x1="540" y1="395" x2="720" y2="395" strokeWidth="0.8" />
+      </g>
+
+      {/* ── Lampposts and street furniture suggestion ── */}
+      <g strokeWidth="1.2">
+        <line x1="40" y1="470" x2="40" y2="380" />
+        <circle cx="40" cy="376" r="4" />
+        <line x1="760" y1="470" x2="760" y2="380" />
+        <circle cx="760" cy="376" r="4" />
+      </g>
+    </svg>
+  );
+}
+
+/**
  * MumbaiSkyline — stylized line illustration of Mumbai's
  * iconic skyline (BMC HQ, Gateway of India, modern towers,
  * Bandra-Worli Sea Link suggestion).

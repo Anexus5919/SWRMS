@@ -105,7 +105,7 @@ export default function LoginPage() {
               Solid Waste Management Department
             </p>
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-3" />
-            <h1 className="font-display text-3xl xl:text-4xl font-bold tracking-tight">
+            <h1 className="font-display text-3xl xl:text-4xl font-bold tracking-tight text-white">
               SWRMS
             </h1>
             <p className="font-display text-base text-white/80 mt-1">

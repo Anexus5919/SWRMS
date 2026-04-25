@@ -9,6 +9,7 @@ import {
   SanitationWorker,
   RoutePin,
   GeofenceMap,
+  BMCHeritageBuilding,
 } from '@/components/brand/Illustrations';
 import PublicFooter from '@/components/layout/PublicFooter';
 
@@ -85,6 +86,11 @@ export default async function HomePage() {
           background: 'radial-gradient(circle, var(--gold-500), transparent 70%)',
         }} />
 
+        {/* BMC HQ heritage building watermark — extra layer of brand */}
+        <div className="absolute left-0 right-0 bottom-0 h-[70%] flex items-end justify-center pointer-events-none text-bmc-700 opacity-[0.18]">
+          <BMCHeritageBuilding className="w-full max-w-[1100px]" />
+        </div>
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-24 grid lg:grid-cols-[1.2fr_1fr] gap-12 items-center">
           <div className="animate-fade-in">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 mb-5">
@@ -94,7 +100,7 @@ export default async function HomePage() {
               </span>
             </div>
 
-            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-white">
               Cleaner streets begin with{' '}
               <span className="text-gold-400">accountable workforce.</span>
             </h1>
@@ -260,7 +266,7 @@ export default async function HomePage() {
                 <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/5" />
                 <div className="relative">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-300 mb-2">For field staff</p>
-                  <h3 className="font-display text-xl font-bold">Mobile-first PWA</h3>
+                  <h3 className="font-display text-xl font-bold text-white">Mobile-first PWA</h3>
                 </div>
               </div>
               <div className="p-6">
@@ -281,7 +287,7 @@ export default async function HomePage() {
                 <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-gold-500/10" />
                 <div className="relative">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-300 mb-2">For supervisors</p>
-                  <h3 className="font-display text-xl font-bold">Live Dashboard</h3>
+                  <h3 className="font-display text-xl font-bold text-white">Live Dashboard</h3>
                 </div>
               </div>
               <div className="p-6">
@@ -301,7 +307,7 @@ export default async function HomePage() {
                 <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/5" />
                 <div className="relative">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-300 mb-2">For administrators</p>
-                  <h3 className="font-display text-xl font-bold">Reports &amp; Audit</h3>
+                  <h3 className="font-display text-xl font-bold text-white">Reports &amp; Audit</h3>
                 </div>
               </div>
               <div className="p-6">
@@ -331,7 +337,7 @@ export default async function HomePage() {
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-2">
                 Aligned with UN Sustainable Development Goal 11
               </p>
-              <h3 className="font-display text-xl sm:text-2xl font-bold">
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
                 Sustainable Cities &amp; Communities · Target 11.6
               </h3>
               <p className="text-sm text-white/70 mt-2 max-w-3xl leading-relaxed">

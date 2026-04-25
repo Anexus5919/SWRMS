@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
               Account Recovery
             </p>
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto my-3" />
-            <h1 className="font-display text-3xl xl:text-4xl font-bold tracking-tight">
+            <h1 className="font-display text-3xl xl:text-4xl font-bold tracking-tight text-white">
               Reset your access
             </h1>
             <p className="text-sm text-white/70 mt-3 leading-relaxed">

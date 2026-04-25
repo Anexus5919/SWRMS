@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
+import { BMCHeritageBuilding } from '@/components/brand/Illustrations';
 
 export const metadata: Metadata = { title: 'Help & Support' };
 
@@ -40,10 +41,15 @@ export default function HelpPage() {
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      <section className="bg-bmc-900 text-white py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-2/3 max-w-2xl pointer-events-none text-bmc-600 opacity-25">
+          <BMCHeritageBuilding className="w-full h-full" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-bmc-900 via-bmc-900/80 to-transparent pointer-events-none" />
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">Help &amp; support</p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight">
+          <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight text-white">
             We&apos;re here to help BMC field staff &amp; supervisors.
           </h1>
         </div>
