@@ -70,6 +70,13 @@ export async function POST(req: NextRequest) {
   const now = Date.now();
   const grace = GRACE_MINUTES * 60_000;
 
+  // Dev-only escape hatch: ?force=1 skips the shift-lapse check so
+  // operators can test the push pipeline at any time of day. Still
+  // gated by CRON_SECRET, so no security implication — just bypasses
+  // the "wait until 06:30 IST" guard during a manual smoke test.
+  const { searchParams } = new URL(req.url);
+  const force = searchParams.get('force') === '1';
+
   const [routes, attendance, unavailability, staff] = await Promise.all([
     Route.find({ status: 'active' }).select('_id ward shiftStart code name requiredStaff').lean(),
     Attendance.find({ date: today }).select('userId').lean(),
@@ -93,7 +100,7 @@ export async function POST(req: NextRequest) {
     if (!worker.assignedRouteId) continue;
     const route = routeById.get(worker.assignedRouteId.toString());
     if (!route) continue;
-    if (now - shiftStartUTC(today, route.shiftStart) < grace) continue; // shift hasn't lapsed
+    if (!force && now - shiftStartUTC(today, route.shiftStart) < grace) continue; // shift hasn't lapsed
 
     const id = worker._id.toString();
     if (attendedSet.has(id) || unavailableSet.has(id)) continue;
