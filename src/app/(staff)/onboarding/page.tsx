@@ -48,7 +48,7 @@ export default function OnboardingPage() {
             <ol className="space-y-2 text-sm text-gray-600">
               <li className="flex gap-2">
                 <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                <span>Face the front camera directly — clear, well-lit photo</span>
+                <span>Face the front camera directly - clear, well-lit photo</span>
               </li>
               <li className="flex gap-2">
                 <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">2</span>
@@ -56,11 +56,11 @@ export default function OnboardingPage() {
               </li>
               <li className="flex gap-2">
                 <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                <span>Wait for the green border — it means your face is detected</span>
+                <span>Wait for the green border - it means your face is detected</span>
               </li>
               <li className="flex gap-2">
                 <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">4</span>
-                <span>Tap capture — your face embedding will be saved securely</span>
+                <span>Tap capture - your face embedding will be saved securely</span>
               </li>
             </ol>
           </div>

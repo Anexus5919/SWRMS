@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 /**
- * AppFooter — slim footer for inside-app pages (admin/supervisor/staff).
+ * AppFooter - slim footer for inside-app pages (admin/supervisor/staff).
  * Different from PublicFooter (used on landing/about/etc).
  */
 export default function AppFooter() {

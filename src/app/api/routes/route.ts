@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { createRouteSchema } from '@/lib/validators/schemas';
 
 /**
- * GET /api/routes — List all routes
+ * GET /api/routes - List all routes
  */
 export async function GET() {
   const { error } = await requireRole('staff', 'supervisor', 'admin');
@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 /**
- * POST /api/routes — Create a new route (admin)
+ * POST /api/routes - Create a new route (admin)
  */
 export async function POST(req: NextRequest) {
   const { error } = await requireRole('admin');

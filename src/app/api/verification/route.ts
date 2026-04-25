@@ -6,7 +6,7 @@ import { resolveLogSchema } from '@/lib/validators/schemas';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
- * GET /api/verification — List verification logs
+ * GET /api/verification - List verification logs
  */
 export async function GET(req: NextRequest) {
   const { error } = await requireRole('supervisor', 'admin');
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/verification — Resolve a verification log
+ * PUT /api/verification - Resolve a verification log
  */
 export async function PUT(req: NextRequest) {
   const { session, error } = await requireRole('supervisor', 'admin');

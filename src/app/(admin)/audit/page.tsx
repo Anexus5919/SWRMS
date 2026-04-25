@@ -166,7 +166,7 @@ function targetHref(entry: AuditEntry): string | null {
 }
 
 function formatDiffValue(value: unknown): string {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return '-';
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   try {

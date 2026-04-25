@@ -2,7 +2,7 @@ import Link from 'next/link';
 import BMCSeal from '@/components/brand/BMCSeal';
 
 /**
- * PublicFooter — government-grade footer with BMC contact info,
+ * PublicFooter - government-grade footer with BMC contact info,
  * legal links, and program credits. Used across public pages.
  */
 export default function PublicFooter() {

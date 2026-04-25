@@ -248,7 +248,7 @@ export default function StaffManagementPage() {
               >
                 <option value="">None</option>
                 {routes.map((r) => (
-                  <option key={r._id} value={r._id}>{r.code} — {r.name}</option>
+                  <option key={r._id} value={r._id}>{r.code} - {r.name}</option>
                 ))}
               </select>
             </div>
@@ -304,7 +304,7 @@ export default function StaffManagementPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--neutral-500)]">{s.phone}</td>
                     <td className="px-4 py-3 text-xs font-mono text-[var(--neutral-500)]">
-                      {s.assignedRouteId ? s.assignedRouteId.code || '—' : '—'}
+                      {s.assignedRouteId ? s.assignedRouteId.code || '-' : '-'}
                     </td>
                     <td className="px-4 py-3">
                       {s.faceDescriptor && s.faceDescriptor.length === 128 ? (

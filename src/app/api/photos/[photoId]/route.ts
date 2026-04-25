@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { reviewPhotoSchema } from '@/lib/validators/schemas';
 
 /**
- * GET /api/photos/[photoId] — Get single photo with full data (including base64)
+ * GET /api/photos/[photoId] - Get single photo with full data (including base64)
  */
 export async function GET(
   req: NextRequest,
@@ -41,7 +41,7 @@ export async function GET(
 }
 
 /**
- * PUT /api/photos/[photoId] — Manual review (approve/reject)
+ * PUT /api/photos/[photoId] - Manual review (approve/reject)
  */
 export async function PUT(
   req: NextRequest,

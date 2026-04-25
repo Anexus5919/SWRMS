@@ -40,7 +40,7 @@ export default function AttendanceLogPage() {
             Attendance Log
           </h2>
           <p className="text-sm text-[var(--neutral-500)]">
-            {verifiedCount} verified, {rejectedCount} rejected — {date}
+            {verifiedCount} verified, {rejectedCount} rejected - {date}
           </p>
         </div>
         <input

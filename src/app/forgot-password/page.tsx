@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import BMCSeal from '@/components/brand/BMCSeal';
-import { BMCHeritageBuilding } from '@/components/brand/Illustrations';
 
 export default function ForgotPasswordPage() {
   const [employeeId, setEmployeeId] = useState('');
@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // For pilot — we don't auto-send emails; this triggers an admin notification
+    // For pilot - we don't auto-send emails; this triggers an admin notification
     setTimeout(() => {
       setSubmitted(true);
       setLoading(false);
@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_1fr] bg-[var(--page-bg)]">
       {/* Branded panel */}
-      <div className="relative bg-bmc-900 text-white overflow-hidden hidden lg:flex flex-col justify-between p-10 xl:p-14">
+      <div className="relative bg-bmc-900 text-white overflow-hidden hidden lg:flex flex-col p-10 xl:p-14">
         {/* Subtle dot grid */}
         <div
           className="absolute inset-0 opacity-[0.05]"
@@ -33,19 +33,22 @@ export default function ForgotPasswordPage() {
           }}
         />
 
-        {/* Top-right warm gold radial */}
-        <div
-          className="absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full opacity-25"
-          style={{ background: 'radial-gradient(circle, var(--gold-500) 0%, transparent 70%)' }}
-        />
-
-        {/* BMC HQ building backdrop */}
-        <div className="absolute inset-x-0 bottom-0 h-[58%] flex items-end justify-center pointer-events-none text-bmc-700">
-          <BMCHeritageBuilding className="w-full max-w-[760px] opacity-60" />
+        {/* BMC HQ building backdrop - actual sketch (invert + screen so
+            only the line strokes show, no visible background patch) */}
+        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none">
+          <Image
+            src="/bmc_complex.png"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 1280px) 60vw, 50vw"
+            className="object-contain object-bottom opacity-55"
+            style={{
+              filter: 'invert(1) brightness(1.4) contrast(1.05)',
+              mixBlendMode: 'screen',
+            }}
+          />
         </div>
-        <div className="absolute bottom-0 inset-x-0 h-32 pointer-events-none"
-          style={{ background: 'linear-gradient(to top, var(--bmc-900) 0%, transparent 100%)' }}
-        />
 
         {/* Top: Government identifier */}
         <div className="relative z-10 flex items-start justify-between">
@@ -60,15 +63,9 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
 
-        {/* Center: Seal + title */}
-        <div className="relative z-10 flex flex-col items-center text-center max-w-lg mx-auto">
-          <div className="relative inline-block">
-            <div
-              className="absolute -inset-3 blur-xl opacity-50"
-              style={{ background: 'radial-gradient(circle, var(--gold-400) 0%, transparent 65%)' }}
-            />
-            <BMCSeal size={96} variant="full" className="relative" />
-          </div>
+        {/* Center: Seal + title - sits in upper third */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-lg mx-auto mt-16 xl:mt-24">
+          <BMCSeal size={88} variant="full" />
           <p className="text-[10px] uppercase tracking-[0.28em] text-gold-300 font-semibold mt-5">
             Account Recovery
           </p>
@@ -78,18 +75,11 @@ export default function ForgotPasswordPage() {
           </h1>
           <p className="text-sm text-white/70 mt-4 leading-relaxed max-w-md">
             For audit and security reasons, password resets in SWRMS require
-            administrator approval. Submit your request below — your ward
+            administrator approval. Submit your request below - your ward
             administrator will be notified.
           </p>
         </div>
 
-        {/* Bottom: address */}
-        <div className="relative z-10 mt-auto">
-          <div className="flex items-center justify-between text-[10px] text-white/45 pt-4 border-t border-white/10">
-            <span>Chembur Ward Office · Mumbai 400 071</span>
-            <span>SDG 11 · Sustainable Cities</span>
-          </div>
-        </div>
       </div>
 
       {/* Form */}

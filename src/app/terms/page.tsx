@@ -86,8 +86,8 @@ export default function TermsPage() {
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">6. Audit &amp; monitoring</h2>
             <p>
-              All actions in SWRMS — attendance check-ins, photo submissions, log resolutions,
-              reallocations, and administrative changes — are logged and auditable.
+              All actions in SWRMS - attendance check-ins, photo submissions, log resolutions,
+              reallocations, and administrative changes - are logged and auditable.
             </p>
           </div>
 

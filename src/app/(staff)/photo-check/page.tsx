@@ -78,13 +78,13 @@ export default function PhotoCheckPage() {
         ]);
 
         const hasFace = faceRes.success && faceRes.data?.hasRegisteredFace;
-        // For attendance, the GET is supervisor-only — use the POST attempt or check session
+        // For attendance, the GET is supervisor-only - use the POST attempt or check session
         // Instead, try to check via a lightweight method
         const hasAttendance = attendRes.success && Array.isArray(attendRes.data) && attendRes.data.length > 0;
 
         setPreflightStatus({
           faceRegistered: hasFace,
-          attendanceMarked: true, // We trust the flow — attendance page redirects here
+          attendanceMarked: true, // We trust the flow - attendance page redirects here
           checking: false,
         });
 

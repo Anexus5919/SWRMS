@@ -112,7 +112,7 @@ export default function MyRoutePage() {
         </div>
         <div className="flex justify-between px-4 py-3">
           <span className="text-xs text-[var(--neutral-500)]">Shift</span>
-          <span className="text-xs font-medium text-[var(--neutral-800)]">{route.shiftStart} — {route.shiftEnd}</span>
+          <span className="text-xs font-medium text-[var(--neutral-800)]">{route.shiftStart} - {route.shiftEnd}</span>
         </div>
         <div className="flex justify-between px-4 py-3">
           <span className="text-xs text-[var(--neutral-500)]">Start Point</span>

@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
- * GET /api/reports — Aggregated reports for admin/supervisor
+ * GET /api/reports - Aggregated reports for admin/supervisor
  */
 export async function GET(req: NextRequest) {
   const { error } = await requireRole('supervisor', 'admin');

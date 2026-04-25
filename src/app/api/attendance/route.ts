@@ -10,7 +10,7 @@ function todayString() {
 }
 
 /**
- * POST /api/attendance — Mark geo-fenced attendance
+ * POST /api/attendance - Mark geo-fenced attendance
  */
 export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('staff');
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET /api/attendance — List attendance records (for supervisor)
+ * GET /api/attendance - List attendance records (for supervisor)
  */
 export async function GET(req: NextRequest) {
   const { session, error } = await requireRole('supervisor', 'admin');

@@ -7,7 +7,7 @@ function todayString() {
 }
 
 /**
- * GET /api/reallocation/suggestions — Get engine-computed reallocation suggestions
+ * GET /api/reallocation/suggestions - Get engine-computed reallocation suggestions
  */
 export async function GET() {
   const { error } = await requireRole('supervisor', 'admin');

@@ -2,7 +2,7 @@
 
 A technology-driven solution for improving municipal waste collection operations through geo-fenced attendance verification, AI-powered face recognition, geotagged photo validation, real-time route monitoring, and dynamic workforce reallocation.
 
-Built for the **Brihanmumbai Municipal Corporation (BMC)**, Chembur Ward, Mumbai — aligned with **UN Sustainable Development Goal 11: Sustainable Cities and Communities** (Target 11.6).
+Built for the **Brihanmumbai Municipal Corporation (BMC)**, Chembur Ward, Mumbai - aligned with **UN Sustainable Development Goal 11: Sustainable Cities and Communities** (Target 11.6).
 
 > **Vivekanand Education Society's Institute of Technology**
 > Department of Information Technology | Project Synopsis 2025-26, Sem IV
@@ -14,9 +14,9 @@ Built for the **Brihanmumbai Municipal Corporation (BMC)**, Chembur Ward, Mumbai
 
 Mumbai generates approximately 7,500–9,000 metric tonnes of municipal solid waste daily. BMC manages collection through predefined routes with dedicated crews. Despite this structure, operations face three critical issues:
 
-1. **Attendance fraud** — Workers mark attendance at ward offices but don't report to assigned routes. Manual registers and basic biometrics lack location verification.
-2. **Static workforce allocation** — When staff are absent, supervisors manually reassign workers. Shorter routes complete by mid-morning leaving workers idle, while longer routes remain incomplete.
-3. **No real-time monitoring** — Supervisors have no centralized mechanism to detect understaffing early enough to take corrective action.
+1. **Attendance fraud** - Workers mark attendance at ward offices but don't report to assigned routes. Manual registers and basic biometrics lack location verification.
+2. **Static workforce allocation** - When staff are absent, supervisors manually reassign workers. Shorter routes complete by mid-morning leaving workers idle, while longer routes remain incomplete.
+3. **No real-time monitoring** - Supervisors have no centralized mechanism to detect understaffing early enough to take corrective action.
 
 These findings are based on direct field visits to BMC ward offices in Chembur and interactions with Solid Waste Management (SWM) staff and supervisors.
 
@@ -27,23 +27,23 @@ These findings are based on direct field visits to BMC ward offices in Chembur a
 SWRMS addresses all three gaps through an integrated platform:
 
 ### For Field Staff (Mobile-first)
-- **Geo-fenced attendance** — GPS-verified check-in within 200m of assigned route start point using the Haversine formula
-- **Face registration** — One-time selfie enrollment extracts a 128-dimensional face descriptor using face-api.js (TensorFlow.js)
-- **Geotagged photo capture** — Staff take photos at shift start, checkpoints, and shift end. Each photo is GPS-stamped and face-verified against their registered embedding
-- **Daily checklist** — Home page shows step-by-step progress: face registered → attendance → shift start photo → route progress → shift end photo
-- **Offline-first** — Attendance queued in localStorage when offline, auto-synced when connectivity returns
+- **Geo-fenced attendance** - GPS-verified check-in within 200m of assigned route start point using the Haversine formula
+- **Face registration** - One-time selfie enrollment extracts a 128-dimensional face descriptor using face-api.js (TensorFlow.js)
+- **Geotagged photo capture** - Staff take photos at shift start, checkpoints, and shift end. Each photo is GPS-stamped and face-verified against their registered embedding
+- **Daily checklist** - Home page shows step-by-step progress: face registered → attendance → shift start photo → route progress → shift end photo
+- **Offline-first** - Attendance queued in localStorage when offline, auto-synced when connectivity returns
 
 ### For Supervisors (Dashboard)
-- **Real-time route dashboard** — Live staffing ratios, route completion progress, color-coded status (green/amber/red)
-- **Verification alerts** — Amber banner showing count of critical issues (face mismatches, missing photos, no-face detections) with direct link to review
-- **Photo review modal** — Side-by-side comparison of geotagged photo vs registered profile photo, with confidence score, GPS coordinates, and approve/reject controls
-- **Workforce reallocation** — Engine identifies surplus workers from completed routes and recommends reassignment to understaffed routes, sorted by geographic proximity
+- **Real-time route dashboard** - Live staffing ratios, route completion progress, color-coded status (green/amber/red)
+- **Verification alerts** - Amber banner showing count of critical issues (face mismatches, missing photos, no-face detections) with direct link to review
+- **Photo review modal** - Side-by-side comparison of geotagged photo vs registered profile photo, with confidence score, GPS coordinates, and approve/reject controls
+- **Workforce reallocation** - Engine identifies surplus workers from completed routes and recommends reassignment to understaffed routes, sorted by geographic proximity
 
 ### For Administrators
-- **Staff management** — CRUD with face registration status badges per employee
-- **Route management** — CRUD with expandable assigned staff list showing face enrollment status
-- **Reports & analytics** — Attendance trends (line charts), route performance (bar charts), verification summaries
-- **Verification logs** — All-ward view of alerts with resolution workflow
+- **Staff management** - CRUD with face registration status badges per employee
+- **Route management** - CRUD with expandable assigned staff list showing face enrollment status
+- **Reports & analytics** - Attendance trends (line charts), route performance (bar charts), verification summaries
+- **Verification logs** - All-ward view of alerts with resolution workflow
 
 ---
 
@@ -172,13 +172,13 @@ Login → /home (daily checklist)
 
 **7 collections:**
 
-- **Users** — employeeId, name, role, ward, phone, passwordHash, assignedRouteId, profilePhoto, faceDescriptor (128 floats), faceRegisteredAt
-- **Routes** — name, code, ward, startPoint, endPoint, waypoints, estimatedLengthKm, requiredStaff, geofenceRadius, shiftStart/End, status
-- **Attendance** — userId, routeId, date, checkInTime, coordinates, distanceFromRoute, status (verified/rejected), deviceInfo, isOfflineSync
-- **RouteProgress** — routeId, date, status, completionPercentage, staffingSnapshot, updates[]
-- **GeoPhotos** — userId, routeId, date, type, photo (base64), coordinates, faceDetected, facesCount, faceDescriptor, verificationResult, manualReview
-- **VerificationLogs** — type, severity, routeId, date, affectedUserId, geoPhotoId, details, resolution
-- **Reallocations** — fromRouteId, toRouteId, workerId, supervisorId, date, reason, status, distanceBetweenRoutes
+- **Users** - employeeId, name, role, ward, phone, passwordHash, assignedRouteId, profilePhoto, faceDescriptor (128 floats), faceRegisteredAt
+- **Routes** - name, code, ward, startPoint, endPoint, waypoints, estimatedLengthKm, requiredStaff, geofenceRadius, shiftStart/End, status
+- **Attendance** - userId, routeId, date, checkInTime, coordinates, distanceFromRoute, status (verified/rejected), deviceInfo, isOfflineSync
+- **RouteProgress** - routeId, date, status, completionPercentage, staffingSnapshot, updates[]
+- **GeoPhotos** - userId, routeId, date, type, photo (base64), coordinates, faceDetected, facesCount, faceDescriptor, verificationResult, manualReview
+- **VerificationLogs** - type, severity, routeId, date, affectedUserId, geoPhotoId, details, resolution
+- **Reallocations** - fromRouteId, toRouteId, workerId, supervisorId, date, reason, status, distanceBetweenRoutes
 
 ---
 
@@ -296,10 +296,10 @@ src/
 
 This project directly addresses **UN SDG 11, Target 11.6**: *"Reduce the adverse per capita environmental impact of cities, including by paying special attention to municipal and other waste management."*
 
-- **Workforce accountability** — Geo-fenced attendance eliminates proxy attendance, ensuring workers are physically at their assigned routes
-- **Resource optimization** — Dynamic reallocation redistributes idle workers from completed routes to understaffed ones without additional hiring
-- **Environmental sustainability** — Digital attendance eliminates paper registers; improved collection reduces street garbage accumulation
-- **Social sustainability** — Designed for low-cost Android devices and low-bandwidth environments, accessible to all staff
+- **Workforce accountability** - Geo-fenced attendance eliminates proxy attendance, ensuring workers are physically at their assigned routes
+- **Resource optimization** - Dynamic reallocation redistributes idle workers from completed routes to understaffed ones without additional hiring
+- **Environmental sustainability** - Digital attendance eliminates paper registers; improved collection reduces street garbage accumulation
+- **Social sustainability** - Designed for low-cost Android devices and low-bandwidth environments, accessible to all staff
 
 ---
 
@@ -307,11 +307,11 @@ This project directly addresses **UN SDG 11, Target 11.6**: *"Reduce the adverse
 
 Based on field visits to BMC Chembur ward offices and literature review of:
 
-1. Bhagat & Dharmale (2023) — Eco-efficiency optimization of MSW systems
-2. Gupta, Kumar & Singh (2019) — Vehicle routing for urban SWM with periodic variation
-3. Hashemi-Amiri, Ji & Tian (2023) — Integrated location-scheduling-routing for smart MSW
-4. Ministry of Housing & Urban Affairs (2016) — India's Solid Waste Management Rules
-5. World Bank (2020) — Urban SWM in developing countries (15-30% absenteeism rates)
+1. Bhagat & Dharmale (2023) - Eco-efficiency optimization of MSW systems
+2. Gupta, Kumar & Singh (2019) - Vehicle routing for urban SWM with periodic variation
+3. Hashemi-Amiri, Ji & Tian (2023) - Integrated location-scheduling-routing for smart MSW
+4. Ministry of Housing & Urban Affairs (2016) - India's Solid Waste Management Rules
+5. World Bank (2020) - Urban SWM in developing countries (15-30% absenteeism rates)
 
 **Research gap identified**: Existing systems focus on vehicle routing and waste volume prediction. None address workforce attendance verification at field locations, or dynamic staff reallocation based on real-time route progress. This project fills that gap.
 
@@ -322,7 +322,7 @@ Based on field visits to BMC Chembur ward offices and literature review of:
 ### Current Limitations
 - Face recognition accuracy degrades in poor lighting and with partial face occlusion (handled via tiered confidence + manual review fallback)
 - GPS drift in urban canyons (20-50m) mitigated by 3-reading median but not eliminated
-- Client-side face processing — for production, should move server-side to prevent tampering
+- Client-side face processing - for production, should move server-side to prevent tampering
 
 ### Planned Enhancements
 - Predictive attendance forecasting using historical patterns (day of week, weather, festivals)

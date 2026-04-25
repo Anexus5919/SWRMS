@@ -81,7 +81,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      {/* Toast container — bottom-right on desktop, bottom-center on mobile */}
+      {/* Toast container - bottom-right on desktop, bottom-center on mobile */}
       <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:bottom-4 z-[100] flex flex-col gap-2 sm:max-w-sm pointer-events-none">
         {toasts.map((toast) => {
           const styles = STYLES[toast.type];

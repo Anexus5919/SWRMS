@@ -31,11 +31,11 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'SWRMS — Brihanmumbai Municipal Corporation',
+    default: 'SWRMS - Brihanmumbai Municipal Corporation',
     template: '%s | SWRMS BMC',
   },
   description:
-    'Smart Workforce & Route Management System — Solid Waste Management, BMC Chembur Ward. Geo-fenced attendance, AI-verified field photos, real-time route tracking.',
+    'Smart Workforce & Route Management System - Solid Waste Management, BMC Chembur Ward. Geo-fenced attendance, AI-verified field photos, real-time route tracking.',
   keywords: ['BMC', 'Brihanmumbai Municipal Corporation', 'Solid Waste Management', 'SWRMS', 'Mumbai', 'Chembur'],
   authors: [{ name: 'V.E.S.I.T Department of Information Technology' }],
 };

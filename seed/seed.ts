@@ -487,7 +487,7 @@ async function seed() {
     const workers = staffByRoute[rid] || [];
     const routeIdx = createdRoutes.indexOf(route);
 
-    // On critical routes R05, R06 — flag missing shift_start photos
+    // On critical routes R05, R06 - flag missing shift_start photos
     if (routeIdx === 4 || routeIdx === 5) {
       for (const worker of workers.slice(0, 2)) {
         verificationLogs.push({
@@ -514,7 +514,7 @@ async function seed() {
         date: today,
         affectedUserId: workers[0]._id,
         details: {
-          message: `Face mismatch detected for ${workers[0].name.first} ${workers[0].name.last} (${workers[0].employeeId}) — distance: 0.73`,
+          message: `Face mismatch detected for ${workers[0].name.first} ${workers[0].name.last} (${workers[0].employeeId}) - distance: 0.73`,
           faceDistance: 0.73,
           coordinates: { lat: route.startPoint.lat + 0.0003, lng: route.startPoint.lng + 0.0002 },
         },
@@ -565,10 +565,10 @@ async function seed() {
   console.log(`Created ${attendanceRecords.length} attendance records (${verified} verified, ${rejected} rejected)`);
   console.log(`Created ${progressRecords.length} route progress records`);
   console.log('\nDemo scenario:');
-  console.log('  R01, R02, R08 — completed with full staff (surplus workers available)');
-  console.log('  R05, R06      — CRITICAL understaffing (reallocation needed!)');
-  console.log('  R04, R09      — marginal staffing');
-  console.log('  R03, R07, R10 — adequate, in progress');
+  console.log('  R01, R02, R08 - completed with full staff (surplus workers available)');
+  console.log('  R05, R06      - CRITICAL understaffing (reallocation needed!)');
+  console.log('  R04, R09      - marginal staffing');
+  console.log('  R03, R07, R10 - adequate, in progress');
   console.log('  Verification logs: missing photos, face mismatch, headcount issues');
 
   console.log('\n--- Seed Complete ---');

@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
- * POST /api/photos/missing — Detect workers who marked attendance but didn't submit photos.
+ * POST /api/photos/missing - Detect workers who marked attendance but didn't submit photos.
  * Creates VerificationLog entries for each missing photo.
  * Called by supervisor or can be triggered by cron.
  */

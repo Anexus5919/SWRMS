@@ -45,7 +45,7 @@ export default function StaffHomePage() {
         setStatus(data.data);
       }
     } catch {
-      // Silently fail — keep last known state
+      // Silently fail - keep last known state
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export default function StaffHomePage() {
               ? '/photo-check?type=shift_start'
               : null,
           actionLabel: 'Take Photo',
-          doneLabel: `Submitted at ${status.photos.shiftStart.time || ''}${status.photos.shiftStart.verified ? ' — Verified' : ''}`,
+          doneLabel: `Submitted at ${status.photos.shiftStart.time || ''}${status.photos.shiftStart.verified ? ' - Verified' : ''}`,
           pendingLabel: 'Face-verified shift start photo',
           warning: false,
         },
@@ -131,7 +131,7 @@ export default function StaffHomePage() {
               ? '/photo-check?type=shift_end'
               : null,
           actionLabel: 'Take Photo',
-          doneLabel: `Submitted at ${status.photos.shiftEnd.time || ''}${status.photos.shiftEnd.verified ? ' — Verified' : ''}`,
+          doneLabel: `Submitted at ${status.photos.shiftEnd.time || ''}${status.photos.shiftEnd.verified ? ' - Verified' : ''}`,
           pendingLabel: 'Face-verified shift end photo',
           warning: false,
         },

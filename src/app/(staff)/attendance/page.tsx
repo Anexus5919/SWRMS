@@ -75,7 +75,7 @@ export default function AttendancePage() {
       setResult(data.data);
       setState(data.data.verified ? 'verified' : 'rejected');
     } catch {
-      // Offline — queue for later
+      // Offline - queue for later
       addToQueue({
         coordinates: { lat: pos.lat, lng: pos.lng, accuracy: pos.accuracy },
         routeId: session?.user?.assignedRouteId || '',
@@ -204,7 +204,7 @@ export default function AttendancePage() {
           </p>
           <div className="mt-2 space-y-1">
             <p className="text-xs text-[var(--neutral-600)]">
-              Route: {result.routeCode} — {result.routeName}
+              Route: {result.routeCode} - {result.routeName}
             </p>
             <p className="text-xs text-[var(--neutral-600)]">
               Distance from route: {result.distance}m
@@ -216,7 +216,7 @@ export default function AttendancePage() {
             )}
           </div>
 
-          {/* CTA: Take Shift Start Photo — only after verified attendance */}
+          {/* CTA: Take Shift Start Photo - only after verified attendance */}
           {result.status === 'verified' && (
             <button
               onClick={() => router.push('/photo-check?type=shift_start')}
@@ -232,7 +232,7 @@ export default function AttendancePage() {
         </div>
       )}
 
-      {/* Already checked in — still prompt for photo */}
+      {/* Already checked in - still prompt for photo */}
       {state === 'already' && (
         <div className="mt-6 w-full max-w-sm p-4 rounded-lg bg-status-amber-light border border-status-amber/20">
           <p className="text-sm font-medium text-status-amber">

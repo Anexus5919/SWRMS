@@ -4,7 +4,7 @@ import { Route } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 
 /**
- * GET /api/routes/[routeId] — Get a single route
+ * GET /api/routes/[routeId] - Get a single route
  */
 export async function GET(
   req: NextRequest,
@@ -28,7 +28,7 @@ export async function GET(
 }
 
 /**
- * PUT /api/routes/[routeId] — Update route (admin)
+ * PUT /api/routes/[routeId] - Update route (admin)
  */
 export async function PUT(
   req: NextRequest,
@@ -53,7 +53,7 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/routes/[routeId] — Deactivate route (admin)
+ * DELETE /api/routes/[routeId] - Deactivate route (admin)
  */
 export async function DELETE(
   req: NextRequest,

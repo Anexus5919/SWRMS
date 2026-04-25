@@ -11,8 +11,8 @@ const FAQS = [
     a: 'Accounts are created by ward administrators. Contact your supervisor or the M-East Ward Office (helpdesk 1916) with your BMC employee ID. Self-registration is not permitted as this is an authorized-personnel system.',
   },
   {
-    q: 'I can\'t mark my attendance — it says I\'m too far from my route.',
-    a: 'The system requires you to be within 200 metres of your assigned route start point. Verify (1) you are at the correct location, (2) GPS is enabled on your device with high accuracy, (3) you are not inside a building that may block GPS signal. The system takes 3 GPS readings and uses the median — try moving to an open area and waiting 10 seconds.',
+    q: 'I can\'t mark my attendance - it says I\'m too far from my route.',
+    a: 'The system requires you to be within 200 metres of your assigned route start point. Verify (1) you are at the correct location, (2) GPS is enabled on your device with high accuracy, (3) you are not inside a building that may block GPS signal. The system takes 3 GPS readings and uses the median - try moving to an open area and waiting 10 seconds.',
   },
   {
     q: 'My face was not recognized in a photo. What do I do?',
@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: 'Who can see my location and photos?',
-    a: 'Only your ward supervisor and the BMC SWM administrator can view your attendance records and submitted photos. GPS coordinates are recorded only at the moment of attendance check-in and during photo submission — there is no continuous location tracking.',
+    a: 'Only your ward supervisor and the BMC SWM administrator can view your attendance records and submitted photos. GPS coordinates are recorded only at the moment of attendance check-in and during photo submission - there is no continuous location tracking.',
   },
 ];
 

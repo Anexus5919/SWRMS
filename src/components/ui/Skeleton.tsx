@@ -6,7 +6,7 @@ interface SkeletonProps {
 }
 
 /**
- * Skeleton — shimmer loader for use during data fetching.
+ * Skeleton - shimmer loader for use during data fetching.
  * Use composed Skeleton blocks rather than full-page spinners.
  */
 export function Skeleton({

@@ -1,5 +1,5 @@
 /**
- * BMC Official Seal — stylized SVG recreation of the
+ * BMC Official Seal - stylized SVG recreation of the
  * Brihanmumbai Municipal Corporation crest.
  *
  * Features the four quadrants representing Mumbai's identity:
@@ -77,7 +77,7 @@ export default function BMCSeal({ size = 80, className = '', variant = 'full' }:
     );
   }
 
-  // Full variant — stylized representation of the official seal
+  // Full variant - stylized representation of the official seal
   return (
     <svg
       viewBox="0 0 200 200"
@@ -115,26 +115,27 @@ export default function BMCSeal({ size = 80, className = '', variant = 'full' }:
       <circle cx="100" cy="100" r="92" fill="none" stroke="url(#bmc-gold)" strokeWidth="0.8" />
       <circle cx="100" cy="100" r="89" fill="none" stroke="url(#bmc-gold)" strokeWidth="0.4" opacity="0.6" />
 
-      {/* Hindi text arc top - "बृहन्मुंबई महानगरपालिका" representation as decorative dots */}
+      {/* Hindi text arc top - decorative dot representation.
+          Coordinates rounded to 2 decimals to keep SSR + client output identical. */}
       <g opacity="0.85">
         {Array.from({ length: 32 }).map((_, i) => {
           const angle = -150 + (i * (120 / 31));
           const rad = (angle * Math.PI) / 180;
-          const x = 100 + Math.cos(rad) * 86;
-          const y = 100 + Math.sin(rad) * 86;
+          const x = (100 + Math.cos(rad) * 86).toFixed(2);
+          const y = (100 + Math.sin(rad) * 86).toFixed(2);
           return (
             <circle key={`top-${i}`} cx={x} cy={y} r="0.8" fill="#9c1822" />
           );
         })}
       </g>
 
-      {/* English text arc bottom - "Brihanmumbai Municipal Corporation" */}
+      {/* English text arc bottom - decorative dot representation. */}
       <g opacity="0.85">
         {Array.from({ length: 32 }).map((_, i) => {
           const angle = 30 + (i * (120 / 31));
           const rad = (angle * Math.PI) / 180;
-          const x = 100 + Math.cos(rad) * 86;
-          const y = 100 + Math.sin(rad) * 86;
+          const x = (100 + Math.cos(rad) * 86).toFixed(2);
+          const y = (100 + Math.sin(rad) * 86).toFixed(2);
           return (
             <circle key={`bot-${i}`} cx={x} cy={y} r="0.8" fill="#1a4080" />
           );

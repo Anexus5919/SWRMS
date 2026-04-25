@@ -122,7 +122,7 @@ export default function RouteDetailPage() {
           </div>
           <div className="flex justify-between px-4 py-3">
             <span className="text-xs text-[var(--neutral-500)]">Shift</span>
-            <span className="text-xs font-medium">{route.shiftStart} — {route.shiftEnd}</span>
+            <span className="text-xs font-medium">{route.shiftStart} - {route.shiftEnd}</span>
           </div>
         </div>
 
@@ -160,7 +160,7 @@ export default function RouteDetailPage() {
                       {a.status}
                     </span>
                     <p className="text-[10px] text-[var(--neutral-400)] mt-0.5">
-                      {a.distanceFromRoute}m — {new Date(a.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      {a.distanceFromRoute}m - {new Date(a.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>

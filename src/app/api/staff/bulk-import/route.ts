@@ -23,7 +23,7 @@ interface ImportResult {
 }
 
 /**
- * POST /api/staff/bulk-import — Bulk staff import from parsed CSV.
+ * POST /api/staff/bulk-import - Bulk staff import from parsed CSV.
  * Body: { rows: CSVRow[] }
  * Returns per-row result for transparency.
  */

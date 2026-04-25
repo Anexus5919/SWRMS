@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
- * GET /api/staff/status — Daily status checklist for the authenticated staff member
+ * GET /api/staff/status - Daily status checklist for the authenticated staff member
  */
 export async function GET() {
   const { session, error } = await requireRole('staff');

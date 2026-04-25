@@ -86,7 +86,7 @@ export default async function HomePage() {
           background: 'radial-gradient(circle, var(--gold-500), transparent 70%)',
         }} />
 
-        {/* BMC HQ heritage building watermark — extra layer of brand */}
+        {/* BMC HQ heritage building watermark - extra layer of brand */}
         <div className="absolute left-0 right-0 bottom-0 h-[70%] flex items-end justify-center pointer-events-none text-bmc-700 opacity-[0.18]">
           <BMCHeritageBuilding className="w-full max-w-[1100px]" />
         </div>
@@ -107,7 +107,7 @@ export default async function HomePage() {
 
             <p className="mt-5 text-base sm:text-lg text-white/75 leading-relaxed max-w-xl">
               SWRMS replaces paper attendance registers with geo-fenced check-ins,
-              AI-verified field photos, and live route monitoring — ensuring every
+              AI-verified field photos, and live route monitoring - ensuring every
               waste collection route operates with the right staff at the right time.
             </p>
 
@@ -197,8 +197,8 @@ export default async function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { stat: '15-30%', label: 'Daily absenteeism', detail: 'World Bank estimates of municipal waste workforce attendance variance — currently invisible to supervisors.', color: 'text-status-red' },
-              { stat: '25-40 min', label: 'Per-worker time lost', detail: 'Daily travel + queue time at ward office for paper attendance — replaced by 15-second geo-verified check-in.', color: 'text-status-amber' },
+              { stat: '15-30%', label: 'Daily absenteeism', detail: 'World Bank estimates of municipal waste workforce attendance variance - currently invisible to supervisors.', color: 'text-status-red' },
+              { stat: '25-40 min', label: 'Per-worker time lost', detail: 'Daily travel + queue time at ward office for paper attendance - replaced by 15-second geo-verified check-in.', color: 'text-status-amber' },
               { stat: '0', label: 'Real-time visibility', detail: 'Existing systems offer no live route status, no missing-photo alerts, no automated reallocation.', color: 'text-bmc-700' },
             ].map((item) => (
               <div key={item.label} className="relative bg-white border border-[var(--border)] rounded-xl p-6 shadow-doc hover:shadow-doc-md transition-shadow">

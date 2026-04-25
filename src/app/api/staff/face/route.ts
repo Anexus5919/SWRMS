@@ -4,7 +4,7 @@ import { User } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 
 /**
- * POST /api/staff/face — Register face descriptor for current user
+ * POST /api/staff/face - Register face descriptor for current user
  * Called after face-api.js extracts the 128-d embedding on the client
  */
 export async function POST(req: NextRequest) {
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET /api/staff/face — Check if current user has face registered
+ * GET /api/staff/face - Check if current user has face registered
  */
 export async function GET() {
   const { session, error } = await requireRole('staff', 'supervisor', 'admin');

@@ -8,7 +8,7 @@ interface PrintHeaderProps {
 }
 
 /**
- * PrintHeader — official BMC letterhead for printable reports.
+ * PrintHeader - official BMC letterhead for printable reports.
  * Only visible when printing (uses .print-only utility).
  * Displays seal, government identifiers, report metadata.
  */

@@ -5,7 +5,7 @@ import { verifyGeofence } from '@/lib/geo/geofence';
 import { requireRole } from '@/lib/auth/middleware';
 
 /**
- * POST /api/attendance/sync — Bulk sync offline attendance records
+ * POST /api/attendance/sync - Bulk sync offline attendance records
  */
 export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('staff');

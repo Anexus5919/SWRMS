@@ -4,7 +4,7 @@ import { User } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 
 /**
- * GET /api/staff/[staffId] — Get staff detail
+ * GET /api/staff/[staffId] - Get staff detail
  */
 export async function GET(
   req: NextRequest,
@@ -32,7 +32,7 @@ export async function GET(
 }
 
 /**
- * PUT /api/staff/[staffId] — Update staff (whitelisted fields only)
+ * PUT /api/staff/[staffId] - Update staff (whitelisted fields only)
  */
 export async function PUT(
   req: NextRequest,
@@ -46,7 +46,7 @@ export async function PUT(
     const { staffId } = await params;
     const body = await req.json();
 
-    // Whitelist allowed fields — prevents role escalation and password tampering
+    // Whitelist allowed fields - prevents role escalation and password tampering
     const ALLOWED_FIELDS = ['name', 'phone', 'ward', 'assignedRouteId', 'isActive'];
     const sanitized: Record<string, unknown> = {};
     for (const key of ALLOWED_FIELDS) {
@@ -83,7 +83,7 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/staff/[staffId] — Deactivate staff
+ * DELETE /api/staff/[staffId] - Deactivate staff
  */
 export async function DELETE(
   req: NextRequest,

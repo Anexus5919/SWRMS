@@ -8,9 +8,9 @@ export const SHIFT_END = '14:00';
 export const ATTENDANCE_WINDOW_MINUTES = 30;
 
 export const STAFFING_THRESHOLDS = {
-  CRITICAL: 0.5,   // RED — fewer than half showed up
-  MARGINAL: 0.75,  // AMBER — operational but strained
-  ADEQUATE: 1.0,   // GREEN — fully staffed or above
+  CRITICAL: 0.5,   // RED - fewer than half showed up
+  MARGINAL: 0.75,  // AMBER - operational but strained
+  ADEQUATE: 1.0,   // GREEN - fully staffed or above
 } as const;
 
 export const FACE_VERIFICATION = {

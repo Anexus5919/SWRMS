@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
- * GET /api/routes/[routeId]/progress — Get today's progress for a route
+ * GET /api/routes/[routeId]/progress - Get today's progress for a route
  */
 export async function GET(
   req: NextRequest,
@@ -52,7 +52,7 @@ export async function GET(
 }
 
 /**
- * PUT /api/routes/[routeId]/progress — Update route progress
+ * PUT /api/routes/[routeId]/progress - Update route progress
  */
 export async function PUT(
   req: NextRequest,

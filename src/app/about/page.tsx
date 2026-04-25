@@ -7,7 +7,7 @@ import { GeofenceMap, BMCHeritageBuilding } from '@/components/brand/Illustratio
 export const metadata: Metadata = {
   title: 'About SWRMS',
   description:
-    'About the Smart Workforce & Route Management System — a BMC Solid Waste Management pilot for Chembur Ward.',
+    'About the Smart Workforce & Route Management System - a BMC Solid Waste Management pilot for Chembur Ward.',
 };
 
 export default function AboutPage() {
@@ -52,8 +52,8 @@ export default function AboutPage() {
               repeatedly:
             </p>
             <ul className="mt-4 space-y-2 text-[15px] text-[var(--text-secondary)]">
-              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Attendance fraud — workers signing the register at the ward office without reporting to their assigned routes.</span></li>
-              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Late detection of route failures — supervisors had no way to detect understaffing until collections were already missed.</span></li>
+              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Attendance fraud - workers signing the register at the ward office without reporting to their assigned routes.</span></li>
+              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Late detection of route failures - supervisors had no way to detect understaffing until collections were already missed.</span></li>
               <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Idle workers on completed shorter routes while adjacent longer routes remained understaffed.</span></li>
             </ul>
           </div>
@@ -80,11 +80,11 @@ export default function AboutPage() {
               UN Sustainable Development Goal 11
             </p>
             <h3 className="font-display text-lg font-bold text-bmc-900">
-              Sustainable Cities &amp; Communities — Target 11.6
+              Sustainable Cities &amp; Communities - Target 11.6
             </h3>
             <p className="text-[14px] text-[var(--text-secondary)] mt-2 leading-relaxed">
               SWRMS contributes to Target 11.6 by improving accountability and route completion
-              rates in municipal solid waste collection — directly addressing the per-capita
+              rates in municipal solid waste collection - directly addressing the per-capita
               environmental impact of waste accumulation in densely populated urban areas.
             </p>
           </div>

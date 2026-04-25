@@ -10,7 +10,7 @@ interface EmptyStateProps {
 }
 
 /**
- * EmptyState — used on lists with no data. Includes domain
+ * EmptyState - used on lists with no data. Includes domain
  * illustration so the page never feels empty or broken.
  */
 export default function EmptyState({

@@ -12,7 +12,7 @@ function getStatusLabel(ratio: number) {
 }
 
 /**
- * GET /api/dashboard — Aggregated dashboard data for supervisor
+ * GET /api/dashboard - Aggregated dashboard data for supervisor
  */
 export async function GET() {
   const { error } = await requireRole('supervisor', 'admin');

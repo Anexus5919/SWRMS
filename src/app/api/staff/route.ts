@@ -6,7 +6,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { logAudit } from '@/lib/audit';
 
 /**
- * GET /api/staff — List staff members
+ * GET /api/staff - List staff members
  */
 export async function GET(req: NextRequest) {
   const { error } = await requireRole('supervisor', 'admin');
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/staff — Register new staff
+ * POST /api/staff - Register new staff
  */
 export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('admin');

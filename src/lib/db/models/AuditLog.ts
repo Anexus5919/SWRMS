@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 /**
- * AuditLog — government-grade audit trail of every consequential action.
+ * AuditLog - government-grade audit trail of every consequential action.
  * Required for compliance, incident investigation, and accountability.
  */
 

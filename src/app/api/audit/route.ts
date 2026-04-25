@@ -4,7 +4,7 @@ import { AuditLog } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 
 /**
- * GET /api/audit — list audit log entries (admin only)
+ * GET /api/audit - list audit log entries (admin only)
  * Query params: category, action, actorId, q (search), page, limit, from, to
  */
 export async function GET(req: NextRequest) {

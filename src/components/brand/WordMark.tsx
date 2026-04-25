@@ -8,7 +8,7 @@ interface WordMarkProps {
 }
 
 /**
- * BMC SWRMS official wordmark — combines the seal with
+ * BMC SWRMS official wordmark - combines the seal with
  * the program identity. Used in headers and official documents.
  */
 export default function WordMark({

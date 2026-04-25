@@ -2,7 +2,7 @@ import Link from 'next/link';
 import BMCSeal from '@/components/brand/BMCSeal';
 
 /**
- * PublicHeader — used on About, Help, Privacy, Terms.
+ * PublicHeader - used on About, Help, Privacy, Terms.
  * Slimmer than the landing-page header.
  */
 export default function PublicHeader() {

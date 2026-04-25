@@ -7,7 +7,7 @@ import { compareFaceDescriptors } from '@/lib/face/compare';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
- * POST /api/photos — Upload a geotagged photo with face verification
+ * POST /api/photos - Upload a geotagged photo with face verification
  */
 export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('staff');
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         manualReviewStatus = 'pending';
       }
     } else if (faceDetected && faceDescriptor && !user.faceDescriptor) {
-      // User has no registered face — flag for review
+      // User has no registered face - flag for review
       verificationResult = {
         confidence: 'low',
         distance: null,
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
         affectedUserId: userId,
         geoPhotoId: geoPhoto._id,
         details: {
-          message: `Face mismatch for ${user.name.first} ${user.name.last} (${user.employeeId}) — distance: ${verificationResult.distance}`,
+          message: `Face mismatch for ${user.name.first} ${user.name.last} (${user.employeeId}) - distance: ${verificationResult.distance}`,
           faceDistance: verificationResult.distance ?? undefined,
           coordinates: { lat: coordinates.lat, lng: coordinates.lng },
         },
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         affectedUserId: userId,
         geoPhotoId: geoPhoto._id,
         details: {
-          message: `Low confidence face match for ${user.name.first} ${user.name.last} (${user.employeeId}) — distance: ${verificationResult.distance}`,
+          message: `Low confidence face match for ${user.name.first} ${user.name.last} (${user.employeeId}) - distance: ${verificationResult.distance}`,
           faceDistance: verificationResult.distance ?? undefined,
           coordinates: { lat: coordinates.lat, lng: coordinates.lng },
         },
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET /api/photos — List geotagged photos (supervisor/admin)
+ * GET /api/photos - List geotagged photos (supervisor/admin)
  */
 export async function GET(req: NextRequest) {
   const { error } = await requireRole('supervisor', 'admin');

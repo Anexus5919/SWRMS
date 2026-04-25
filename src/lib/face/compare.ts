@@ -67,7 +67,7 @@ export function compareFaceDescriptors(
       confidence: 'low',
       verified: false,
       requiresManualReview: true,
-      message: 'Low confidence — flagged for mandatory manual review',
+      message: 'Low confidence - flagged for mandatory manual review',
     };
   }
 

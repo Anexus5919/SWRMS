@@ -341,7 +341,7 @@ export default function AdminVerificationLogsPage() {
                     {log.affectedUserId ? `${log.affectedUserId.name.first} ${log.affectedUserId.name.last}` : 'Unknown'}
                   </p>
                   <span className="text-[10px] font-mono text-[var(--neutral-400)]">
-                    {log.affectedUserId?.employeeId || '—'}
+                    {log.affectedUserId?.employeeId || '-'}
                   </span>
                   <span className="text-[10px] text-[var(--neutral-500)]">
                     Route: <span className="font-medium text-[var(--neutral-700)]">{log.routeId?.name || 'Unknown'}</span>

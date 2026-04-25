@@ -9,7 +9,7 @@ function todayString() {
 }
 
 /**
- * POST /api/reallocation — Execute a reallocation (supervisor approves)
+ * POST /api/reallocation - Execute a reallocation (supervisor approves)
  */
 export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('supervisor');
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET /api/reallocation — Get reallocation history
+ * GET /api/reallocation - Get reallocation history
  */
 export async function GET(req: NextRequest) {
   const { error } = await requireRole('supervisor', 'admin');

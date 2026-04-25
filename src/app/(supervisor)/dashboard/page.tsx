@@ -157,7 +157,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader subtitle={`Chembur Ward — ${data.date}`} />
+      <PageHeader subtitle={`Chembur Ward - ${data.date}`} />
 
       {/* Alert banner for critical routes */}
       {criticalRoutes.length > 0 && (
@@ -170,7 +170,7 @@ export default function DashboardPage() {
               {criticalRoutes.length} route{criticalRoutes.length > 1 ? 's' : ''} critically understaffed
             </p>
             <p className="text-xs text-status-red/80 mt-0.5">
-              {criticalRoutes.map((r) => r.code).join(', ')} — consider workforce reallocation
+              {criticalRoutes.map((r) => r.code).join(', ')} - consider workforce reallocation
             </p>
           </div>
           <Link

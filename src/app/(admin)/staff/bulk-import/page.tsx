@@ -634,14 +634,14 @@ export default function BulkImportPage() {
                                 {r.role}
                               </Badge>
                             ) : (
-                              <span className="text-status-red text-xs">—</span>
+                              <span className="text-status-red text-xs">-</span>
                             )}
                           </td>
                           <td className="px-3 py-2 text-xs font-mono text-[var(--text-secondary)]">
                             {r.phone || <span className="text-status-red">(empty)</span>}
                           </td>
                           <td className="px-3 py-2 text-xs font-mono text-[var(--text-secondary)]">
-                            {r.routeCode || <span className="text-[var(--text-muted)]">—</span>}
+                            {r.routeCode || <span className="text-[var(--text-muted)]">-</span>}
                           </td>
                           <td className="px-3 py-2 text-[11px] text-status-red leading-tight">
                             {r.errors.length > 0 ? r.errors.join('; ') : <span className="text-status-green">OK</span>}
@@ -768,7 +768,7 @@ export default function BulkImportPage() {
                           </Badge>
                         </td>
                         <td className="px-4 py-2 text-xs text-[var(--text-secondary)]">
-                          {r.message ?? <span className="text-[var(--text-muted)]">—</span>}
+                          {r.message ?? <span className="text-[var(--text-muted)]">-</span>}
                         </td>
                       </tr>
                     ))}
