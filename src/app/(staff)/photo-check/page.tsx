@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useCamera } from '@/hooks/useCamera';
@@ -47,7 +47,7 @@ const PHOTO_TYPES: { value: PhotoType; label: string; icon: React.ReactNode }[] 
   },
 ];
 
-export default function PhotoCheckPage() {
+function PhotoCheckPageInner() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const preselectedType = searchParams.get('type') as PhotoType | null;
@@ -634,4 +634,22 @@ export default function PhotoCheckPage() {
     case 'error':
       return renderError();
   }
+}
+
+// Next 16 prerenders client pages and requires `useSearchParams()` to be
+// wrapped in a Suspense boundary so the search-params read can suspend
+// during static generation. The fallback matches the in-page preflight loader.
+export default function PhotoCheckPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-4 pt-12 flex flex-col items-center">
+          <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-sm text-gray-500">Checking requirements...</p>
+        </div>
+      }
+    >
+      <PhotoCheckPageInner />
+    </Suspense>
+  );
 }

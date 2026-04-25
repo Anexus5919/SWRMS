@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import DashboardOverviewMap from '@/components/maps/DynamicDashboardOverviewMap';
+import KpiRollupCard from '@/components/supervisor/KpiRollupCard';
 import {
   Badge,
   Breadcrumbs,
@@ -257,6 +258,10 @@ export default function DashboardPage() {
           Map
         </button>
       </div>
+
+      {/* Trailing-window KPI rollup (% completed by 10am/12pm/2pm).
+          Hidden when there's no historical data yet. */}
+      <KpiRollupCard days={14} />
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

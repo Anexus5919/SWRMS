@@ -13,6 +13,8 @@ const SUPERVISOR_PREFIXES = [
   '/reallocation',
   '/attendance-log',
   '/supervisor-logs',
+  '/reliability',
+  '/replay',
 ] as const;
 
 const ADMIN_PREFIXES = [
@@ -93,5 +95,7 @@ export const config = {
     '/supervisor-logs/:path*',
     '/admin-logs/:path*',
     '/audit/:path*',
+    '/reliability/:path*',
+    '/replay/:path*',
   ],
 };
