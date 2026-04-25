@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import FaceRegistration from '@/components/camera/FaceRegistration';
+import { useTranslation } from '@/lib/i18n/context';
 
 export default function OnboardingPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { t } = useTranslation();
   const [step, setStep] = useState<'welcome' | 'register' | 'done'>('welcome');
 
   const handleSuccess = () => {
@@ -27,41 +29,40 @@ export default function OnboardingPage() {
           </div>
 
           <h1 className="text-xl font-bold text-gray-900 mb-2">
-            Welcome, {session?.user?.name}
+            {t('onboarding.welcome')}
+            {session?.user?.name ? `, ${session.user.name}` : ''}
           </h1>
           <p className="text-sm text-gray-500 mb-2">
-            Employee ID: {(session?.user as any)?.employeeId}
+            {t('onboarding.employeeId')}: {(session?.user as { employeeId?: string } | undefined)?.employeeId}
           </p>
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-left">
             <h3 className="text-sm font-semibold text-amber-800 mb-2">
-              Face Registration Required
+              {t('onboarding.faceRequiredTitle')}
             </h3>
             <p className="text-sm text-amber-700 leading-relaxed">
-              Before you can mark attendance or take geotagged photos, you need to register your face.
-              This is a one-time process. Your photo will be used to verify your identity at job sites.
+              {t('onboarding.faceRequiredBody')}
             </p>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 text-left">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Instructions:</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">
+              {t('onboarding.instructionsTitle')}
+            </h3>
             <ol className="space-y-2 text-sm text-gray-600">
-              <li className="flex gap-2">
-                <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                <span>Face the front camera directly - clear, well-lit photo</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                <span>Remove sunglasses, hats, or anything covering your face</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                <span>Wait for the green border - it means your face is detected</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">4</span>
-                <span>Tap capture - your face embedding will be saved securely</span>
-              </li>
+              {[
+                t('onboarding.instr1'),
+                t('onboarding.instr2'),
+                t('onboarding.instr3'),
+                t('onboarding.instr4'),
+              ].map((line, idx) => (
+                <li key={idx} className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold">
+                    {idx + 1}
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
             </ol>
           </div>
 
@@ -69,7 +70,7 @@ export default function OnboardingPage() {
             onClick={() => setStep('register')}
             className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors active:scale-[0.98]"
           >
-            Register My Face
+            {t('onboarding.registerButton')}
           </button>
         </div>
       )}
@@ -83,7 +84,7 @@ export default function OnboardingPage() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            Back
+            {t('onboarding.back')}
           </button>
           <FaceRegistration
             onSuccess={handleSuccess}
@@ -99,8 +100,8 @@ export default function OnboardingPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Face Registered!</h2>
-          <p className="text-sm text-gray-500">Redirecting you to mark attendance...</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{t('onboarding.doneTitle')}</h2>
+          <p className="text-sm text-gray-500">{t('onboarding.redirecting')}</p>
         </div>
       )}
     </div>

@@ -225,7 +225,11 @@ export default function DashboardPage() {
     <div>
       <PageHeader subtitle={`Chembur Ward - ${data.date}`} />
 
-      {/* Alert banner for critical routes */}
+      {/* Alert banner for critical routes.
+          Note: this banner counts routes, not the *fixability* of the
+          shortage. If every route is critical with no surplus elsewhere,
+          reallocation alone cannot help — the Reallocation page surfaces
+          that explicitly. The CTA here just opens that page. */}
       {criticalRoutes.length > 0 && (
         <div className="mb-4 p-3 bg-status-red-light border border-status-red/20 rounded-lg flex items-start gap-3">
           <svg className="w-5 h-5 text-status-red flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -236,14 +240,14 @@ export default function DashboardPage() {
               {criticalRoutes.length} route{criticalRoutes.length > 1 ? 's' : ''} critically understaffed
             </p>
             <p className="text-xs text-status-red/80 mt-0.5">
-              {criticalRoutes.map((r) => r.code).join(', ')} - consider workforce reallocation
+              {criticalRoutes.map((r) => r.code).join(', ')} — open Reallocation to review options or escalate.
             </p>
           </div>
           <Link
             href="/reallocation"
             className="ml-auto text-xs font-medium text-status-red underline whitespace-nowrap"
           >
-            Reallocate
+            View options
           </Link>
         </div>
       )}

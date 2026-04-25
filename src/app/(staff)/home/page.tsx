@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import TrackingCard from '@/components/tracking/TrackingCard';
 import UnavailabilityCard from '@/components/staff/UnavailabilityCard';
+import { useTranslation } from '@/lib/i18n/context';
 
 interface StatusData {
   faceRegistered: boolean;
@@ -37,6 +38,7 @@ function formatDate(): string {
 
 export default function StaffHomePage() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,65 +79,65 @@ export default function StaffHomePage() {
     ? [
         {
           num: 1,
-          title: 'Face Registration',
+          title: t('home.stepFace'),
           done: status.faceRegistered,
           time: null as string | null,
           action: !status.faceRegistered ? '/onboarding' : null,
-          actionLabel: 'Register Face',
-          doneLabel: 'Registered',
-          pendingLabel: 'Required before check-in',
+          actionLabel: t('home.stepFaceAction'),
+          doneLabel: t('home.stepFaceDone'),
+          pendingLabel: t('home.stepFacePending'),
           warning: !status.faceRegistered,
         },
         {
           num: 2,
-          title: 'Mark Attendance',
+          title: t('home.stepAttendance'),
           done: status.attendance.marked,
           time: status.attendance.time,
           action: !status.attendance.marked && status.faceRegistered ? '/attendance' : null,
-          actionLabel: 'Mark Now',
-          doneLabel: `Verified at ${status.attendance.time || ''}`,
-          pendingLabel: 'GPS attendance check-in',
+          actionLabel: t('home.stepAttendanceAction'),
+          doneLabel: `${t('home.stepAttendanceVerifiedAt')} ${status.attendance.time || ''}`,
+          pendingLabel: t('home.stepAttendancePending'),
           warning: false,
         },
         {
           num: 3,
-          title: 'Shift Start Photo',
+          title: t('home.stepShiftStart'),
           done: status.photos.shiftStart.submitted,
           time: status.photos.shiftStart.time,
           action:
             status.attendance.marked && !status.photos.shiftStart.submitted
               ? '/photo-check?type=shift_start'
               : null,
-          actionLabel: 'Take Photo',
-          doneLabel: `Submitted at ${status.photos.shiftStart.time || ''}${status.photos.shiftStart.verified ? ' - Verified' : ''}`,
-          pendingLabel: 'Face-verified shift start photo',
+          actionLabel: t('home.stepShiftStartAction'),
+          doneLabel: `${t('home.submittedAt')} ${status.photos.shiftStart.time || ''}${status.photos.shiftStart.verified ? ` - ${t('home.verifiedSuffix')}` : ''}`,
+          pendingLabel: t('home.stepShiftStartPending'),
           warning: false,
         },
         {
           num: 4,
-          title: 'Route Progress',
+          title: t('home.stepRoute'),
           done: status.routeProgress.status === 'completed',
           time: null as string | null,
           action: '/progress',
-          actionLabel: 'View Progress',
-          doneLabel: 'Route completed',
-          pendingLabel: `${status.routeProgress.percentage}% complete`,
+          actionLabel: t('home.stepRouteAction'),
+          doneLabel: t('home.stepRouteCompleted'),
+          pendingLabel: `${status.routeProgress.percentage}${t('home.stepRoutePercentSuffix')}`,
           warning: false,
           showProgress: true,
           progressPercent: status.routeProgress.percentage,
         },
         {
           num: 5,
-          title: 'Shift End Photo',
+          title: t('home.stepShiftEnd'),
           done: status.photos.shiftEnd.submitted,
           time: status.photos.shiftEnd.time,
           action:
             status.attendance.marked && !status.photos.shiftEnd.submitted
               ? '/photo-check?type=shift_end'
               : null,
-          actionLabel: 'Take Photo',
-          doneLabel: `Submitted at ${status.photos.shiftEnd.time || ''}${status.photos.shiftEnd.verified ? ' - Verified' : ''}`,
-          pendingLabel: 'Face-verified shift end photo',
+          actionLabel: t('home.stepShiftEndAction'),
+          doneLabel: `${t('home.submittedAt')} ${status.photos.shiftEnd.time || ''}${status.photos.shiftEnd.verified ? ` - ${t('home.verifiedSuffix')}` : ''}`,
+          pendingLabel: t('home.stepShiftEndPending'),
           warning: false,
         },
       ]
@@ -146,7 +148,11 @@ export default function StaffHomePage() {
       {/* Greeting */}
       <div className="mb-6">
         <h1 className="text-lg font-bold text-[var(--neutral-800)]">
-          Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}
+          {(() => {
+            const h = new Date().getHours();
+            const key = h < 12 ? 'home.morning' : h < 17 ? 'home.afternoon' : 'home.evening';
+            return t(key);
+          })()}
           {session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}
         </h1>
         <p className="text-xs text-[var(--neutral-500)] mt-0.5">
@@ -163,7 +169,7 @@ export default function StaffHomePage() {
       {loading && (
         <div className="flex flex-col items-center justify-center py-16">
           <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-sm text-gray-500">Loading your daily status...</p>
+          <p className="text-sm text-gray-500">{t('home.loading')}</p>
         </div>
       )}
 
@@ -248,7 +254,7 @@ export default function StaffHomePage() {
                     {/* Checkpoint count */}
                     {step.num === 3 && isDone && status.photos.checkpoints > 0 && (
                       <p className="text-[10px] text-[var(--neutral-400)] mt-0.5">
-                        + {status.photos.checkpoints} checkpoint photo{status.photos.checkpoints !== 1 ? 's' : ''}
+                        + {status.photos.checkpoints} {t('home.checkpointPhotosSuffix')}
                       </p>
                     )}
 
@@ -277,7 +283,7 @@ export default function StaffHomePage() {
                         href={step.action}
                         className="inline-flex items-center gap-1.5 mt-2 px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors active:scale-[0.97]"
                       >
-                        View Details
+                        {t('home.stepRouteViewDetails')}
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
@@ -332,8 +338,8 @@ export default function StaffHomePage() {
           <svg className="w-10 h-10 mx-auto text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
           </svg>
-          <p className="text-sm font-semibold text-emerald-700">All tasks completed!</p>
-          <p className="text-xs text-emerald-600 mt-0.5">Great work today.</p>
+          <p className="text-sm font-semibold text-emerald-700">{t('home.allDoneTitle')}</p>
+          <p className="text-xs text-emerald-600 mt-0.5">{t('home.allDoneSub')}</p>
         </div>
       )}
     </div>

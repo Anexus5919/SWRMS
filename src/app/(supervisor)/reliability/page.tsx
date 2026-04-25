@@ -7,7 +7,7 @@ import {
   Button,
   Card,
   EmptyState,
-  SkeletonRow,
+  Skeleton,
 } from '@/components/ui';
 
 type Rating = 'excellent' | 'good' | 'fair' | 'poor';
@@ -205,9 +205,14 @@ export default function ReliabilityPage() {
 
       {loading ? (
         <Card>
-          <div className="space-y-2 p-2">
+          <div className="p-4 space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <SkeletonRow key={i} />
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton height="h-3" width="w-32" />
+                <Skeleton height="h-3" width="w-20" />
+                <Skeleton height="h-3" width="w-12" className="ml-auto" />
+                <Skeleton height="h-3" width="w-16" />
+              </div>
             ))}
           </div>
         </Card>
@@ -377,8 +382,11 @@ function ReliabilityDetailModal({
         </div>
 
         {loading ? (
-          <div className="p-6">
-            <SkeletonRow />
+          <div className="p-6 space-y-3">
+            <Skeleton height="h-6" width="w-48" />
+            <Skeleton height="h-3" width="w-full" />
+            <Skeleton height="h-3" width="w-3/4" />
+            <Skeleton height="h-20" width="w-full" rounded="lg" />
           </div>
         ) : !detail ? (
           <div className="p-6 text-sm text-[var(--neutral-500)]">Could not load report.</div>

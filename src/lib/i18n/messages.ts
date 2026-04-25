@@ -65,6 +65,51 @@ export interface Messages {
     confirm: string;
     cancel: string;
   };
+  onboarding: {
+    welcome: string;            // "Welcome, {name}"
+    employeeId: string;         // "Employee ID"
+    faceRequiredTitle: string;
+    faceRequiredBody: string;
+    instructionsTitle: string;
+    instr1: string;
+    instr2: string;
+    instr3: string;
+    instr4: string;
+    registerButton: string;
+    back: string;
+    doneTitle: string;
+    redirecting: string;
+  };
+  home: {
+    morning: string;
+    afternoon: string;
+    evening: string;
+    loading: string;
+    stepFace: string;
+    stepFaceDone: string;
+    stepFacePending: string;
+    stepFaceAction: string;
+    stepAttendance: string;
+    stepAttendancePending: string;
+    stepAttendanceAction: string;
+    stepAttendanceVerifiedAt: string;
+    stepShiftStart: string;
+    stepShiftStartPending: string;
+    stepShiftStartAction: string;
+    stepShiftEnd: string;
+    stepShiftEndPending: string;
+    stepShiftEndAction: string;
+    stepRoute: string;
+    stepRouteCompleted: string;
+    stepRoutePercentSuffix: string;
+    stepRouteAction: string;
+    stepRouteViewDetails: string;
+    submittedAt: string;
+    verifiedSuffix: string;
+    checkpointPhotosSuffix: string;
+    allDoneTitle: string;
+    allDoneSub: string;
+  };
   errors: {
     generic: string;
     network: string;
@@ -122,6 +167,52 @@ export const messages: Record<Locale, Messages> = {
       confirm: 'Confirm',
       cancel: 'Cancel',
     },
+    onboarding: {
+      welcome: 'Welcome',
+      employeeId: 'Employee ID',
+      faceRequiredTitle: 'Face Registration Required',
+      faceRequiredBody:
+        'Before you can mark attendance or take geotagged photos, you need to register your face. This is a one-time process. Your photo will be used to verify your identity at job sites.',
+      instructionsTitle: 'Instructions:',
+      instr1: 'Face the front camera directly - clear, well-lit photo',
+      instr2: 'Remove sunglasses, hats, or anything covering your face',
+      instr3: 'Wait for the green border - it means your face is detected',
+      instr4: 'Tap capture - your face embedding will be saved securely',
+      registerButton: 'Register My Face',
+      back: 'Back',
+      doneTitle: 'Face Registered!',
+      redirecting: 'Redirecting you to mark attendance...',
+    },
+    home: {
+      morning: 'Good Morning',
+      afternoon: 'Good Afternoon',
+      evening: 'Good Evening',
+      loading: 'Loading your daily status...',
+      stepFace: 'Face Registration',
+      stepFaceDone: 'Registered',
+      stepFacePending: 'Required before check-in',
+      stepFaceAction: 'Register Face',
+      stepAttendance: 'Mark Attendance',
+      stepAttendancePending: 'GPS attendance check-in',
+      stepAttendanceAction: 'Mark Now',
+      stepAttendanceVerifiedAt: 'Verified at',
+      stepShiftStart: 'Shift Start Photo',
+      stepShiftStartPending: 'Face-verified shift start photo',
+      stepShiftStartAction: 'Take Photo',
+      stepShiftEnd: 'Shift End Photo',
+      stepShiftEndPending: 'Face-verified shift end photo',
+      stepShiftEndAction: 'Take Photo',
+      stepRoute: 'Route Progress',
+      stepRouteCompleted: 'Route completed',
+      stepRoutePercentSuffix: '% complete',
+      stepRouteAction: 'View Progress',
+      stepRouteViewDetails: 'View Details',
+      submittedAt: 'Submitted at',
+      verifiedSuffix: 'Verified',
+      checkpointPhotosSuffix: 'checkpoint photos',
+      allDoneTitle: 'All tasks completed!',
+      allDoneSub: 'Great work today.',
+    },
     errors: {
       generic: 'Something went wrong. Please try again.',
       network: 'No internet. We will retry automatically.',
@@ -177,6 +268,52 @@ export const messages: Record<Locale, Messages> = {
       confirm: 'पुष्टि करें',
       cancel: 'रद्द करें',
     },
+    onboarding: {
+      welcome: 'स्वागत है',
+      employeeId: 'कर्मचारी आईडी',
+      faceRequiredTitle: 'चेहरा पंजीकरण आवश्यक',
+      faceRequiredBody:
+        'हाज़िरी लगाने या जियो-टैग फ़ोटो लेने से पहले आपको अपना चेहरा पंजीकृत करना होगा। यह एक बार की प्रक्रिया है। आपकी फ़ोटो काम की जगह पर पहचान सत्यापन के लिए इस्तेमाल होगी।',
+      instructionsTitle: 'निर्देश:',
+      instr1: 'कैमरे के सामने सीधे देखें - साफ़ और अच्छी रोशनी वाली फ़ोटो',
+      instr2: 'चश्मा, टोपी या चेहरा ढकने वाली कोई चीज़ हटा दें',
+      instr3: 'हरी सीमा का इंतज़ार करें - इसका मतलब है आपका चेहरा पहचाना गया',
+      instr4: 'कैप्चर दबाएँ - आपका चेहरा सुरक्षित रूप से सहेजा जाएगा',
+      registerButton: 'मेरा चेहरा पंजीकृत करें',
+      back: 'वापस',
+      doneTitle: 'चेहरा पंजीकृत हो गया!',
+      redirecting: 'आपको हाज़िरी पेज पर ले जाया जा रहा है...',
+    },
+    home: {
+      morning: 'सुप्रभात',
+      afternoon: 'नमस्ते',
+      evening: 'शुभ संध्या',
+      loading: 'आज की स्थिति लोड हो रही है...',
+      stepFace: 'चेहरा पंजीकरण',
+      stepFaceDone: 'पंजीकृत',
+      stepFacePending: 'हाज़िरी से पहले ज़रूरी',
+      stepFaceAction: 'चेहरा पंजीकृत करें',
+      stepAttendance: 'हाज़िरी लगाएँ',
+      stepAttendancePending: 'GPS हाज़िरी चेक-इन',
+      stepAttendanceAction: 'अभी लगाएँ',
+      stepAttendanceVerifiedAt: 'सत्यापित हुई',
+      stepShiftStart: 'शिफ्ट शुरू फ़ोटो',
+      stepShiftStartPending: 'चेहरा-सत्यापित शिफ्ट शुरू फ़ोटो',
+      stepShiftStartAction: 'फ़ोटो लें',
+      stepShiftEnd: 'शिफ्ट समाप्ति फ़ोटो',
+      stepShiftEndPending: 'चेहरा-सत्यापित शिफ्ट समाप्ति फ़ोटो',
+      stepShiftEndAction: 'फ़ोटो लें',
+      stepRoute: 'रूट प्रगति',
+      stepRouteCompleted: 'रूट पूरा हुआ',
+      stepRoutePercentSuffix: '% पूरा',
+      stepRouteAction: 'प्रगति देखें',
+      stepRouteViewDetails: 'विवरण देखें',
+      submittedAt: 'जमा हुई',
+      verifiedSuffix: 'सत्यापित',
+      checkpointPhotosSuffix: 'चेकपॉइंट फ़ोटो',
+      allDoneTitle: 'सभी काम पूरे हो गए!',
+      allDoneSub: 'आज शानदार काम।',
+    },
     errors: {
       generic: 'कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।',
       network: 'इंटरनेट नहीं है। हम अपने आप दुबारा कोशिश करेंगे।',
@@ -231,6 +368,52 @@ export const messages: Record<Locale, Messages> = {
       declared: 'तुम्ही आज अनुपलब्ध असल्याचे नोंदवले आहे.',
       confirm: 'पुष्टी करा',
       cancel: 'रद्द करा',
+    },
+    onboarding: {
+      welcome: 'स्वागत आहे',
+      employeeId: 'कर्मचारी आयडी',
+      faceRequiredTitle: 'चेहरा नोंदणी आवश्यक',
+      faceRequiredBody:
+        'हजेरी लावण्याआधी किंवा जिओ-टॅग फोटो काढण्याआधी तुम्हाला तुमचा चेहरा नोंदवावा लागेल. ही एकदाच करायची प्रक्रिया आहे. कामाच्या ठिकाणी ओळख पटवण्यासाठी तुमचा फोटो वापरला जाईल.',
+      instructionsTitle: 'सूचना:',
+      instr1: 'समोरच्या कॅमेऱ्याकडे थेट पाहा - स्पष्ट, चांगल्या उजेडातला फोटो',
+      instr2: 'गॉगल, टोपी किंवा चेहरा झाकणारी कोणतीही गोष्ट काढा',
+      instr3: 'हिरव्या किनारीची वाट पहा - म्हणजे तुमचा चेहरा ओळखला गेला',
+      instr4: 'कॅप्चर दाबा - तुमचा चेहरा सुरक्षितपणे जतन होईल',
+      registerButton: 'माझा चेहरा नोंदवा',
+      back: 'मागे',
+      doneTitle: 'चेहरा नोंदला गेला!',
+      redirecting: 'तुम्हाला हजेरी पानावर नेले जात आहे...',
+    },
+    home: {
+      morning: 'सुप्रभात',
+      afternoon: 'नमस्कार',
+      evening: 'शुभ संध्याकाळ',
+      loading: 'आजची स्थिती लोड होत आहे...',
+      stepFace: 'चेहरा नोंदणी',
+      stepFaceDone: 'नोंदले',
+      stepFacePending: 'हजेरीआधी आवश्यक',
+      stepFaceAction: 'चेहरा नोंदवा',
+      stepAttendance: 'हजेरी लावा',
+      stepAttendancePending: 'GPS हजेरी चेक-इन',
+      stepAttendanceAction: 'आता लावा',
+      stepAttendanceVerifiedAt: 'पडताळणी झाली',
+      stepShiftStart: 'शिफ्ट सुरू फोटो',
+      stepShiftStartPending: 'चेहरा-पडताळलेला शिफ्ट सुरू फोटो',
+      stepShiftStartAction: 'फोटो काढा',
+      stepShiftEnd: 'शिफ्ट संपण्याचा फोटो',
+      stepShiftEndPending: 'चेहरा-पडताळलेला शिफ्ट संपण्याचा फोटो',
+      stepShiftEndAction: 'फोटो काढा',
+      stepRoute: 'मार्ग प्रगती',
+      stepRouteCompleted: 'मार्ग पूर्ण झाला',
+      stepRoutePercentSuffix: '% पूर्ण',
+      stepRouteAction: 'प्रगती पहा',
+      stepRouteViewDetails: 'तपशील पहा',
+      submittedAt: 'दाखल केले',
+      verifiedSuffix: 'पडताळलेले',
+      checkpointPhotosSuffix: 'चेकपॉइंट फोटो',
+      allDoneTitle: 'सर्व कामे पूर्ण!',
+      allDoneSub: 'आजचे काम छान झाले.',
     },
     errors: {
       generic: 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.',

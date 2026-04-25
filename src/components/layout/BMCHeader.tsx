@@ -84,14 +84,16 @@ export default function BMCHeader() {
 
               {menuOpen && (
                 <>
-                  {/* Click-outside overlay */}
+                  {/* Click-outside overlay. Lifted above Leaflet's tooltip
+                      pane (z-700) so the menu renders correctly when a map
+                      is the next sibling on the page. */}
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-[1000]"
                     onClick={() => setMenuOpen(false)}
                     aria-hidden="true"
                   />
                   {/* Menu */}
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-doc-xl border border-[var(--border)] z-50 overflow-hidden animate-fade-in">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-doc-xl border border-[var(--border)] z-[1001] overflow-hidden animate-fade-in">
                     {/* User header */}
                     <div className="bg-bmc-900 text-white p-4">
                       <div className="flex items-center gap-3">
