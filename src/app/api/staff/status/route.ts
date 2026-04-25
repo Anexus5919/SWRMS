@@ -39,7 +39,7 @@ export async function GET() {
   if (user.assignedRouteId) {
     [routeProgress, route] = await Promise.all([
       RouteProgress.findOne({ routeId: user.assignedRouteId, date: today }).lean(),
-      Route.findById(user.assignedRouteId).select('name code').lean(),
+      Route.findById(user.assignedRouteId).select('name code shiftEnd shiftStart').lean(),
     ]);
   }
 
@@ -79,7 +79,7 @@ export async function GET() {
         }
       : { percentage: 0, status: 'not_started' },
     route: route
-      ? { name: route.name, code: route.code }
+      ? { name: route.name, code: route.code, shiftStart: route.shiftStart, shiftEnd: route.shiftEnd }
       : null,
   };
 

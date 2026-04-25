@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import TrackingCard from '@/components/tracking/TrackingCard';
 
 interface StatusData {
   faceRegistered: boolean;
@@ -20,7 +21,7 @@ interface StatusData {
     percentage: number;
     status: string;
   };
-  route: { name: string; code: string } | null;
+  route: { name: string; code: string; shiftEnd?: string } | null;
 }
 
 function formatDate(): string {
@@ -286,6 +287,15 @@ export default function StaffHomePage() {
             })}
           </div>
         </div>
+      )}
+
+      {/* Live tracking card - only after attendance is marked */}
+      {!loading && status?.attendance.marked && status.attendance.status === 'verified' && (
+        <TrackingCard
+          attendanceVerified
+          routeCompleted={status.routeProgress.status === 'completed'}
+          shiftEnd={status.route?.shiftEnd}
+        />
       )}
 
       {/* Route info footer */}

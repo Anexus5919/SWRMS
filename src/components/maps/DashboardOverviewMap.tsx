@@ -27,8 +27,22 @@ interface RouteOverview {
   routeProgress?: { status: string; completionPercentage: number };
 }
 
+export interface LiveWorkerPosition {
+  userId: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  routeId: string;
+  coordinates: { lat: number; lng: number; accuracy?: number | null };
+  recordedAt: string | Date;
+  isOffRoute: boolean;
+  distanceFromRouteMeters: number | null;
+}
+
 interface DashboardOverviewMapProps {
   routes: RouteOverview[];
+  /** Latest GPS ping per active worker. Empty array = no live data. */
+  livePositions?: LiveWorkerPosition[];
   height?: string;
   /** Pre-fit zoom; map auto-fits to all routes after mount. */
   defaultCenter?: [number, number];
@@ -69,6 +83,7 @@ function FitToRoutes({ points }: { points: [number, number][] }) {
  */
 export default function DashboardOverviewMap({
   routes,
+  livePositions = [],
   height = '400px',
   defaultCenter = [19.0522, 72.8994], // Chembur center
   defaultZoom = 13,
@@ -125,6 +140,46 @@ export default function DashboardOverviewMap({
       />
 
       <FitToRoutes points={allPoints} />
+
+      {/* Live worker pins. Off-route workers get a red highlight ring. */}
+      {livePositions.map((w) => (
+        <CircleMarker
+          key={`worker-${w.userId}`}
+          center={[w.coordinates.lat, w.coordinates.lng]}
+          radius={8}
+          pathOptions={{
+            color: w.isOffRoute ? '#b91c1c' : '#1d4ed8',
+            fillColor: w.isOffRoute ? '#fee2e2' : '#dbeafe',
+            fillOpacity: 1,
+            weight: 3,
+          }}
+        >
+          <Tooltip direction="top">
+            <div className="text-xs">
+              <strong>
+                {w.firstName} {w.lastName}
+              </strong>{' '}
+              <span className="font-mono text-[10px]">({w.employeeId})</span>
+              <br />
+              {w.isOffRoute ? (
+                <span style={{ color: '#b91c1c' }}>
+                  Off route &mdash; {w.distanceFromRouteMeters ?? '?'}m from path
+                </span>
+              ) : (
+                <span style={{ color: '#1d4ed8' }}>On route</span>
+              )}
+              <br />
+              <span className="text-[10px]">
+                Last update:{' '}
+                {new Date(w.recordedAt).toLocaleTimeString('en-IN', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          </Tooltip>
+        </CircleMarker>
+      ))}
 
       {routesWithPolylines.map(({ route: r, positions, snapped }) => {
         const color = STATUS_COLOR[r.statusLabel] ?? STATUS_COLOR.adequate;

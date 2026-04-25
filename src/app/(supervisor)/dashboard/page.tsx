@@ -47,6 +47,18 @@ interface DashboardData {
   };
 }
 
+interface LivePosition {
+  userId: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  routeId: string;
+  coordinates: { lat: number; lng: number; accuracy?: number | null };
+  recordedAt: string;
+  isOffRoute: boolean;
+  distanceFromRouteMeters: number | null;
+}
+
 const statusToBadge: Record<RouteItem['statusLabel'], 'green' | 'amber' | 'red'> = {
   adequate: 'green',
   marginal: 'amber',
@@ -69,6 +81,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'map'>('grid');
+  const [livePositions, setLivePositions] = useState<LivePosition[]>([]);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -82,12 +95,28 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const fetchLivePositions = useCallback(async () => {
+    try {
+      const res = await fetch('/api/tracking/live');
+      const json = await res.json();
+      if (json.success) setLivePositions(json.data?.positions ?? []);
+    } catch {
+      // Tracking is non-critical for the rest of the dashboard.
+    }
+  }, []);
+
   useEffect(() => {
     fetchDashboard();
-    // Poll every 15 seconds for real-time updates
-    const interval = setInterval(fetchDashboard, 15000);
-    return () => clearInterval(interval);
-  }, [fetchDashboard]);
+    fetchLivePositions();
+    const dashInterval = setInterval(fetchDashboard, 15000);
+    // Live positions refresh more aggressively while in map view (every 10s),
+    // less so otherwise (every 30s) to save bandwidth.
+    const liveInterval = setInterval(fetchLivePositions, 10_000);
+    return () => {
+      clearInterval(dashInterval);
+      clearInterval(liveInterval);
+    };
+  }, [fetchDashboard, fetchLivePositions]);
 
   // Page header (always rendered, even during loading)
   const PageHeader = ({ subtitle }: { subtitle: string }) => (
@@ -258,12 +287,17 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Map view: every active route, color-coded by staffing status */}
+      {/* Map view: every active route, color-coded by staffing status,
+          with live worker pins overlaid (refreshes every 10s). */}
       {view === 'map' && (
         <div className="mb-6">
-          <DashboardOverviewMap routes={routes} height="450px" />
+          <DashboardOverviewMap
+            routes={routes}
+            livePositions={livePositions}
+            height="450px"
+          />
           {routes.length > 0 && (
-            <div className="mt-2 flex items-center gap-4 text-[10px] text-[var(--neutral-500)]">
+            <div className="mt-2 flex items-center gap-4 text-[10px] text-[var(--neutral-500)] flex-wrap">
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#15803d' }} />
                 Adequate
@@ -275,6 +309,20 @@ export default function DashboardPage() {
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#b91c1c' }} />
                 Critical
+              </span>
+              <span className="inline-flex items-center gap-1.5 ml-2">
+                <span
+                  className="w-2.5 h-2.5 rounded-full border-2"
+                  style={{ borderColor: '#1d4ed8', background: '#dbeafe' }}
+                />
+                Worker on route ({livePositions.filter((p) => !p.isOffRoute).length})
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full border-2"
+                  style={{ borderColor: '#b91c1c', background: '#fee2e2' }}
+                />
+                Worker off route ({livePositions.filter((p) => p.isOffRoute).length})
               </span>
             </div>
           )}

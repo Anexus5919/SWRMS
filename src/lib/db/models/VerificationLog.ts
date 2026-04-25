@@ -15,6 +15,12 @@ export interface IVerificationLog extends Document {
     faceDistance?: number;
     coordinates?: { lat: number; lng: number };
     photoUrl?: string; // base64 reference for manual check
+    /** Sub-kind for location_anomaly: 'route_deviation' | 'idle' | 'mock_location'. */
+    kind?: 'route_deviation' | 'idle' | 'mock_location';
+    distanceMeters?: number;
+    thresholdMeters?: number;
+    spanMeters?: number;
+    windowMinutes?: number;
   };
   resolution: {
     status: 'open' | 'acknowledged' | 'resolved' | 'dismissed';
@@ -73,6 +79,11 @@ const VerificationLogSchema = new Schema<IVerificationLog>(
         lng: Number,
       },
       photoUrl: String,
+      kind: { type: String, enum: ['route_deviation', 'idle', 'mock_location', null], default: null },
+      distanceMeters: Number,
+      thresholdMeters: Number,
+      spanMeters: Number,
+      windowMinutes: Number,
     },
     resolution: {
       status: {
