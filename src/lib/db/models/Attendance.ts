@@ -19,6 +19,10 @@ export interface IAttendance extends Document {
     userAgent?: string;
     platform?: string;
   };
+  /** True if device's Geolocation API said the position came from a mock provider. */
+  mockLocation?: boolean;
+  /** Difference in seconds between client clock and server clock. */
+  clockDriftSeconds?: number | null;
   isOfflineSync: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -70,6 +74,8 @@ const AttendanceSchema = new Schema<IAttendance>(
       userAgent: String,
       platform: String,
     },
+    mockLocation: { type: Boolean, default: false },
+    clockDriftSeconds: { type: Number, default: null },
     isOfflineSync: {
       type: Boolean,
       default: false,

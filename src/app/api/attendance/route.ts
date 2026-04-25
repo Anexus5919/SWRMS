@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
-import { Attendance, Route, User } from '@/lib/db/models';
+import { Attendance, Route, User, VerificationLog, Unavailability } from '@/lib/db/models';
 import { verifyGeofence } from '@/lib/geo/geofence';
 import { requireRole } from '@/lib/auth/middleware';
 import { markAttendanceSchema } from '@/lib/validators/schemas';
+import { todayIST } from '@/lib/utils/timezone';
 
-function todayString() {
-  return new Date().toISOString().split('T')[0];
-}
+const CLOCK_DRIFT_WARNING_SECONDS = 300; // 5 minutes
 
 /**
  * POST /api/attendance - Mark geo-fenced attendance
@@ -36,21 +35,73 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { coordinates, deviceInfo } = parsed.data;
+  const { coordinates, deviceInfo, mockLocation, clientTime } = parsed.data;
   // `attempts` is not part of the validated schema but may be sent by the client
-  const attempts = (body as Record<string, unknown>).coordinates &&
-    typeof (body.coordinates as Record<string, unknown>).attempts === 'number'
-    ? (body.coordinates as Record<string, unknown>).attempts as number
-    : 1;
+  const rawCoords = (body as Record<string, unknown>).coordinates;
+  const attempts =
+    rawCoords && typeof (rawCoords as Record<string, unknown>).attempts === 'number'
+      ? ((rawCoords as Record<string, unknown>).attempts as number)
+      : 1;
 
   const userId = session!.user.id;
-  const today = todayString();
+  const today = todayIST();
+
+  // ── Anti-fraud gate 1: mock-location flag ────────────────────────
+  // Reject the attendance entirely. Worker would have had to enable
+  // a fake-GPS app and grant it permissions to set this flag, so we
+  // treat it as a clear policy violation.
+  if (mockLocation) {
+    const userForLog = await User.findById(userId).select('assignedRouteId').lean();
+    if (userForLog?.assignedRouteId) {
+      await VerificationLog.create({
+        type: 'location_anomaly',
+        severity: 'critical',
+        routeId: userForLog.assignedRouteId,
+        date: today,
+        affectedUserId: userId,
+        details: {
+          kind: 'mock_location',
+          coordinates: { lat: coordinates.lat, lng: coordinates.lng },
+          message:
+            'Attendance rejected: device reported mock-location (fake GPS app suspected).',
+        },
+        resolution: { status: 'open' },
+      });
+    }
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'MOCK_LOCATION_REJECTED',
+          message:
+            'Mock-location detected. Attendance cannot be marked. If you have a fake-GPS app installed, please remove it and try again.',
+        },
+      },
+      { status: 403 }
+    );
+  }
 
   // Check if already checked in today
   const existing = await Attendance.findOne({ userId, date: today });
   if (existing) {
     return NextResponse.json(
       { success: false, error: { code: 'ALREADY_CHECKED_IN', message: 'Attendance already marked for today' } },
+      { status: 409 }
+    );
+  }
+
+  // Check if worker self-declared unavailable today
+  const unavailable = await Unavailability.findOne({ userId, date: today }).select('reason').lean();
+  if (unavailable) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'DECLARED_UNAVAILABLE',
+          message:
+            'You declared yourself unavailable today and cannot mark attendance. Contact your supervisor if you returned to work.',
+        },
+      },
       { status: 409 }
     );
   }
@@ -73,6 +124,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Verify geofence
+  const serverNow = new Date();
   const geofenceResult = verifyGeofence(
     coordinates.lat,
     coordinates.lng,
@@ -81,11 +133,36 @@ export async function POST(req: NextRequest) {
     route.geofenceRadius
   );
 
+  // ── Anti-fraud gate 2: clock drift detection ─────────────────────
+  // Don't reject — workers may legitimately have wrong clocks — but log
+  // a warning so supervisors can investigate suspicious cases (e.g. a
+  // worker faking attendance during off-hours by skewing device time).
+  let clockDriftSeconds: number | null = null;
+  if (clientTime) {
+    const drift = Math.abs(serverNow.getTime() - new Date(clientTime).getTime()) / 1000;
+    clockDriftSeconds = Math.round(drift);
+    if (drift > CLOCK_DRIFT_WARNING_SECONDS) {
+      await VerificationLog.create({
+        type: 'location_anomaly',
+        severity: 'warning',
+        routeId: route._id,
+        date: today,
+        affectedUserId: userId,
+        details: {
+          kind: 'mock_location', // re-use kind enum; specific cause goes in message
+          coordinates: { lat: coordinates.lat, lng: coordinates.lng },
+          message: `Device clock differs from server clock by ${Math.round(drift)} seconds. Possible time tampering.`,
+        },
+        resolution: { status: 'open' },
+      });
+    }
+  }
+
   const attendance = await Attendance.create({
     userId,
     routeId: route._id,
     date: today,
-    checkInTime: new Date(),
+    checkInTime: serverNow,
     coordinates: {
       lat: coordinates.lat,
       lng: coordinates.lng,
@@ -96,6 +173,8 @@ export async function POST(req: NextRequest) {
     rejectionReason: geofenceResult.verified ? undefined : geofenceResult.message,
     attempts,
     deviceInfo: deviceInfo || {},
+    mockLocation: false,
+    clockDriftSeconds,
     isOfflineSync: false,
   });
 
@@ -110,6 +189,7 @@ export async function POST(req: NextRequest) {
       routeName: route.name,
       routeCode: route.code,
       checkInTime: attendance.checkInTime,
+      clockDriftSeconds,
     },
   });
 }
@@ -124,7 +204,7 @@ export async function GET(req: NextRequest) {
   await connectDB();
 
   const { searchParams } = new URL(req.url);
-  const date = searchParams.get('date') || todayString();
+  const date = searchParams.get('date') || todayIST();
   const routeId = searchParams.get('routeId');
 
   const filter: Record<string, unknown> = { date };

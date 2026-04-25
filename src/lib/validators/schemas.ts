@@ -11,9 +11,13 @@ const coordinateSchema = z.object({
 export const markAttendanceSchema = z.object({
   coordinates: coordinateSchema,
   deviceInfo: z.object({
-    userAgent: z.string().optional(),
-    platform: z.string().optional(),
+    userAgent: z.string().max(500).optional(),
+    platform: z.string().max(100).optional(),
   }).optional(),
+  /** Android isFromMockProvider passthrough; we reject attendance if true. */
+  mockLocation: z.boolean().optional(),
+  /** Device-reported time so we can detect clock tampering. */
+  clientTime: z.string().datetime().optional(),
 });
 
 export const syncAttendanceSchema = z.object({
