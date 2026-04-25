@@ -1,12 +1,20 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
-// Route-table-driven role gating.
-// Each entry's prefix matches the path itself OR any sub-path under it,
-// but NOT siblings that happen to share a leading substring (e.g. `/attendance`
-// must NOT match `/attendance-log`). This is the bug that previously redirected
-// supervisors clicking "Attendance Log" back to the staff `/home` page and then
-// to `/dashboard`.
+/**
+ * Next 16 renamed the `middleware` file convention to `proxy`. The export
+ * shape is identical (default function + optional `config`), and the
+ * `withAuth(...)` wrapper from `next-auth/middleware` is just a higher-
+ * order function that we re-export here unchanged.
+ *
+ * The function name no longer needs to match `middleware` — Next 16
+ * accepts any default export of `(req) => Response | undefined`.
+ *
+ * Route-table-driven role gating. Each entry's prefix matches the path
+ * itself OR any sub-path under it, but NOT siblings that happen to share
+ * a leading substring (e.g. `/attendance` must NOT match `/attendance-log`).
+ */
+
 const SUPERVISOR_PREFIXES = [
   '/dashboard',
   '/routes',
@@ -42,7 +50,7 @@ function matchesAny(pathname: string, prefixes: readonly string[]): boolean {
 }
 
 export default withAuth(
-  function middleware(req) {
+  function proxy(req) {
     const { pathname } = req.nextUrl;
     const role = req.nextauth.token?.role as string;
 

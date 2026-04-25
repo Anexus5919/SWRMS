@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { uploadPhotoSchema, MAX_PHOTO_BASE64_LENGTH } from '@/lib/validators/schemas';
 import { compareFaceDescriptors } from '@/lib/face/compare';
 import { todayIST } from '@/lib/utils/timezone';
+import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
 
 /**
  * POST /api/photos - Upload a geotagged photo with face verification
@@ -12,6 +13,9 @@ import { todayIST } from '@/lib/utils/timezone';
 export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('staff');
   if (error) return error;
+
+  const limit = checkLimit(`photos:${session!.user.id}`, LIMITS.photos.max, LIMITS.photos.windowMs);
+  if (!limit.ok) return rateLimitResponse(limit);
 
   // Defensive payload-size check before parsing JSON. ~1.4MB photo + ~3KB
   // descriptor + envelope. Anything over 1.6MB is rejected up-front to

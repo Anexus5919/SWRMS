@@ -6,6 +6,7 @@ import { trackingPingSchema } from '@/lib/validators/tracking';
 import { todayIST } from '@/lib/utils/timezone';
 import { decodePolyline } from '@/lib/routing/osrm';
 import { evaluateAnomaly } from '@/lib/engine/anomaly';
+import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
 
 const ALERT_COOLDOWN_MS = 15 * 60 * 1000;
 
@@ -35,6 +36,12 @@ export async function POST(req: NextRequest) {
   const userId = session?.user?.id as string;
   const assignedRouteId = (session?.user as { assignedRouteId?: string | null } | undefined)
     ?.assignedRouteId;
+
+  // Per-user rate limit. Real cap is ~120 pings/hr at 30s interval; we
+  // allow 240/hr to absorb client retries and clock skew without ever
+  // letting a scripted client flood the endpoint.
+  const limit = checkLimit(`ping:${userId}`, LIMITS.trackingPing.max, LIMITS.trackingPing.windowMs);
+  if (!limit.ok) return rateLimitResponse(limit);
 
   if (!assignedRouteId) {
     return NextResponse.json(

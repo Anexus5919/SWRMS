@@ -5,6 +5,7 @@ import { Attendance, Unavailability, User } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 import { logAudit } from '@/lib/audit';
+import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
 
 const declareUnavailabilitySchema = z.object({
   reason: z.enum(['sick', 'personal', 'transport', 'other']),
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest) {
   if (error) return error;
 
   const userId = session?.user?.id as string;
+
+  const limit = checkLimit(`unavail:${userId}`, LIMITS.unavailability.max, LIMITS.unavailability.windowMs);
+  if (!limit.ok) return rateLimitResponse(limit);
 
   let body: unknown;
   try {

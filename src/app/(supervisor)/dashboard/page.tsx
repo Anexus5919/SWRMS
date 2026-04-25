@@ -108,16 +108,52 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboard();
-    fetchLivePositions();
     const dashInterval = setInterval(fetchDashboard, 15000);
-    // Live positions refresh more aggressively while in map view (every 10s),
-    // less so otherwise (every 30s) to save bandwidth.
-    const liveInterval = setInterval(fetchLivePositions, 10_000);
-    return () => {
-      clearInterval(dashInterval);
-      clearInterval(liveInterval);
+    return () => clearInterval(dashInterval);
+  }, [fetchDashboard]);
+
+  // Live positions: prefer the SSE stream (one connection, server-paced
+  // 5s ticks). Fall back to polling if SSE fails — older proxies, dev
+  // hot-reloads, or network policies sometimes strip text/event-stream.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof EventSource === 'undefined') {
+      fetchLivePositions();
+      const id = setInterval(fetchLivePositions, 10_000);
+      return () => clearInterval(id);
+    }
+
+    let pollId: ReturnType<typeof setInterval> | null = null;
+    const es = new EventSource('/api/tracking/stream');
+
+    const startPollingFallback = () => {
+      if (pollId) return;
+      fetchLivePositions();
+      pollId = setInterval(fetchLivePositions, 10_000);
     };
-  }, [fetchDashboard, fetchLivePositions]);
+
+    es.addEventListener('positions', (e) => {
+      try {
+        const payload = JSON.parse((e as MessageEvent).data);
+        setLivePositions(payload.positions ?? []);
+      } catch {
+        // Malformed payload — ignore this tick.
+      }
+    });
+
+    es.onerror = () => {
+      // EventSource auto-reconnects on transient errors. Only fall back
+      // to polling once the connection is permanently closed (e.g. an
+      // intermediary stripped the stream).
+      if (es.readyState === EventSource.CLOSED) {
+        startPollingFallback();
+      }
+    };
+
+    return () => {
+      es.close();
+      if (pollId) clearInterval(pollId);
+    };
+  }, [fetchLivePositions]);
 
   // Page header (always rendered, even during loading)
   const PageHeader = ({ subtitle }: { subtitle: string }) => (

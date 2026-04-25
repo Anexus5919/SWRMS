@@ -9,6 +9,7 @@ export { default as AuditLog } from './AuditLog';
 export { default as GPSPing } from './GPSPing';
 export { default as Unavailability } from './Unavailability';
 export { default as Checkpoint, CheckpointScan } from './Checkpoint';
+export { default as PushSubscription } from './PushSubscription';
 
 export type { IUser } from './User';
 export type { IRoute } from './Route';
@@ -21,3 +22,4 @@ export type { IAuditLog, AuditAction } from './AuditLog';
 export type { IGPSPing } from './GPSPing';
 export type { IUnavailability } from './Unavailability';
 export type { ICheckpoint, ICheckpointScan } from './Checkpoint';
+export type { IPushSubscription } from './PushSubscription';

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Poppins, IBM_Plex_Serif, JetBrains_Mono } from 'next/font/google';
 import SessionProvider from '@/components/providers/SessionProvider';
 import './globals.css';
@@ -38,6 +38,11 @@ export const metadata: Metadata = {
     'Smart Workforce & Route Management System - Solid Waste Management, BMC Chembur Ward. Geo-fenced attendance, AI-verified field photos, real-time route tracking.',
   keywords: ['BMC', 'Brihanmumbai Municipal Corporation', 'Solid Waste Management', 'SWRMS', 'Mumbai', 'Chembur'],
   authors: [{ name: 'V.E.S.I.T Department of Information Technology' }],
+  manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#1a4480',
 };
 
 export default function RootLayout({

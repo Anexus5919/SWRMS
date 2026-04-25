@@ -1,0 +1,26 @@
+{
+  "name": "SWRMS — Smart Workforce & Route Management System",
+  "short_name": "SWRMS",
+  "description": "Brihanmumbai Municipal Corporation — Solid Waste Management Department field operations portal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#1a4480",
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/bmc_logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/bmc_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

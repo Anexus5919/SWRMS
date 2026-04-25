@@ -5,6 +5,7 @@ import { verifyGeofence } from '@/lib/geo/geofence';
 import { requireRole } from '@/lib/auth/middleware';
 import { markAttendanceSchema } from '@/lib/validators/schemas';
 import { todayIST } from '@/lib/utils/timezone';
+import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
 
 const CLOCK_DRIFT_WARNING_SECONDS = 300; // 5 minutes
 
@@ -14,6 +15,11 @@ const CLOCK_DRIFT_WARNING_SECONDS = 300; // 5 minutes
 export async function POST(req: NextRequest) {
   const { session, error } = await requireRole('staff');
   if (error) return error;
+
+  // Per-user rate limit AFTER auth so an unauthenticated attacker
+  // can't burn a legit user's quota by spamming.
+  const limit = checkLimit(`attendance:${session!.user.id}`, LIMITS.attendance.max, LIMITS.attendance.windowMs);
+  if (!limit.ok) return rateLimitResponse(limit);
 
   await connectDB();
 
