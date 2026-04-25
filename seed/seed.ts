@@ -353,7 +353,12 @@ async function seed() {
   // Creates a realistic scenario where some routes are overstaffed/completed
   // and others are critically understaffed, triggering the reallocation engine.
 
-  const today = new Date().toISOString().split('T')[0];
+  // Use IST date (matches todayIST() used by every API + cron). Using
+  // toISOString() directly returns UTC, which can be a different calendar
+  // day for ~5.5 hours each evening — that subtle drift used to leave
+  // today's dashboard empty when the seed was re-run after ~18:30 UTC.
+  const istNow = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+  const today = istNow.toISOString().split('T')[0];
   const attendanceRecords = [];
   const progressRecords = [];
 
