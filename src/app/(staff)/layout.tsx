@@ -5,12 +5,22 @@ import { useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import BMCHeader from '@/components/layout/BMCHeader';
 import MobileNav from '@/components/layout/MobileNav';
+import { LocaleProvider } from '@/lib/i18n/context';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 
 export default function StaffLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <LocaleProvider>
+      <StaffLayoutInner>{children}</StaffLayoutInner>
+    </LocaleProvider>
+  );
+}
+
+function StaffLayoutInner({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const router = useRouter();
@@ -58,6 +68,14 @@ export default function StaffLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <BMCHeader />
+      {/* Compact language switcher under the main BMC header. The staff
+          PWA is the only role-area with non-English copy, so it lives
+          inside the staff layout rather than in the global header. */}
+      <div className="bg-bmc-800 border-t border-white/10">
+        <div className="max-w-lg mx-auto px-4 py-1.5 flex justify-end">
+          <LanguageSwitcher />
+        </div>
+      </div>
       <main className="flex-1 pb-20">{children}</main>
       {/* Only show nav if face is registered (not on onboarding) */}
       {hasFace && pathname !== '/onboarding' && <MobileNav />}

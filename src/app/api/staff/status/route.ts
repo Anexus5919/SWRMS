@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
-import { User, Attendance, GeoPhoto, RouteProgress, Route } from '@/lib/db/models';
+import { User, Attendance, GeoPhoto, RouteProgress, Route, Unavailability } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 
@@ -17,13 +17,15 @@ export async function GET() {
   const today = todayIST();
 
   // Run all queries in parallel
-  const [user, attendance, shiftStartPhoto, checkpointCount, shiftEndPhoto] = await Promise.all([
-    User.findById(userId).select('faceDescriptor assignedRouteId name').lean(),
-    Attendance.findOne({ userId, date: today, status: 'verified' }).lean(),
-    GeoPhoto.findOne({ userId, date: today, type: 'shift_start' }).lean(),
-    GeoPhoto.countDocuments({ userId, date: today, type: 'checkpoint' }),
-    GeoPhoto.findOne({ userId, date: today, type: 'shift_end' }).lean(),
-  ]);
+  const [user, attendance, shiftStartPhoto, checkpointCount, shiftEndPhoto, unavailability] =
+    await Promise.all([
+      User.findById(userId).select('faceDescriptor assignedRouteId name').lean(),
+      Attendance.findOne({ userId, date: today, status: 'verified' }).lean(),
+      GeoPhoto.findOne({ userId, date: today, type: 'shift_start' }).lean(),
+      GeoPhoto.countDocuments({ userId, date: today, type: 'checkpoint' }),
+      GeoPhoto.findOne({ userId, date: today, type: 'shift_end' }).lean(),
+      Unavailability.findOne({ userId, date: today }).select('reason declaredAt').lean(),
+    ]);
 
   if (!user) {
     return NextResponse.json(
@@ -80,6 +82,9 @@ export async function GET() {
       : { percentage: 0, status: 'not_started' },
     route: route
       ? { name: route.name, code: route.code, shiftStart: route.shiftStart, shiftEnd: route.shiftEnd }
+      : null,
+    unavailability: unavailability
+      ? { reason: unavailability.reason, declaredAt: unavailability.declaredAt }
       : null,
   };
 

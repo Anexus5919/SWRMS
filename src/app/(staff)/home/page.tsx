@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import TrackingCard from '@/components/tracking/TrackingCard';
+import UnavailabilityCard from '@/components/staff/UnavailabilityCard';
 
 interface StatusData {
   faceRegistered: boolean;
@@ -22,6 +23,7 @@ interface StatusData {
     status: string;
   };
   route: { name: string; code: string; shiftEnd?: string } | null;
+  unavailability: { reason: string; declaredAt: string } | null;
 }
 
 function formatDate(): string {
@@ -287,6 +289,17 @@ export default function StaffHomePage() {
             })}
           </div>
         </div>
+      )}
+
+      {/* Unavailability card - shown when attendance NOT yet marked.
+          If worker already self-declared unavailable, shows confirmation
+          state. Hidden entirely once attendance is marked. */}
+      {!loading && status && (
+        <UnavailabilityCard
+          attendanceMarked={status.attendance.marked}
+          alreadyDeclared={status.unavailability !== null}
+          onDeclared={fetchStatus}
+        />
       )}
 
       {/* Live tracking card - only after attendance is marked */}

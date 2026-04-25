@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useLiveTracking } from '@/hooks/useLiveTracking';
+import { useTranslation } from '@/lib/i18n/context';
 
 interface TrackingCardProps {
   /** Worker has verified attendance — gates the Start button. */
@@ -37,6 +38,7 @@ export default function TrackingCard({
 }: TrackingCardProps) {
   const stopAt = useMemo(() => todayShiftEnd(shiftEnd), [shiftEnd]);
   const { status, start, stop } = useLiveTracking({ stopAt });
+  const { t } = useTranslation();
 
   // Auto-stop if the route flips to completed (someone marked 100% from another tab/device).
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function TrackingCard({
               aria-hidden
             />
             <h3 className="text-sm font-semibold text-[var(--neutral-800)]">
-              Live Tracking
+              {t('tracking.title')}
             </h3>
             <span
               className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
@@ -69,13 +71,11 @@ export default function TrackingCard({
                   : 'text-gray-500 bg-gray-100'
               }`}
             >
-              {isOn ? 'ON' : 'OFF'}
+              {isOn ? t('tracking.on') : t('tracking.off')}
             </span>
           </div>
           <p className="text-xs text-[var(--neutral-500)] mt-1.5 leading-relaxed">
-            {isOn
-              ? 'Your location is being shared with your supervisor while you complete the route.'
-              : 'Press Start Shift to share your location with the supervisor while you work. You can stop any time.'}
+            {isOn ? t('tracking.explainerOn') : t('tracking.explainerOff')}
           </p>
         </div>
       </div>
@@ -91,23 +91,24 @@ export default function TrackingCard({
         >
           {status.isOffRoute ? (
             <span>
-              <strong>Off route</strong> &mdash; you are{' '}
-              {status.distanceFromRouteMeters
-                ? `${status.distanceFromRouteMeters}m`
-                : 'far'}{' '}
-              from the assigned path. Return to the route.
+              <strong>{t('tracking.offRoute')}</strong>
+              {status.distanceFromRouteMeters !== null
+                ? ` — ${status.distanceFromRouteMeters} ${t('tracking.metresFromPath')}`
+                : ''}
+              {' · '}
+              {t('tracking.offRouteAction')}
             </span>
           ) : (
             <span>
-              <strong>On route</strong>
+              <strong>{t('tracking.onRoute')}</strong>
               {status.distanceFromRouteMeters !== null
-                ? ` (${status.distanceFromRouteMeters}m from path)`
+                ? ` (${status.distanceFromRouteMeters} ${t('tracking.metresFromPath')})`
                 : ''}
               {status.lastPingAt
-                ? ` — last update ${status.lastPingAt.toLocaleTimeString('en-IN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}`
+                ? ` — ${t('tracking.lastUpdate')} ${status.lastPingAt.toLocaleTimeString(
+                    'en-IN',
+                    { hour: '2-digit', minute: '2-digit' }
+                  )}`
                 : ''}
             </span>
           )}
@@ -117,16 +118,14 @@ export default function TrackingCard({
       {/* Mock-location warning */}
       {status.mockLocationDetected && (
         <div className="mt-3 px-3 py-2 rounded text-xs bg-red-50 border border-red-300 text-red-800">
-          <strong>Warning:</strong> Your device is reporting a mock-location flag. This
-          will be reviewed by the supervisor. If you have a fake-GPS app installed,
-          please disable it.
+          {t('tracking.mockLocationWarn')}
         </div>
       )}
 
       {/* Paused / error */}
       {status.state === 'paused' && status.error && (
         <p className="mt-3 text-[11px] text-amber-700">
-          Paused: {status.error}. Will retry on next interval.
+          {t('tracking.pausedPrefix')}: {status.error}.
         </p>
       )}
 
@@ -153,10 +152,10 @@ export default function TrackingCard({
               />
             </svg>
             {canStart
-              ? 'Start Shift Tracking'
+              ? t('tracking.startButton')
               : routeCompleted
-                ? 'Route Completed'
-                : 'Mark Attendance First'}
+                ? t('tracking.routeCompleted')
+                : t('tracking.markAttendanceFirst')}
           </button>
         ) : (
           <button
@@ -177,7 +176,7 @@ export default function TrackingCard({
                 d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"
               />
             </svg>
-            Stop Tracking
+            {t('tracking.stopButton')}
           </button>
         )}
       </div>
