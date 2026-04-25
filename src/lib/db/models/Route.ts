@@ -20,6 +20,16 @@ export interface IRoute extends Document {
   shiftStart: string;
   shiftEnd: string;
   status: 'active' | 'inactive' | 'suspended';
+  /** Encoded polyline (Google polyline algorithm, precision 5) snapped to roads. */
+  routePolyline?: string | null;
+  /** Source of the polyline so we can re-snap or trust accordingly. */
+  routePolylineSource?: 'osrm' | 'mapbox' | 'graphhopper' | 'manual' | null;
+  /** Distance returned by the routing engine. May differ from estimatedLengthKm. */
+  routeDistanceKm?: number | null;
+  /** Driving duration estimate in minutes. */
+  routeDurationMinutes?: number | null;
+  /** When the polyline was last computed; null until first snap. */
+  routePolylineUpdatedAt?: Date | null;
   createdAt: Date;
 }
 
@@ -79,6 +89,27 @@ const RouteSchema = new Schema<IRoute>({
     type: String,
     enum: ['active', 'inactive', 'suspended'],
     default: 'active',
+  },
+  routePolyline: {
+    type: String,
+    default: null,
+  },
+  routePolylineSource: {
+    type: String,
+    enum: ['osrm', 'mapbox', 'graphhopper', 'manual', null],
+    default: null,
+  },
+  routeDistanceKm: {
+    type: Number,
+    default: null,
+  },
+  routeDurationMinutes: {
+    type: Number,
+    default: null,
+  },
+  routePolylineUpdatedAt: {
+    type: Date,
+    default: null,
   },
   createdAt: {
     type: Date,

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { decodePolyline } from '@/lib/routing/osrm';
 
 // Fix default marker icon issue in Next.js
 const defaultIcon = L.icon({
@@ -32,6 +33,12 @@ interface RouteMapProps {
   workerPosition?: { lat: number; lng: number } | null;
   height?: string;
   statusColor?: string;
+  /**
+   * Encoded polyline (Google polyline algorithm, precision 5) — typically
+   * computed by OSRM and stored on the Route document. When present, the
+   * map renders the road-snapped path instead of the straight start→end line.
+   */
+  routePolyline?: string | null;
 }
 
 function FitBounds({ points }: { points: [number, number][] }) {
@@ -55,14 +62,27 @@ export default function RouteMap({
   workerPosition = null,
   height = '300px',
   statusColor = '#1a4480',
+  routePolyline = null,
 }: RouteMapProps) {
-  const allPoints: [number, number][] = [
-    [startPoint.lat, startPoint.lng],
-    ...waypoints.map((wp) => [wp.lat, wp.lng] as [number, number]),
-    [endPoint.lat, endPoint.lng],
-  ];
+  // Decode the encoded polyline if provided. Fall back to straight-line
+  // start → waypoints → end when the route hasn't been road-snapped yet.
+  const polylinePoints = useMemo<[number, number][]>(() => {
+    if (routePolyline) {
+      try {
+        return decodePolyline(routePolyline);
+      } catch {
+        // Bad polyline string — fall through to straight-line fallback.
+      }
+    }
+    return [
+      [startPoint.lat, startPoint.lng],
+      ...waypoints.map((wp) => [wp.lat, wp.lng] as [number, number]),
+      [endPoint.lat, endPoint.lng],
+    ];
+  }, [routePolyline, startPoint, endPoint, waypoints]);
 
   const center: [number, number] = [startPoint.lat, startPoint.lng];
+  const isSnapped = polylinePoints.length > waypoints.length + 2;
 
   return (
     <MapContainer
@@ -76,7 +96,7 @@ export default function RouteMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <FitBounds points={allPoints} />
+      <FitBounds points={polylinePoints} />
 
       {/* Geofence circle at start point */}
       <Circle
@@ -91,10 +111,16 @@ export default function RouteMap({
         }}
       />
 
-      {/* Route polyline */}
+      {/* Route polyline - road-snapped when available, otherwise straight line.
+          Dashed style indicates a non-snapped fallback so it's visually clear. */}
       <Polyline
-        positions={allPoints}
-        pathOptions={{ color: statusColor, weight: 3, opacity: 0.8 }}
+        positions={polylinePoints}
+        pathOptions={{
+          color: statusColor,
+          weight: 4,
+          opacity: 0.85,
+          dashArray: isSnapped ? undefined : '8 6',
+        }}
       />
 
       {/* Start marker */}

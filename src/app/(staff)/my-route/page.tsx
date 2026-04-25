@@ -16,6 +16,9 @@ interface RouteData {
   geofenceRadius: number;
   shiftStart: string;
   shiftEnd: string;
+  routePolyline?: string | null;
+  routeDistanceKm?: number | null;
+  routeDurationMinutes?: number | null;
 }
 
 export default function MyRoutePage() {
@@ -93,6 +96,7 @@ export default function MyRoutePage() {
         endPoint={route.endPoint}
         waypoints={route.waypoints}
         geofenceRadius={route.geofenceRadius}
+        routePolyline={route.routePolyline}
         height="250px"
       />
 

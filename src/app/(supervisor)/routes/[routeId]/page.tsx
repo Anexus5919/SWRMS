@@ -17,6 +17,9 @@ interface RouteDetail {
   geofenceRadius: number;
   shiftStart: string;
   shiftEnd: string;
+  routePolyline?: string | null;
+  routeDistanceKm?: number | null;
+  routeDurationMinutes?: number | null;
 }
 
 interface AttendanceRecord {
@@ -95,6 +98,7 @@ export default function RouteDetailPage() {
         endPoint={route.endPoint}
         waypoints={route.waypoints}
         geofenceRadius={route.geofenceRadius}
+        routePolyline={route.routePolyline}
         height="280px"
       />
 

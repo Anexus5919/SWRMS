@@ -4,6 +4,7 @@ import { Route } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 import { updateRouteSchema } from '@/lib/validators/schemas';
 import { logAudit } from '@/lib/audit';
+import { snapRouteForPersistence } from '@/lib/routing/osrm';
 
 /**
  * GET /api/routes/[routeId] - Get a single route
@@ -93,9 +94,44 @@ export async function PUT(
     );
   }
 
+  const update: Record<string, unknown> = { ...parsed.data };
+
+  // Re-snap road polyline if any geometry-relevant field changed AND
+  // the admin didn't explicitly supply a polyline in this request.
+  const geometryChanged =
+    parsed.data.startPoint !== undefined ||
+    parsed.data.endPoint !== undefined ||
+    parsed.data.waypoints !== undefined;
+
+  if (geometryChanged && parsed.data.routePolyline === undefined) {
+    const newStart = parsed.data.startPoint ?? before.startPoint;
+    const newEnd = parsed.data.endPoint ?? before.endPoint;
+    const newWaypoints = parsed.data.waypoints ?? before.waypoints ?? [];
+    try {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 6000);
+      const snapped = await snapRouteForPersistence(
+        newStart,
+        newEnd,
+        newWaypoints
+          .slice()
+          .sort((a, b) => a.order - b.order)
+          .map((w) => ({ lat: w.lat, lng: w.lng })),
+        ctrl.signal,
+      );
+      clearTimeout(timeout);
+      Object.assign(update, snapped);
+    } catch (err) {
+      console.warn(
+        '[routes.update] OSRM re-snap failed, leaving previous polyline in place:',
+        (err as Error).message,
+      );
+    }
+  }
+
   const route = await Route.findByIdAndUpdate(
     routeId,
-    parsed.data,
+    update,
     { new: true, runValidators: true }
   ).lean();
 

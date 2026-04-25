@@ -11,6 +11,7 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { decodePolyline } from '@/lib/routing/osrm';
 
 interface RouteOverview {
   _id: string;
@@ -22,6 +23,7 @@ interface RouteOverview {
   requiredStaff: number;
   staffingRatio: number;
   statusLabel: 'adequate' | 'marginal' | 'critical';
+  routePolyline?: string | null;
   routeProgress?: { status: string; completionPercentage: number };
 }
 
@@ -71,14 +73,33 @@ export default function DashboardOverviewMap({
   defaultCenter = [19.0522, 72.8994], // Chembur center
   defaultZoom = 13,
 }: DashboardOverviewMapProps) {
+  // Compute the polyline for each route once. Snapped polyline if the
+  // Route doc has one, straight start→end fallback otherwise.
+  const routesWithPolylines = useMemo(() => {
+    return routes.map((r) => {
+      let polyline: [number, number][] | null = null;
+      if (r.routePolyline) {
+        try {
+          polyline = decodePolyline(r.routePolyline);
+        } catch {
+          polyline = null;
+        }
+      }
+      const positions: [number, number][] = polyline ?? [
+        [r.startPoint.lat, r.startPoint.lng],
+        [r.endPoint.lat, r.endPoint.lng],
+      ];
+      return { route: r, positions, snapped: polyline !== null };
+    });
+  }, [routes]);
+
   const allPoints = useMemo(() => {
     const pts: [number, number][] = [];
-    for (const r of routes) {
-      pts.push([r.startPoint.lat, r.startPoint.lng]);
-      pts.push([r.endPoint.lat, r.endPoint.lng]);
+    for (const item of routesWithPolylines) {
+      pts.push(...item.positions);
     }
     return pts;
-  }, [routes]);
+  }, [routesWithPolylines]);
 
   if (routes.length === 0) {
     return (
@@ -105,18 +126,19 @@ export default function DashboardOverviewMap({
 
       <FitToRoutes points={allPoints} />
 
-      {routes.map((r) => {
+      {routesWithPolylines.map(({ route: r, positions, snapped }) => {
         const color = STATUS_COLOR[r.statusLabel] ?? STATUS_COLOR.adequate;
-        const positions: [number, number][] = [
-          [r.startPoint.lat, r.startPoint.lng],
-          [r.endPoint.lat, r.endPoint.lng],
-        ];
 
         return (
           <span key={r._id}>
             <Polyline
               positions={positions}
-              pathOptions={{ color, weight: 4, opacity: 0.85 }}
+              pathOptions={{
+                color,
+                weight: 4,
+                opacity: 0.85,
+                dashArray: snapped ? undefined : '8 6',
+              }}
             >
               <Tooltip sticky direction="top">
                 <div className="text-xs">

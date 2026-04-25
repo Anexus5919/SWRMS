@@ -49,6 +49,11 @@ const RouteSchema = new mongoose.Schema({
   shiftStart: { type: String, default: '06:00' },
   shiftEnd: { type: String, default: '14:00' },
   status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
+  routePolyline: { type: String, default: null },
+  routePolylineSource: { type: String, enum: ['osrm', 'mapbox', 'graphhopper', 'manual', null], default: null },
+  routeDistanceKm: { type: Number, default: null },
+  routeDurationMinutes: { type: Number, default: null },
+  routePolylineUpdatedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -229,6 +234,45 @@ async function seed() {
   // Create routes
   const createdRoutes = await Route.insertMany(routes);
   console.log(`Created ${createdRoutes.length} routes.`);
+
+  // Best-effort: snap each route to the road network via OSRM. Public demo
+  // is rate-limited so we serialise + sleep 200ms between requests. If OSRM
+  // is unreachable, routes simply have no polyline and the map falls back
+  // to dashed straight lines until an admin re-snaps via /api/routes/[id]/snap.
+  const osrmBase = (process.env.OSRM_BASE_URL || 'https://router.project-osrm.org').replace(/\/$/, '');
+  console.log(`Snapping route polylines via ${osrmBase}...`);
+  let snapped = 0;
+  for (const r of createdRoutes) {
+    const coords = `${r.startPoint.lng},${r.startPoint.lat};${r.endPoint.lng},${r.endPoint.lat}`;
+    const url = `${osrmBase}/route/v1/driving/${coords}?overview=full&geometries=polyline`;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(t);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: { code?: string; routes?: Array<{ geometry: string; distance: number; duration: number }> } = await res.json();
+      if (data.code === 'Ok' && data.routes?.[0]) {
+        const route = data.routes[0];
+        await Route.updateOne(
+          { _id: r._id },
+          {
+            routePolyline: route.geometry,
+            routePolylineSource: 'osrm',
+            routeDistanceKm: Math.round((route.distance / 1000) * 100) / 100,
+            routeDurationMinutes: Math.round((route.duration / 60) * 10) / 10,
+            routePolylineUpdatedAt: new Date(),
+          }
+        );
+        snapped++;
+      }
+    } catch (err) {
+      console.warn(`  - ${r.code}: snap failed (${(err as Error).message})`);
+    }
+    // Be polite to the public demo
+    await new Promise((res) => setTimeout(res, 200));
+  }
+  console.log(`Snapped ${snapped}/${createdRoutes.length} routes to roads.`);
 
   // Create admin
   await User.create({

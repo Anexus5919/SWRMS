@@ -65,6 +65,7 @@ export async function GET() {
       presentStaff: present,
       staffingRatio: Math.round(ratio * 100) / 100,
       statusLabel: getStatusLabel(ratio),
+      routePolyline: route.routePolyline ?? null,
       routeProgress: {
         status: progress?.status || 'not_started',
         completionPercentage: progress?.completionPercentage || 0,
