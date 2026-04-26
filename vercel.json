@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["bom1"],
+  "functions": {
+    "src/app/api/**/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/missed-shift-alert",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

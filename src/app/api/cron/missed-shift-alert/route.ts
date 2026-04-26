@@ -42,7 +42,16 @@ function authorise(req: NextRequest): NextResponse | null {
       { status: 503 }
     );
   }
-  const got = req.headers.get('x-cron-secret');
+  // Two acceptable shapes:
+  //   1. x-cron-secret: <secret>            (manual curl, original convention)
+  //   2. Authorization: Bearer <secret>     (Vercel Cron's standard convention)
+  // Vercel automatically attaches the second when CRON_SECRET is set as
+  // an env var on the project, so the same endpoint works for both
+  // self-managed schedulers and Vercel Cron without code changes.
+  const got =
+    req.headers.get('x-cron-secret') ??
+    req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
+    null;
   if (got !== expected) {
     return NextResponse.json(
       { success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid cron secret' } },
