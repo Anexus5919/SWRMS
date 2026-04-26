@@ -27,8 +27,13 @@ export default async function AboutPage() {
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      {/* Page header */}
-      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
+      {/* Page header — min-h-[20rem] is just above /about's natural
+          rendered height so /about itself doesn't visibly grow, but
+          /help, /privacy, /terms (which have less hero copy) get
+          pulled up to the same dark-band size for visual consistency.
+          No flex-centering: content stays at its natural top position,
+          extra space sits below. */}
+      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden min-h-[20rem]">
         {/* Etched BMC seal as a heritage watermark on the right side.
             Fixed pixel size (not % of hero height) so the seal renders
             at exactly the same dimensions on every public page -

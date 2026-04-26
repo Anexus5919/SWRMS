@@ -40,7 +40,9 @@ export default function HelpPage() {
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
+      {/* min-h matches /about's natural rendered height so all four
+          public heroes share the same dark-band size. */}
+      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden min-h-[20rem]">
         {/* Etched BMC seal - fixed pixel size so all four public pages
             render an identically-sized watermark regardless of how tall
             their individual hero bands happen to be. */}
