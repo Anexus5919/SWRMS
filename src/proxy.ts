@@ -23,6 +23,7 @@ const SUPERVISOR_PREFIXES = [
   '/supervisor-logs',
   '/reliability',
   '/replay',
+  '/notifications',
 ] as const;
 
 const ADMIN_PREFIXES = [
@@ -105,5 +106,6 @@ export const config = {
     '/audit/:path*',
     '/reliability/:path*',
     '/replay/:path*',
+    '/notifications/:path*',
   ],
 };

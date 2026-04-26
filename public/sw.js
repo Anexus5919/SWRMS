@@ -18,7 +18,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  /** @type {{ title?: string; body?: string; tag?: string; url?: string; icon?: string }} */
+  /** @type {{ title?: string; body?: string; tag?: string; url?: string; icon?: string; notificationId?: string }} */
   let payload = {};
   try {
     payload = event.data ? event.data.json() : {};
@@ -32,7 +32,12 @@ self.addEventListener('push', (event) => {
     tag: payload.tag,
     icon: payload.icon || '/bmc_logo.png',
     badge: '/bmc_logo.png',
-    data: { url: payload.url || '/dashboard' },
+    data: {
+      url: payload.url || '/dashboard',
+      // Carry the NotificationLog id so notificationclick can ping
+      // /api/notifications/:id/read with via=click.
+      notificationId: payload.notificationId || null,
+    },
     // Replace any prior notification with the same tag rather than stacking.
     renotify: !!payload.tag,
   };
@@ -42,25 +47,37 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/dashboard';
+  const data = event.notification.data || {};
+  const url = data.url || '/dashboard';
+  const notificationId = data.notificationId;
 
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsArr) => {
-      // If a tab is already on the target URL, focus it.
+  // Mark the inbox row as read (and clickedAt) so the bell badge updates
+  // even if the user navigates back to a tab that's already open.
+  const markRead = notificationId
+    ? fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ via: 'click' }),
+      }).catch(() => {})
+    : Promise.resolve();
+
+  const focusOrOpen = self.clients
+    .matchAll({ type: 'window', includeUncontrolled: true })
+    .then((clientsArr) => {
       for (const client of clientsArr) {
         if (client.url.includes(url) && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise focus any existing tab and navigate it.
       if (clientsArr.length > 0 && 'navigate' in clientsArr[0]) {
         return clientsArr[0].navigate(url).then((c) => c && c.focus());
       }
-      // No tabs at all — open a new one.
       if (self.clients.openWindow) {
         return self.clients.openWindow(url);
       }
       return null;
-    })
-  );
+    });
+
+  event.waitUntil(Promise.all([markRead, focusOrOpen]));
 });

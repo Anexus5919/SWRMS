@@ -2,6 +2,7 @@ import BMCHeader from '@/components/layout/BMCHeader';
 import DesktopNav from '@/components/layout/DesktopNav';
 import AppFooter from '@/components/layout/AppFooter';
 import PushToggle from '@/components/supervisor/PushToggle';
+import NotificationBell from '@/components/supervisor/NotificationBell';
 
 const supervisorNav = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -22,7 +23,8 @@ export default function SupervisorLayout({
       <BMCHeader />
       <DesktopNav items={supervisorNav} />
       <div className="bg-white border-b border-[var(--border)]">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-2 flex items-center justify-end">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-2 flex items-center justify-end gap-3">
+          <NotificationBell />
           <PushToggle />
         </div>
       </div>

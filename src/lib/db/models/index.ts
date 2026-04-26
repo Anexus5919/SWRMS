@@ -10,6 +10,7 @@ export { default as GPSPing } from './GPSPing';
 export { default as Unavailability } from './Unavailability';
 export { default as Checkpoint, CheckpointScan } from './Checkpoint';
 export { default as PushSubscription } from './PushSubscription';
+export { default as NotificationLog } from './NotificationLog';
 
 export type { IUser } from './User';
 export type { IRoute } from './Route';
@@ -23,3 +24,4 @@ export type { IGPSPing } from './GPSPing';
 export type { IUnavailability } from './Unavailability';
 export type { ICheckpoint, ICheckpointScan } from './Checkpoint';
 export type { IPushSubscription } from './PushSubscription';
+export type { INotificationLog, NotificationKind } from './NotificationLog';

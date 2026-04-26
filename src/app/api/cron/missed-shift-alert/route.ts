@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
 import { Attendance, Route, Unavailability, User } from '@/lib/db/models';
-import { sendPushToAll } from '@/lib/push';
+import { recordAndPush } from '@/lib/push';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
@@ -126,32 +126,40 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Send one push per ward to every supervisor (and admin) in scope.
+  // For every ward bucket, record one notification PER recipient
+  // (admins + supervisors) and try to deliver via push. The inbox is
+  // populated even when push fails or no subscription exists.
   const results = await Promise.all(
     Array.from(missedByWard.entries()).map(async ([ward, bucket]) => {
       const preview = bucket.workers.join(', ') + (bucket.count > bucket.workers.length ? '…' : '');
-      return sendPushToAll(
-        // Admins receive every ward; supervisors only receive their own.
-        { $or: [{ role: 'admin' }, { role: 'supervisor' }] },
-        {
-          title: `${bucket.count} worker${bucket.count > 1 ? 's' : ''} missing in ${ward}`,
-          body:
-            `${preview} have not checked in. ` +
-            `Routes: ${Array.from(bucket.routeCodes).slice(0, 4).join(', ')}.`,
-          tag: `missed-shift-${ward}-${today}`,
-          url: '/attendance-log',
-        }
-      );
+      return recordAndPush({
+        recipientsQuery: { $or: [{ role: 'admin' }, { role: 'supervisor' }] },
+        kind: 'missed_shift',
+        title: `${bucket.count} worker${bucket.count > 1 ? 's' : ''} missing in ${ward}`,
+        body:
+          `${preview} have not checked in. ` +
+          `Routes: ${Array.from(bucket.routeCodes).slice(0, 4).join(', ')}.`,
+        tag: `missed-shift-${ward}-${today}`,
+        url: '/attendance-log',
+        context: {
+          ward,
+          missedCount: bucket.count,
+          previewWorkers: bucket.workers,
+          routeCodes: Array.from(bucket.routeCodes),
+          date: today,
+        },
+      });
     })
   );
 
   const totals = results.reduce(
     (acc, r) => ({
-      sent: acc.sent + r.sent,
-      revoked: acc.revoked + r.revoked,
-      failed: acc.failed + r.failed,
+      sent: acc.sent + r.pushSent,
+      revoked: acc.revoked + r.pushRevoked,
+      failed: acc.failed + r.pushFailed,
+      recipients: acc.recipients + r.recipients,
     }),
-    { sent: 0, revoked: 0, failed: 0 }
+    { sent: 0, revoked: 0, failed: 0, recipients: 0 }
   );
 
   const missedTotal = Array.from(missedByWard.values()).reduce((s, b) => s + b.count, 0);
