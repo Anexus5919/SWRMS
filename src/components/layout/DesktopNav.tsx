@@ -16,7 +16,12 @@ export default function DesktopNav({ items }: DesktopNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-bmc-800 border-b border-bmc-700/50 shadow-doc-sm">
+    // sticky top-0 keeps the nav visible while the user scrolls long
+    // pages (audit log, attendance log, reports, etc.). z-30 sits above
+    // page content but below the BMCHeader's user-menu dropdown
+    // (z-[1001]) and below Leaflet map tooltips (z-700+ inside the map's
+    // own stacking context, but those are scoped to the map container).
+    <nav className="sticky top-0 z-30 bg-bmc-800 border-b border-bmc-700/50 shadow-doc-sm">
       <div className="max-w-[1400px] mx-auto px-2 sm:px-4">
         <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
           {items.map((item) => {
