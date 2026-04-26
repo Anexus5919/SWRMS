@@ -54,8 +54,13 @@ export async function GET() {
     return `${String(hours % 24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   };
 
+  // Demo bypass (see src/app/(staff)/layout.tsx). When the flag is set we
+  // report face as registered so the home-page checklist doesn't block
+  // every demo user on step 1.
+  const bypassFace = process.env.NEXT_PUBLIC_DEMO_BYPASS_FACE === '1';
+
   const data = {
-    faceRegistered: !!(user.faceDescriptor && user.faceDescriptor.length > 0),
+    faceRegistered: bypassFace || !!(user.faceDescriptor && user.faceDescriptor.length > 0),
     attendance: {
       marked: !!attendance,
       time: attendance ? formatTime(attendance.checkInTime) : null,

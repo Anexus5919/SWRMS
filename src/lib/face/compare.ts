@@ -38,6 +38,21 @@ export function compareFaceDescriptors(
   captured: number[],
   registered: number[]
 ): FaceComparisonResult {
+  // Demo bypass: when NEXT_PUBLIC_DEMO_BYPASS_FACE=1 is set we treat
+  // every comparison as a high-confidence match. Lets photo verification
+  // work without the worker having a real registered descriptor in the
+  // DB, which is essential for stakeholder demos. Production leaves
+  // this unset.
+  if (process.env.NEXT_PUBLIC_DEMO_BYPASS_FACE === '1') {
+    return {
+      distance: 0,
+      confidence: 'high',
+      verified: true,
+      requiresManualReview: false,
+      message: 'Demo bypass: face check skipped (NEXT_PUBLIC_DEMO_BYPASS_FACE=1)',
+    };
+  }
+
   const distance = euclideanDistance(captured, registered);
   const rounded = Math.round(distance * 1000) / 1000;
 

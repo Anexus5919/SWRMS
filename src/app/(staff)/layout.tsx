@@ -32,6 +32,17 @@ function StaffLayoutInner({ children }: { children: React.ReactNode }) {
     if (status !== 'authenticated' || session?.user?.role !== 'staff') return;
     if (pathname === '/onboarding') return;
 
+    // Demo bypass: when NEXT_PUBLIC_DEMO_BYPASS_FACE=1 is set in .env.local
+    // we skip the face-registered redirect entirely so the rest of the
+    // staff PWA (attendance, photos, tracking) can be demoed without
+    // every fresh login forcing a face capture. Production deployments
+    // leave this unset and the gate enforces normally.
+    if (process.env.NEXT_PUBLIC_DEMO_BYPASS_FACE === '1') {
+      setFaceChecked(true);
+      setHasFace(true);
+      return;
+    }
+
     // Check if face is registered
     fetch('/api/staff/face')
       .then(res => res.json())
