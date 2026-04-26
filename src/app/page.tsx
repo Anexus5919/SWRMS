@@ -344,9 +344,19 @@ export default async function HomePage() {
                 &quot;Reduce the adverse per capita environmental impact of cities, including by paying special attention to municipal and other waste management.&quot;
               </p>
             </div>
-            <div className="flex items-center justify-center w-24 h-24 rounded-full bg-gold-500 text-bmc-950 font-display font-black text-3xl shadow-doc-lg">
-              11
-            </div>
+            {/* Official UN SDG 11 mark — served from /public/sdg_logo.png.
+                Square aspect ratio is preserved so the orange/yellow square
+                + skyline-and-arrow icon proportions remain correct at every
+                screen width. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/sdg_logo.png"
+              alt="UN Sustainable Development Goal 11 — Sustainable Cities and Communities"
+              width={120}
+              height={120}
+              className="flex-shrink-0 shadow-doc-lg rounded-md"
+              style={{ width: 120, height: 120, objectFit: 'contain' }}
+            />
           </div>
         </div>
       </section>
