@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/config';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { GeofenceMap } from '@/components/brand/Illustrations';
@@ -10,13 +12,25 @@ export const metadata: Metadata = {
     'About the Smart Workforce & Route Management System - a BMC Solid Waste Management pilot for Chembur Ward.',
 };
 
-export default function AboutPage() {
+function dashboardUrlFor(role: string | undefined): string {
+  if (role === 'admin') return '/staff';
+  if (role === 'supervisor') return '/dashboard';
+  if (role === 'staff') return '/home';
+  return '/login';
+}
+
+export default async function AboutPage() {
+  const session = await getServerSession(authOptions);
+  const authed = !!session?.user;
+  const ctaHref = authed ? dashboardUrlFor(session?.user?.role) : '/login';
   return (
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      {/* Page header */}
-      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
+      {/* Page header — uniform min-height + vertical-centering across all
+          four public pages (about, help, privacy, terms) so the seal
+          watermark renders at the same size regardless of content length. */}
+      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden min-h-[26rem] sm:min-h-[30rem] flex flex-col justify-center">
         {/* Etched BMC seal as a heritage watermark on the right side.
             Square aspect preserved with object-contain. The fade gradient
             below keeps the heading readable on top of the artwork. */}
@@ -145,19 +159,24 @@ export default function AboutPage() {
           </div>
         </article>
 
-        {/* CTA */}
+        {/* CTA — copy + link adapt to whether the visitor is already
+            signed in. A logged-in supervisor reading the about page
+            should not be told to "sign in" again; they're routed back
+            to their dashboard instead. */}
         <div className="mt-12 bg-bmc-900 text-white rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-doc-lg">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-1">
-              Authorized BMC personnel
+              {authed ? `Welcome back, ${session?.user?.name ?? ''}` : 'Authorized BMC personnel'}
             </p>
-            <p className="font-display text-lg font-bold">Sign in to the SWRMS portal</p>
+            <p className="font-display text-lg font-bold">
+              {authed ? 'Continue to your dashboard' : 'Sign in to the SWRMS portal'}
+            </p>
           </div>
           <Link
-            href="/login"
+            href={ctaHref}
             className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-gold-500 text-bmc-950 rounded-md hover:bg-gold-400 transition-colors"
           >
-            Sign In
+            {authed ? 'Go to Dashboard' : 'Sign In'}
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
             </svg>

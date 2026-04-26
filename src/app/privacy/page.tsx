@@ -9,7 +9,9 @@ export default function PrivacyPage() {
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
+      {/* Uniform min-height matches /about so the seal watermark is the
+          same physical size on every public page. */}
+      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden min-h-[26rem] sm:min-h-[30rem] flex flex-col justify-center">
         {/* Etched BMC seal watermark — consistent across all public pages. */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[140%] aspect-square pointer-events-none opacity-20 mix-blend-screen">
           {/* eslint-disable-next-line @next/next/no-img-element */}
