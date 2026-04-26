@@ -16,7 +16,7 @@ import BMCSeal from '@/components/brand/BMCSeal';
  *   - If the visitor IS signed in, the Sign-In CTA is replaced with their
  *     name and a "Go to Dashboard" link that routes to the role-appropriate
  *     landing page. We never want a logged-in user staring at a "Sign In"
- *     button — that's confusing UX.
+ *     button - that's confusing UX.
  *   - The active page (about / help / privacy / terms) is highlighted in
  *     gold with an underline so users see where they are.
  *   - The whole header is `sticky top-0` so the nav stays visible while

@@ -31,7 +31,7 @@ export default async function AboutPage() {
       <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
         {/* Etched BMC seal as a heritage watermark on the right side.
             Fixed pixel size (not % of hero height) so the seal renders
-            at exactly the same dimensions on every public page —
+            at exactly the same dimensions on every public page -
             previously `h-[140%]` made the seal larger on tall heroes
             (/about) and smaller on short ones (/privacy, /terms). */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] pointer-events-none opacity-20 mix-blend-screen">
@@ -66,7 +66,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Content — outer container matches PublicHeader's max-w-7xl so the
+      {/* Content - outer container matches PublicHeader's max-w-7xl so the
           left edge aligns with the BMC logo above AND the article extends
           all the way to the same right edge. Justified paragraphs below
           fill the column flush on both sides. */}
@@ -85,8 +85,8 @@ export default async function AboutPage() {
               emerged repeatedly:
             </p>
             <ul className="mt-4 space-y-2 text-[15px] text-[var(--text-secondary)]">
-              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Attendance fraud — workers signing the register at the ward office without reporting to their assigned routes.</span></li>
-              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Late detection of route failures — supervisors had no way to detect understaffing until collections were already missed.</span></li>
+              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Attendance fraud - workers signing the register at the ward office without reporting to their assigned routes.</span></li>
+              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Late detection of route failures - supervisors had no way to detect understaffing until collections were already missed.</span></li>
               <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Idle workers on completed shorter routes while adjacent longer routes remained understaffed.</span></li>
             </ul>
             <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed text-justify">
@@ -135,7 +135,7 @@ export default async function AboutPage() {
             </h3>
             <p className="text-[14px] text-[var(--text-secondary)] mt-2 leading-relaxed text-justify">
               SWRMS contributes to Target 11.6 by improving accountability and route completion
-              rates in municipal solid waste collection — directly addressing the per-capita
+              rates in municipal solid waste collection - directly addressing the per-capita
               environmental impact of waste accumulation in densely populated urban areas. The
               system makes the daily collection cycle measurable and auditable, which is the
               prerequisite for any subsequent operational reform.
@@ -159,7 +159,7 @@ export default async function AboutPage() {
           </div>
         </article>
 
-        {/* CTA — copy + link adapt to whether the visitor is already
+        {/* CTA - copy + link adapt to whether the visitor is already
             signed in. A logged-in supervisor reading the about page
             should not be told to "sign in" again; they're routed back
             to their dashboard instead. */}

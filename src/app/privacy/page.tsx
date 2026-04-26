@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <PublicHeader />
 
       <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
-        {/* Etched BMC seal — fixed pixel size so all four public pages
+        {/* Etched BMC seal - fixed pixel size so all four public pages
             render an identically-sized watermark regardless of how tall
             their individual hero bands happen to be. */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] pointer-events-none opacity-20 mix-blend-screen">
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
               This Privacy Policy applies to the Smart Workforce &amp; Route Management System (SWRMS),
               a pilot deployment operated by the Brihanmumbai Municipal Corporation (BMC) Solid Waste
               Management Department for Chembur (M-East) Ward. It covers all personal information
-              processed by the system in connection with daily field operations — attendance, route
+              processed by the system in connection with daily field operations - attendance, route
               tracking, photo verification, and the audit logs generated alongside them. The policy
               applies to every authorised user of SWRMS regardless of role (sanitation staff, ward
               supervisor, or BMC administrator) and remains in effect for as long as you hold an
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
               rented, or shared with any third-party advertiser, recruiter, or analytics provider; the
               only external party that ever touches operational data is the OpenStreetMap routing
               service (OSRM), and only the route start/end coordinates of newly created routes are sent
-              there for road-snapping — never personal information.
+              there for road-snapping - never personal information.
             </p>
             <p className="mt-3 text-justify">
               GPS pings collected during live tracking are used in two ways: first, to power the
@@ -130,8 +130,8 @@ export default function PrivacyPage() {
             </p>
             <p className="mt-3 text-justify">
               In addition to the access controls above, every supervisor or administrator action that
-              modifies stored data — user creation, route edits, reallocation approvals, log
-              resolutions — is recorded to a tamper-evident audit log capturing the actor&apos;s identity,
+              modifies stored data - user creation, route edits, reallocation approvals, log
+              resolutions - is recorded to a tamper-evident audit log capturing the actor&apos;s identity,
               role, IP address, browser user-agent, and a before-and-after diff of any changed fields.
               Records are never hard-deleted; user accounts and routes are deactivated via a status
               flag so the historical trail remains queryable for any future review.
@@ -145,8 +145,8 @@ export default function PrivacyPage() {
               Protection Act 2023, you have the right to access, correct, or request deletion of your
               personal data held by SWRMS, and to receive a clear explanation of how that data has
               been used. Requests are routed through the BMC SWM Department and are typically
-              acknowledged within five working days. To exercise any of these rights — or to register
-              a privacy concern — contact the M-East Ward SWM Office using the address below or the
+              acknowledged within five working days. To exercise any of these rights - or to register
+              a privacy concern - contact the M-East Ward SWM Office using the address below or the
               BMC Citizen Helpdesk on 1916.
             </p>
           </div>

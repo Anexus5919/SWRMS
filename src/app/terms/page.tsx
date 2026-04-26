@@ -10,7 +10,7 @@ export default function TermsPage() {
       <PublicHeader />
 
       <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
-        {/* Etched BMC seal — fixed pixel size so all four public pages
+        {/* Etched BMC seal - fixed pixel size so all four public pages
             render an identically-sized watermark regardless of how tall
             their individual hero bands happen to be. */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] pointer-events-none opacity-20 mix-blend-screen">
@@ -90,7 +90,7 @@ export default function TermsPage() {
               official BMC identity card: do not write the password down where others can see it,
               do not share it with co-workers even briefly, and do not allow anyone else to operate
               the device while you are still signed in. Notify your ward administrator immediately
-              if you suspect unauthorised access — earlier notification limits the scope of any
+              if you suspect unauthorised access - earlier notification limits the scope of any
               audit-trail review that may follow.
             </p>
           </div>
@@ -111,8 +111,8 @@ export default function TermsPage() {
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">6. Audit &amp; monitoring</h2>
             <p className="text-justify">
-              All actions in SWRMS — attendance check-ins, photo submissions, log resolutions,
-              reallocations, and administrative changes — are logged and auditable. Each entry
+              All actions in SWRMS - attendance check-ins, photo submissions, log resolutions,
+              reallocations, and administrative changes - are logged and auditable. Each entry
               records the employee identifier of the actor, their role at the time of the action,
               the device IP address, the browser user-agent string, and where applicable a
               before-and-after diff of the modified record. Logs are retained for the duration
