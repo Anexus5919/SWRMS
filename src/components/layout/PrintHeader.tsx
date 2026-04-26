@@ -1,5 +1,3 @@
-import BMCSeal from '@/components/brand/BMCSeal';
-
 interface PrintHeaderProps {
   title: string;
   subtitle?: string;
@@ -10,7 +8,11 @@ interface PrintHeaderProps {
 /**
  * PrintHeader - official BMC letterhead for printable reports.
  * Only visible when printing (uses .print-only utility).
- * Displays seal, government identifiers, report metadata.
+ *
+ * Uses the etched/sketch BMC seal (/bmc_logo_sketch.png) rather than the
+ * colour logo because the sketch renders cleanly in monochrome ink-on-
+ * paper, which is how printed government reports are typically produced
+ * and filed. The colour seal would muddy when printed on a B&W laser.
  */
 export default function PrintHeader({ title, subtitle, reportDate, reportType }: PrintHeaderProps) {
   const generatedAt = new Date().toLocaleString('en-IN', {
@@ -26,7 +28,15 @@ export default function PrintHeader({ title, subtitle, reportDate, reportType }:
     <div className="print-only mb-8">
       {/* Letterhead */}
       <div className="flex items-start gap-4 pb-4 border-b-2 border-double border-bmc-900">
-        <BMCSeal size={64} variant="full" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/bmc_logo_sketch.png"
+          alt="Brihanmumbai Municipal Corporation seal"
+          width={72}
+          height={72}
+          className="flex-shrink-0"
+          style={{ width: 72, height: 72, objectFit: 'contain' }}
+        />
         <div className="flex-1">
           <p className="text-[10px] uppercase tracking-[0.2em] text-bmc-700 font-bold">
             Government of Maharashtra

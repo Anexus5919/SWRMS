@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { GeofenceMap, BMCHeritageBuilding } from '@/components/brand/Illustrations';
+import { GeofenceMap } from '@/components/brand/Illustrations';
 
 export const metadata: Metadata = {
   title: 'About SWRMS',
@@ -17,11 +17,19 @@ export default function AboutPage() {
 
       {/* Page header */}
       <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
-        {/* BMC HQ heritage building watermark */}
-        <div className="absolute right-0 top-0 bottom-0 w-2/3 max-w-2xl pointer-events-none text-bmc-600 opacity-25">
-          <BMCHeritageBuilding className="w-full h-full" />
+        {/* Etched BMC seal as a heritage watermark on the right side.
+            Square aspect preserved with object-contain. The fade gradient
+            below keeps the heading readable on top of the artwork. */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[140%] aspect-square pointer-events-none opacity-20 mix-blend-screen">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/bmc_logo_sketch.png"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-contain"
+          />
         </div>
-        {/* Fade gradient over building so left text remains readable */}
+        {/* Fade gradient over the seal so left-side copy remains readable. */}
         <div className="absolute inset-0 bg-gradient-to-r from-bmc-900 via-bmc-900/80 to-transparent pointer-events-none" />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
