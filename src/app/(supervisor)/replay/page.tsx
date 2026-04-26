@@ -42,7 +42,7 @@ interface ReplayDetail {
 }
 
 function todayDateInput(): string {
-  // YYYY-MM-DD in local zone — close enough for the date picker on a same-day desktop.
+  // YYYY-MM-DD in local zone - close enough for the date picker on a same-day desktop.
   const now = new Date();
   const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
   return ist.toISOString().split('T')[0];
@@ -177,7 +177,7 @@ export default function ReplayPage() {
           </div>
           <div className="flex-1 min-w-[200px]">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--neutral-500)] mb-1">
-              Worker {loadingWorkers && <span className="text-[var(--neutral-400)]">— loading…</span>}
+              Worker {loadingWorkers && <span className="text-[var(--neutral-400)]">- loading…</span>}
             </label>
             <select
               value={selectedWorkerId ?? ''}
@@ -190,7 +190,7 @@ export default function ReplayPage() {
               )}
               {workers.map((w) => (
                 <option key={w.userId} value={w.userId}>
-                  {w.name} ({w.employeeId}) · {w.route?.code ?? '—'} · {w.pingCount} pings
+                  {w.name} ({w.employeeId}) · {w.route?.code ?? '-'} · {w.pingCount} pings
                   {w.offRoutePings > 0 ? ` · ${w.offRoutePings} off-route` : ''}
                 </option>
               ))}
@@ -252,7 +252,7 @@ export default function ReplayPage() {
             <Card statusBorder="gold" className="px-4 py-3">
               <p className="text-[10px] text-[var(--neutral-500)] uppercase tracking-wider">Window</p>
               <p className="text-sm font-bold text-[var(--neutral-800)] mt-0.5 font-mono">
-                {summary?.first ? formatTime(summary.first) : '—'} → {summary?.last ? formatTime(summary.last) : '—'}
+                {summary?.first ? formatTime(summary.first) : '-'} → {summary?.last ? formatTime(summary.last) : '-'}
               </p>
               <p className="text-[10px] text-[var(--neutral-400)]">first to last ping</p>
             </Card>
@@ -360,14 +360,14 @@ export default function ReplayPage() {
               aria-label="Replay scrubber"
             />
             <div className="flex justify-between text-[10px] text-[var(--neutral-500)] font-mono mt-1">
-              <span>{detail.pings[0] ? formatTime(detail.pings[0].recordedAt) : '—'}</span>
+              <span>{detail.pings[0] ? formatTime(detail.pings[0].recordedAt) : '-'}</span>
               <span>
                 {cursor + 1} / {detail.pings.length}
               </span>
               <span>
                 {detail.pings[detail.pings.length - 1]
                   ? formatTime(detail.pings[detail.pings.length - 1].recordedAt)
-                  : '—'}
+                  : '-'}
               </span>
             </div>
           </Card>

@@ -5,14 +5,14 @@ import { latestPingPerWorker } from '@/lib/engine/anomaly';
 import { todayIST } from '@/lib/utils/timezone';
 
 /**
- * GET /api/tracking/stream — Server-Sent Events feed of live worker positions.
+ * GET /api/tracking/stream - Server-Sent Events feed of live worker positions.
  *
  * Why SSE rather than Socket.IO? Next 16's App Router runs API routes as
  * serverless-style request handlers; there is no shared event loop into
  * which a Socket.IO server can attach. Wiring Socket.IO would require a
  * custom `server.ts`, which breaks the default `next start` and the
- * Turbopack dev experience. SSE is a one-way stream — perfect for "push
- * me the latest data every few seconds" — and works out of the box.
+ * Turbopack dev experience. SSE is a one-way stream - perfect for "push
+ * me the latest data every few seconds" - and works out of the box.
  *
  * The handler keeps the connection open and emits a JSON payload every
  * `INTERVAL_MS` (5s by default). Clients reconnect automatically with
@@ -24,7 +24,7 @@ import { todayIST } from '@/lib/utils/timezone';
 
 const INTERVAL_MS = 5_000;
 const STALE_MS = 5 * 60 * 1000;
-// Hard ceiling per connection — clients reconnect automatically. This
+// Hard ceiling per connection - clients reconnect automatically. This
 // prevents a leaked tab from holding a connection open indefinitely.
 const MAX_DURATION_MS = 30 * 60 * 1000;
 

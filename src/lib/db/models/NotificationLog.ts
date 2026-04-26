@@ -1,13 +1,13 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 /**
- * NotificationLog — one row per (alert, recipient) pair.
+ * NotificationLog - one row per (alert, recipient) pair.
  *
  * Every push the system sends produces a row here, even if the
  * recipient has no active push subscription. That makes the inbox a
  * **complete record of what should have reached each supervisor**,
  * decoupled from whether the browser endpoint was alive at the
- * moment of delivery — important for govt-portal record keeping.
+ * moment of delivery - important for govt-portal record keeping.
  *
  * The bell icon and /notifications inbox both query this collection.
  *
@@ -38,7 +38,7 @@ export interface INotificationLog extends Document {
   body: string;
   /** URL the inbox / OS notification opens on click. */
   url: string;
-  /** OS-level grouping tag — same tag replaces the prior notification. */
+  /** OS-level grouping tag - same tag replaces the prior notification. */
   tag?: string | null;
   /** Structured context for the inbox to render extra UI (counts, codes). */
   context?: Record<string, unknown> | null;

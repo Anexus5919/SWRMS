@@ -405,7 +405,7 @@ async function seed() {
 
   // Use IST date (matches todayIST() used by every API + cron). Using
   // toISOString() directly returns UTC, which can be a different calendar
-  // day for ~5.5 hours each evening — that subtle drift used to leave
+  // day for ~5.5 hours each evening - that subtle drift used to leave
   // today's dashboard empty when the seed was re-run after ~18:30 UTC.
   const istNow = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
   const today = istNow.toISOString().split('T')[0];
@@ -962,8 +962,8 @@ async function seed() {
     /**
      * Walk a decoded polyline and return the [lat, lng] at fraction t∈[0,1]
      * by cumulative *Euclidean* segment length (degree-space). The error
-     * vs proper haversine is irrelevant within a single ward — the path
-     * is a few km, not a continent — and this is ~50× faster.
+     * vs proper haversine is irrelevant within a single ward - the path
+     * is a few km, not a continent - and this is ~50× faster.
      */
     const pointAlongPolyline = (
       coords: Array<[number, number]>,
@@ -1016,7 +1016,7 @@ async function seed() {
     );
 
     // Pre-decode each route's polyline once. Routes whose OSRM snap failed
-    // earlier in the seed will have routePolyline === null — those fall
+    // earlier in the seed will have routePolyline === null - those fall
     // back to straight-line interpolation.
     const decodedByRoute = new Map<string, Array<[number, number]> | null>();
     for (const [rid, r] of routeById) {
@@ -1132,8 +1132,8 @@ async function seed() {
     console.log(`Today: ${todayPings.length} pings across ${todayAttendance.length} workers`);
 
     // Historical pings: only if --with-history was also passed. To keep
-    // volume manageable, we sample a SUBSET of the past days' attendance —
-    // 4 random workers per day — rather than every worker. That's enough
+    // volume manageable, we sample a SUBSET of the past days' attendance -
+    // 4 random workers per day - rather than every worker. That's enough
     // to make the replay date-picker show data on most past dates.
     if (process.argv.includes('--with-history')) {
       const histAttendance = await Attendance.find({
@@ -1221,7 +1221,7 @@ async function seed() {
         actorRole: 'admin',
         targetType: 'route',
         targetId: r._id.toString(),
-        targetLabel: `${r.code} — ${r.name}`,
+        targetLabel: `${r.code} - ${r.name}`,
         changes: null,
         metadata: { requiredStaff: r.requiredStaff, geofenceRadius: r.geofenceRadius },
         ipAddress: '10.0.0.42',

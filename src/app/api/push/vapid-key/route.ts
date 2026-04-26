@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 /**
- * GET /api/push/vapid-key — returns the VAPID public key.
+ * GET /api/push/vapid-key - returns the VAPID public key.
  *
  * The browser needs this to call `pushManager.subscribe({ applicationServerKey })`.
  * The key is intentionally public (it's also usable as a static `NEXT_PUBLIC_*`

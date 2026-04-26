@@ -9,13 +9,13 @@ import { computeReliabilityForCohort, windowFromDays } from '@/lib/engine/reliab
  * GET /api/staff/reliability?days=30&ward=Chembur
  *
  * Returns workforce-wide reliability scores for the given window.
- * Sorted ascending — worst scores first so supervisors see attention
+ * Sorted ascending - worst scores first so supervisors see attention
  * cases at the top of the list.
  *
  * Query:
- *   days  — lookback window in days (default 30, max 90)
- *   ward  — optional ward filter (matches User.ward)
- *   role  — defaults to 'staff'; only staff are scored
+ *   days  - lookback window in days (default 30, max 90)
+ *   ward  - optional ward filter (matches User.ward)
+ *   role  - defaults to 'staff'; only staff are scored
  */
 export async function GET(req: NextRequest) {
   const { error } = await requireRole('supervisor', 'admin');

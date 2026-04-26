@@ -123,7 +123,7 @@ export function useLiveTracking(options: Options = {}) {
       } else {
         const code = json.error?.code;
         if (code === 'NOT_ON_SHIFT' || code === 'SHIFT_ENDED') {
-          // These are terminal — stop ourselves rather than retrying.
+          // These are terminal - stop ourselves rather than retrying.
           stopRequested.current = true;
           setStatus((s) => ({
             ...s,

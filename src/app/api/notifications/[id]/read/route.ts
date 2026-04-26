@@ -8,7 +8,7 @@ import { requireRole } from '@/lib/auth/middleware';
  * POST /api/notifications/:id/read
  *
  * Marks one notification read for the current user. Body may include
- * `{ "via": "click" }` to additionally set `clickedAt` — used by the
+ * `{ "via": "click" }` to additionally set `clickedAt` - used by the
  * service worker when the OS notification itself is clicked.
  *
  * A user can only mark their own notifications.
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     const body = await req.json();
     if (body?.via === 'click') via = 'click';
   } catch {
-    // No body — defaults to "inbox".
+    // No body - defaults to "inbox".
   }
 
   await connectDB();

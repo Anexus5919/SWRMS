@@ -54,11 +54,11 @@ function FitToData({ points }: { points: [number, number][] }) {
  *
  * Rendering layers (z-order, bottom-up):
  *   1. Snapped route polyline (light blue, dashed when not snapped).
- *   2. Worker trail through cursor — full path travelled so far.
- *   3. Trail beyond cursor — faded so the supervisor can see "what's left".
- *   4. Off-route pings — small red rings.
- *   5. Mock-GPS pings — black-bordered red rings (highest priority).
- *   6. The current playhead — bigger blue circle with tooltip.
+ *   2. Worker trail through cursor - full path travelled so far.
+ *   3. Trail beyond cursor - faded so the supervisor can see "what's left".
+ *   4. Off-route pings - small red rings.
+ *   5. Mock-GPS pings - black-bordered red rings (highest priority).
+ *   6. The current playhead - bigger blue circle with tooltip.
  */
 export default function GPSReplayMap({
   pings,
@@ -133,7 +133,7 @@ export default function GPSReplayMap({
         />
       )}
 
-      {/* Worker trail — past portion */}
+      {/* Worker trail - past portion */}
       {before.length > 1 && (
         <Polyline
           positions={before}
@@ -141,7 +141,7 @@ export default function GPSReplayMap({
         />
       )}
 
-      {/* Worker trail — remaining portion (faded) */}
+      {/* Worker trail - remaining portion (faded) */}
       {after.length > 1 && (
         <Polyline
           positions={after}
@@ -182,7 +182,7 @@ export default function GPSReplayMap({
           pathOptions={{ color: '#b91c1c', fillColor: '#fee2e2', fillOpacity: 0.85, weight: 2 }}
         >
           <Tooltip direction="top">
-            Off route — {p.distanceFromRouteMeters ?? '?'}m
+            Off route - {p.distanceFromRouteMeters ?? '?'}m
           </Tooltip>
         </CircleMarker>
       ))}

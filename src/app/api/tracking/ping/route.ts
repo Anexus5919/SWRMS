@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
           recipientsQuery: { $or: [{ role: 'admin' }, { role: 'supervisor' }] },
           kind: 'mock_location',
           title: `Mock-GPS detected on ${routeCode}`,
-          body: `${workerName}'s device reported a fake-location flag. Possible spoofing — review immediately.`,
+          body: `${workerName}'s device reported a fake-location flag. Possible spoofing - review immediately.`,
           tag: `mock-${userId}-${today}`,
           url: '/supervisor-logs',
           context: {

@@ -1,7 +1,7 @@
 {
-  "name": "SWRMS — Smart Workforce & Route Management System",
+  "name": "SWRMS - Smart Workforce & Route Management System",
   "short_name": "SWRMS",
-  "description": "Brihanmumbai Municipal Corporation — Solid Waste Management Department field operations portal.",
+  "description": "Brihanmumbai Municipal Corporation - Solid Waste Management Department field operations portal.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

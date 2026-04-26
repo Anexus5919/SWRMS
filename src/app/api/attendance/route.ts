@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
   );
 
   // ── Anti-fraud gate 2: clock drift detection ─────────────────────
-  // Don't reject — workers may legitimately have wrong clocks — but log
+  // Don't reject - workers may legitimately have wrong clocks - but log
   // a warning so supervisors can investigate suspicious cases (e.g. a
   // worker faking attendance during off-hours by skewing device time).
   let clockDriftSeconds: number | null = null;

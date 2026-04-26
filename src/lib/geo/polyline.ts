@@ -121,7 +121,7 @@ export function isPointPossiblyNearPolyline(
 
 /**
  * Bounding box of a sequence of GPS points, used for idle detection.
- * Returns the rectangle's diagonal length in metres — if a worker has
+ * Returns the rectangle's diagonal length in metres - if a worker has
  * moved less than `idleThreshold` metres across N pings, they're idle.
  */
 export function pointsSpanMetres(points: Array<{ lat: number; lng: number }>): number {

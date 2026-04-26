@@ -34,7 +34,7 @@ interface RouteMapProps {
   height?: string;
   statusColor?: string;
   /**
-   * Encoded polyline (Google polyline algorithm, precision 5) — typically
+   * Encoded polyline (Google polyline algorithm, precision 5) - typically
    * computed by OSRM and stored on the Route document. When present, the
    * map renders the road-snapped path instead of the straight start→end line.
    */
@@ -71,7 +71,7 @@ export default function RouteMap({
       try {
         return decodePolyline(routePolyline);
       } catch {
-        // Bad polyline string — fall through to straight-line fallback.
+        // Bad polyline string - fall through to straight-line fallback.
       }
     }
     return [

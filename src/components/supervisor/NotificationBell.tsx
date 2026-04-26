@@ -47,7 +47,7 @@ export default function NotificationBell() {
       const json = await res.json();
       if (json.success) setUnread(json.data.unread);
     } catch {
-      // Ignore — try again on next interval.
+      // Ignore - try again on next interval.
     }
   }, []);
 
@@ -90,7 +90,7 @@ export default function NotificationBell() {
       try {
         await fetch(`/api/notifications/${item.id}/read`, { method: 'POST' });
       } catch {
-        // Best-effort — navigate anyway.
+        // Best-effort - navigate anyway.
       }
       setUnread((u) => Math.max(0, u - 1));
       setItems((prev) =>

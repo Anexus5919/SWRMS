@@ -113,7 +113,7 @@ export default function DashboardPage() {
   }, [fetchDashboard]);
 
   // Live positions: prefer the SSE stream (one connection, server-paced
-  // 5s ticks). Fall back to polling if SSE fails — older proxies, dev
+  // 5s ticks). Fall back to polling if SSE fails - older proxies, dev
   // hot-reloads, or network policies sometimes strip text/event-stream.
   useEffect(() => {
     if (typeof window === 'undefined' || typeof EventSource === 'undefined') {
@@ -136,7 +136,7 @@ export default function DashboardPage() {
         const payload = JSON.parse((e as MessageEvent).data);
         setLivePositions(payload.positions ?? []);
       } catch {
-        // Malformed payload — ignore this tick.
+        // Malformed payload - ignore this tick.
       }
     });
 
@@ -228,7 +228,7 @@ export default function DashboardPage() {
       {/* Alert banner for critical routes.
           Note: this banner counts routes, not the *fixability* of the
           shortage. If every route is critical with no surplus elsewhere,
-          reallocation alone cannot help — the Reallocation page surfaces
+          reallocation alone cannot help - the Reallocation page surfaces
           that explicitly. The CTA here just opens that page. */}
       {criticalRoutes.length > 0 && (
         <div className="mb-4 p-3 bg-status-red-light border border-status-red/20 rounded-lg flex items-start gap-3">
@@ -240,7 +240,7 @@ export default function DashboardPage() {
               {criticalRoutes.length} route{criticalRoutes.length > 1 ? 's' : ''} critically understaffed
             </p>
             <p className="text-xs text-status-red/80 mt-0.5">
-              {criticalRoutes.map((r) => r.code).join(', ')} — open Reallocation to review options or escalate.
+              {criticalRoutes.map((r) => r.code).join(', ')} - open Reallocation to review options or escalate.
             </p>
           </div>
           <Link

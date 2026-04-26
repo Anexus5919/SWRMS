@@ -5,7 +5,7 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/messag
 
 /**
  * Compact language switcher: 3 pill-shaped buttons (En / हिं / मरा).
- * Designed for the staff PWA header — single tap to switch language,
+ * Designed for the staff PWA header - single tap to switch language,
  * no dropdown to navigate (important for low-literacy users).
  */
 export default function LanguageSwitcher({ className = '' }: { className?: string }) {

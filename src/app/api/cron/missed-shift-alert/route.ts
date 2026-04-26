@@ -20,7 +20,7 @@ import { todayIST } from '@/lib/utils/timezone';
  *   curl -X POST https://.../api/cron/missed-shift-alert \
  *        -H "x-cron-secret: $CRON_SECRET"
  *
- * Idempotent within reason — repeated calls within a few minutes will
+ * Idempotent within reason - repeated calls within a few minutes will
  * re-detect the same workers; the `tag` on the push lets the OS replace
  * the prior notification rather than stacking duplicates.
  */
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
   // Dev-only escape hatch: ?force=1 skips the shift-lapse check so
   // operators can test the push pipeline at any time of day. Still
-  // gated by CRON_SECRET, so no security implication — just bypasses
+  // gated by CRON_SECRET, so no security implication - just bypasses
   // the "wait until 06:30 IST" guard during a manual smoke test.
   const { searchParams } = new URL(req.url);
   const force = searchParams.get('force') === '1';

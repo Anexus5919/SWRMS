@@ -18,11 +18,11 @@ interface Props {
  * Big-icon, low-literacy unavailability card on the staff home page.
  *
  * Four large square buttons (Sick / Personal / No Transport / Other)
- * — each one tap. After tapping, a single confirmation modal asks the
+ * - each one tap. After tapping, a single confirmation modal asks the
  * worker to confirm before posting to /api/unavailability.
  *
  * If the worker has already checked in, this card is hidden entirely
- * (`attendanceMarked === true`) — they can't unmark themselves.
+ * (`attendanceMarked === true`) - they can't unmark themselves.
  */
 export default function UnavailabilityCard({
   alreadyDeclared,

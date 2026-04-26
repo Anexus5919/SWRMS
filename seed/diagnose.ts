@@ -28,7 +28,7 @@ async function diagnose() {
   console.log('─────────────────────────────────────────');
   console.log('Today IST          :', today);
   console.log('Current IST clock  :', istHour);
-  console.log('Past 06:30 IST?    :', istHour >= '06:30' ? 'YES — shifts have lapsed' : 'NO — cron will return 0 by design');
+  console.log('Past 06:30 IST?    :', istHour >= '06:30' ? 'YES - shifts have lapsed' : 'NO - cron will return 0 by design');
 
   const staffCount = await db.collection('users').countDocuments({ role: 'staff' });
   const staffWithRoutes = await db.collection('users').countDocuments({
@@ -62,7 +62,7 @@ async function diagnose() {
   console.log('  rejected         :', rejectedToday);
   console.log('Unavailability today:', unavailToday);
 
-  // Distinct attendance dates currently in the DB — exposes the UTC/IST
+  // Distinct attendance dates currently in the DB - exposes the UTC/IST
   // mismatch if the seed wrote rows under yesterday's date.
   const dates = await db
     .collection('attendances')
@@ -107,7 +107,7 @@ async function diagnose() {
   console.log('─────────────────────────────────────────');
   console.log('Would fire (assuming shift has lapsed):', wouldFire.length);
   for (const w of wouldFire.slice(0, 10)) {
-    console.log(`  ${w.employeeId} — ${w.name?.first} ${w.name?.last}`);
+    console.log(`  ${w.employeeId} - ${w.name?.first} ${w.name?.last}`);
   }
   if (wouldFire.length > 10) console.log(`  …and ${wouldFire.length - 10} more`);
 

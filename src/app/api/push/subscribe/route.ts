@@ -21,7 +21,7 @@ const subscribeSchema = z.object({
  * Upserts on `endpoint` so re-enabling notifications on the same browser
  * does not create duplicate rows.
  *
- * Open to all authenticated roles — staff can also subscribe (e.g. for
+ * Open to all authenticated roles - staff can also subscribe (e.g. for
  * future "your supervisor reassigned your route" notifications), but the
  * cron jobs in this codebase only target supervisors / admins today.
  */
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
  * DELETE /api/push/subscribe
  *   Body: { endpoint }
  *
- * Remove a subscription. Idempotent — missing rows are silently OK.
+ * Remove a subscription. Idempotent - missing rows are silently OK.
  */
 export async function DELETE(req: NextRequest) {
   const { session, error } = await requireRole('supervisor', 'admin', 'staff');

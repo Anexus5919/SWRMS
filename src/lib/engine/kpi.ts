@@ -11,7 +11,7 @@
  * never hit 100 that day, it doesn't count toward any cutoff.
  *
  * Filtering:
- *   - by ward (Route.ward) — defaults to all
+ *   - by ward (Route.ward) - defaults to all
  *   - by lookback window in days
  *
  * Returns the per-day series (for sparkline / trend chart) plus rolled
@@ -66,7 +66,7 @@ function dateToISTHours(d: Date): number {
 
 /**
  * Find the earliest update where percentage hit 100. Returns Date or null.
- * Iterates updates in order — they may not be sorted by time in the schema,
+ * Iterates updates in order - they may not be sorted by time in the schema,
  * so we sort defensively.
  */
 function findCompletionTime(

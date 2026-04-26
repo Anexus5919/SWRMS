@@ -1,4 +1,4 @@
-/* SWRMS service worker — handles Web Push notifications.
+/* SWRMS service worker - handles Web Push notifications.
  *
  * Scope is the project root ("/"). Registered from
  * src/components/supervisor/PushToggle.tsx after the user enables push.

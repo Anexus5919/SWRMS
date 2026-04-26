@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * **Production note:** state is per-process. On a single Node instance
  * (e.g. one VM, dev mode, or a fixed-pod deployment) this is fine. On a
  * serverless or multi-replica deploy, swap the `buckets` Map for an
- * external store (Redis / Upstash / Vercel KV) — the public API is
+ * external store (Redis / Upstash / Vercel KV) - the public API is
  * already designed to make that swap mechanical.
  *
  * The limiter is deliberately *advisory* on auth: we still call
@@ -41,7 +41,7 @@ export interface LimitResult {
   resetAt: number;
   /** Seconds the client should wait before retrying (0 when ok=true). */
   retryAfterSec: number;
-  /** Maximum tokens for this window — handy for response headers. */
+  /** Maximum tokens for this window - handy for response headers. */
   limit: number;
 }
 
@@ -120,23 +120,23 @@ export function clientIp(req: NextRequest): string {
  * place rather than scattered across handlers.
  */
 export const LIMITS = {
-  /** Attendance check-in — one per day in practice; allow ~10 retries
+  /** Attendance check-in - one per day in practice; allow ~10 retries
    *  in 5 min to absorb GPS/network retries without blocking legit work. */
   attendance: { max: 10, windowMs: 5 * 60 * 1000 },
 
-  /** Photo uploads — shift_start, checkpoints, shift_end. Cap at 30/hr
+  /** Photo uploads - shift_start, checkpoints, shift_end. Cap at 30/hr
    *  so a script can't push thousands of base64 blobs through. */
   photos: { max: 30, windowMs: 60 * 60 * 1000 },
 
-  /** GPS ping — client posts every ~30 s = 120/hr. Allow 240/hr to
+  /** GPS ping - client posts every ~30 s = 120/hr. Allow 240/hr to
    *  cover transient retries without being permissive about scripted
    *  flooding. */
   trackingPing: { max: 240, windowMs: 60 * 60 * 1000 },
 
-  /** Unavailability declaration — 1 expected per day. 5/day allows for
+  /** Unavailability declaration - 1 expected per day. 5/day allows for
    *  cancel-and-redeclare without ever opening a spam vector. */
   unavailability: { max: 5, windowMs: 24 * 60 * 60 * 1000 },
 
-  /** Push subscribe — bursty on first install, then quiet. */
+  /** Push subscribe - bursty on first install, then quiet. */
   pushSubscribe: { max: 10, windowMs: 60 * 60 * 1000 },
 } as const;

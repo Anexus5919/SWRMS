@@ -2,7 +2,7 @@
  * Tiny client-side CSV generator + browser download trigger.
  *
  * Used by the Export buttons on /admin-logs, /supervisor-logs,
- * /attendance-log, and /audit. Pure browser code — no server endpoint
+ * /attendance-log, and /audit. Pure browser code - no server endpoint
  * needed because the data is already loaded into the page.
  *
  * RFC-4180 quoting: any field containing comma, quote, or newline is

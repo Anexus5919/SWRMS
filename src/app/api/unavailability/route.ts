@@ -19,7 +19,7 @@ const declareUnavailabilitySchema = z.object({
  * cannot then check in for the same date (and the engine will treat them
  * as absent for staffing-ratio purposes).
  *
- * Designed to be a single big-button action for low-literacy users —
+ * Designed to be a single big-button action for low-literacy users -
  * the staff home page renders four icon buttons (sick, personal, transport,
  * other) and one tap sends the request.
  */

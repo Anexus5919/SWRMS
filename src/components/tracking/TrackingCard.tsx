@@ -5,9 +5,9 @@ import { useLiveTracking } from '@/hooks/useLiveTracking';
 import { useTranslation } from '@/lib/i18n/context';
 
 interface TrackingCardProps {
-  /** Worker has verified attendance — gates the Start button. */
+  /** Worker has verified attendance - gates the Start button. */
   attendanceVerified: boolean;
-  /** Worker's RouteProgress is 'completed' — auto-stop tracking. */
+  /** Worker's RouteProgress is 'completed' - auto-stop tracking. */
   routeCompleted: boolean;
   /** Worker's shift end time (HH:MM IST). Used to auto-stop tracking. */
   shiftEnd?: string;
@@ -93,7 +93,7 @@ export default function TrackingCard({
             <span>
               <strong>{t('tracking.offRoute')}</strong>
               {status.distanceFromRouteMeters !== null
-                ? ` — ${status.distanceFromRouteMeters} ${t('tracking.metresFromPath')}`
+                ? ` - ${status.distanceFromRouteMeters} ${t('tracking.metresFromPath')}`
                 : ''}
               {' · '}
               {t('tracking.offRouteAction')}
@@ -105,7 +105,7 @@ export default function TrackingCard({
                 ? ` (${status.distanceFromRouteMeters} ${t('tracking.metresFromPath')})`
                 : ''}
               {status.lastPingAt
-                ? ` — ${t('tracking.lastUpdate')} ${status.lastPingAt.toLocaleTimeString(
+                ? ` - ${t('tracking.lastUpdate')} ${status.lastPingAt.toLocaleTimeString(
                     'en-IN',
                     { hour: '2-digit', minute: '2-digit' }
                   )}`

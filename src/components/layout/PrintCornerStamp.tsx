@@ -1,5 +1,5 @@
 /**
- * PrintCornerStamp — renders the etched BMC seal as a fixed-position
+ * PrintCornerStamp - renders the etched BMC seal as a fixed-position
  * "stamp" in the bottom-right corner of every printed page.
  *
  * Most modern browsers (Chrome, Edge, Firefox) repeat fixed-position

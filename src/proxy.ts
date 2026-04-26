@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
  * `withAuth(...)` wrapper from `next-auth/middleware` is just a higher-
  * order function that we re-export here unchanged.
  *
- * The function name no longer needs to match `middleware` — Next 16
+ * The function name no longer needs to match `middleware` - Next 16
  * accepts any default export of `(req) => Response | undefined`.
  *
  * Route-table-driven role gating. Each entry's prefix matches the path
@@ -24,7 +24,7 @@ const SUPERVISOR_PREFIXES = [
   '/reliability',
   '/replay',
   '/notifications',
-  // Reports are operational telemetry — supervisors need them too
+  // Reports are operational telemetry - supervisors need them too
   // (the dashboard's "View report" link on the KPI card targets here).
   // Admins still match because SUPERVISOR_PREFIXES allows admin role.
   '/reports',

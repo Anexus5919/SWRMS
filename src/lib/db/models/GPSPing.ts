@@ -6,9 +6,9 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
  * Pings are written every ~30s by the staff PWA after the worker presses
  * "Start Shift" and stop when they press "End Shift" (or when shift_end
  * passes). Pings power three things:
- *   1. Route deviation alerts — distance from snapped polyline > threshold
- *   2. Idle / stationary detection — worker hasn't moved for N minutes
- *   3. GPS replay (Phase 7) — supervisor scrubs through a worker's day
+ *   1. Route deviation alerts - distance from snapped polyline > threshold
+ *   2. Idle / stationary detection - worker hasn't moved for N minutes
+ *   3. GPS replay (Phase 7) - supervisor scrubs through a worker's day
  *
  * Privacy: pings are only collected during an active shift the worker
  * explicitly started. The staff PWA shows a "Tracking: ON" indicator

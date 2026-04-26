@@ -34,8 +34,8 @@ const cutoffLabel = (h: number): string => {
 /**
  * Compact KPI rollup card for the supervisor dashboard.
  *
- * Shows three percentages — % of routes completed by 10am / 12pm / 2pm
- * over the last 14 days — with a tiny per-day sparkline next to each.
+ * Shows three percentages - % of routes completed by 10am / 12pm / 2pm
+ * over the last 14 days - with a tiny per-day sparkline next to each.
  * Click "View report" to see the full breakdown on the reports page.
  */
 export default function KpiRollupCard({ days = 14 }: { days?: number }) {

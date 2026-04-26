@@ -16,7 +16,7 @@ import { todayIST } from '@/lib/utils/timezone';
  * Used by the supervisor "GPS Replay" page to scrub through any worker's
  * historical movements.
  *
- * Auth: supervisor or admin only — staff cannot replay other workers.
+ * Auth: supervisor or admin only - staff cannot replay other workers.
  */
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

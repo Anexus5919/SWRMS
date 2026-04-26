@@ -1,13 +1,13 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 /**
- * PushSubscription — one row per (user, browser/device) Web Push endpoint.
+ * PushSubscription - one row per (user, browser/device) Web Push endpoint.
  *
  * Web Push uses an opaque endpoint URL plus two crypto keys (`p256dh` and
  * `auth`). The browser hands these to JS via `pushManager.subscribe(...)`;
  * we POST them to /api/push/subscribe which writes a row here.
  *
- * The endpoint URL is unique per browser install — we use it as the
+ * The endpoint URL is unique per browser install - we use it as the
  * upsert key so re-enabling notifications in the same browser updates
  * the row instead of creating duplicates.
  *
@@ -44,7 +44,7 @@ const PushSubscriptionSchema = new Schema<IPushSubscription>({
   lastUsedAt: { type: Date, default: null },
 });
 
-// Most pushes are sent to "all supervisors" — this index keeps that fast.
+// Most pushes are sent to "all supervisors" - this index keeps that fast.
 PushSubscriptionSchema.index({ role: 1, userId: 1 });
 
 const PushSubscription: Model<IPushSubscription> =

@@ -3,12 +3,12 @@
  *
  * Two checks run on every incoming GPS ping (or as a periodic sweep):
  *
- *  1. **Route deviation** — if the ping is more than
+ *  1. **Route deviation** - if the ping is more than
  *     TRACKING_DEVIATION_THRESHOLD_METERS from the snapped route polyline
  *     for two pings in a row, fire a `location_anomaly` VerificationLog.
  *     One isolated bad ping (GPS bounce) is ignored.
  *
- *  2. **Idle / stationary** — if the worker's last
+ *  2. **Idle / stationary** - if the worker's last
  *     `idleSampleCount` pings span less than `idleSpanMetres`, they're
  *     stationary. Fires a `location_anomaly` log of severity 'info' so
  *     supervisors can decide whether it's a problem (lunch break, stuck
@@ -59,7 +59,7 @@ export interface AnomalyOutcome {
  * **after** the ping has been persisted (we count it among recent pings).
  *
  * Returns a small summary the API can attach to its response so the
- * mobile client can show "You're off route — please return to your route."
+ * mobile client can show "You're off route - please return to your route."
  */
 export async function evaluateAnomaly(ctx: AnomalyContext): Promise<AnomalyOutcome> {
   // --- 1. Resolve the snapped polyline (cache if caller has it) --------
@@ -224,7 +224,7 @@ export async function evaluateAnomaly(ctx: AnomalyContext): Promise<AnomalyOutco
           // Idle push is OPT-IN via TRACKING_IDLE_PUSH=1. Some BMC
           // departments treat lunch-break detection as a flag worth
           // surfacing actively; others find it too noisy (workers stop
-          // in traffic, take legitimate breaks, etc.). Off by default —
+          // in traffic, take legitimate breaks, etc.). Off by default -
           // the inbox row + verification log are written regardless, so
           // turning the env var on later doesn't lose history.
           if (process.env.TRACKING_IDLE_PUSH === '1') {

@@ -1,4 +1,4 @@
-# Vercel build skips these — keeps the deploy artifact lean.
+# Vercel build skips these - keeps the deploy artifact lean.
 # Seed scripts run against the database directly from a developer's
 # machine; they don't need to be inside the Lambda runtime.
 seed/

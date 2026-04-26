@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
  *   3. User clicks Disable: PushManager.unsubscribe() + DELETE /api/push/subscribe.
  *
  * Visible only when the browser supports Push and ServiceWorker. iOS
- * Safari only supports Web Push when installed as a PWA — we render a
+ * Safari only supports Web Push when installed as a PWA - we render a
  * helpful hint for those users instead of a broken button.
  *
  * urlBase64ToUint8Array converts the VAPID public key (URL-safe base64)

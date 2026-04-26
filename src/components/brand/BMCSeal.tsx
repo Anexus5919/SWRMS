@@ -1,5 +1,5 @@
 /**
- * BMC Official Seal — renders the actual Brihanmumbai Municipal
+ * BMC Official Seal - renders the actual Brihanmumbai Municipal
  * Corporation logo from /public/bmc_logo.png.
  *
  * The earlier version of this component synthesised a stylised SVG

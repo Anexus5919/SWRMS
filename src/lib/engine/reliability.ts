@@ -11,7 +11,7 @@
  *   - VerificationLog kind=idle               (stationary alerts)
  *   - VerificationLog kind=mock_location      (live mock-GPS during shift)
  *   - VerificationLog type=face_mismatch / no_face_detected
- *   - Unavailability                          (declared sick/personal — neutral)
+ *   - Unavailability                          (declared sick/personal - neutral)
  *
  * Score (0–100) is the **mean of per-day scores** over the window.
  * A day on which the worker declared unavailability is excluded from
@@ -19,7 +19,7 @@
  * the worker had no assigned route at all is also excluded.
  *
  * The breakdown returns raw counts so the UI can show "why" alongside
- * the number — a 72/100 with 3 missed shifts reads very differently
+ * the number - a 72/100 with 3 missed shifts reads very differently
  * from a 72/100 with 8 idle alerts.
  *
  * This is a pure read-only aggregation. It does no writes and is
@@ -35,7 +35,7 @@ import { Attendance, VerificationLog, Unavailability, User, Route } from '../db/
 // Caps prevent a single bad day from also dragging the next day's score.
 const PENALTY = {
   missedShift: 60,        // had route, no attendance, no unavailability
-  rejectedAttendance: 20, // geofence rejection — deliberate or careless
+  rejectedAttendance: 20, // geofence rejection - deliberate or careless
   lateArrival: 5,         // > LATE_GRACE_MINUTES after shiftStart
   routeDeviation: 5,      // per alert (capped)
   routeDeviationCap: 20,
@@ -220,7 +220,7 @@ export async function computeReliabilityForUser(
 
     // Worker is "scheduled" for the day if they had a route AND no
     // declared unavailability. Without an assigned route there's no
-    // expected presence — score is N/A for that day.
+    // expected presence - score is N/A for that day.
     const hadRoute = !!user?.assignedRouteId || !!att?.routeId;
     const declaredUnavailable = !!unav;
     const scheduled = hadRoute && !declaredUnavailable;

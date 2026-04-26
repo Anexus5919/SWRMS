@@ -353,7 +353,7 @@ function ReliabilityDetailModal({
             {detail ? (
               <>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-bmc-700">
-                  Reliability — {detail.windowStart} to {detail.windowEnd}
+                  Reliability - {detail.windowStart} to {detail.windowEnd}
                 </p>
                 <h3 className="font-display text-xl font-bold text-[var(--neutral-900)] mt-1">
                   {detail.worker.name}{' '}

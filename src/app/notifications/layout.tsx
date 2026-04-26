@@ -4,7 +4,7 @@ import AppFooter from '@/components/layout/AppFooter';
 /**
  * Shared layout for the notifications inbox. Used by both supervisors
  * and admins (proxy.ts gates the route to those two roles). Kept
- * deliberately minimal — no role-specific nav strip, since this page
+ * deliberately minimal - no role-specific nav strip, since this page
  * is reached from a bell icon that already lives in each role's main
  * layout. The breadcrumb on the page itself plus the BMC header give
  * users a clear way back.

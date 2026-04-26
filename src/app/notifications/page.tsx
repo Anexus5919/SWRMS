@@ -101,7 +101,7 @@ export default function NotificationsPage() {
     try {
       await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
     } catch {
-      // Optimistic — server will catch up next visit.
+      // Optimistic - server will catch up next visit.
     }
   };
 

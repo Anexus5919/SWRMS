@@ -4,13 +4,13 @@
  * Locales: English (en), Hindi (hi), Marathi (mr).
  *
  * Scope: only the strings staff (low-literacy field workers) actually
- * see. Supervisor and admin dashboards stay English — those users are
+ * see. Supervisor and admin dashboards stay English - those users are
  * office-based and literate.
  *
  * Adding a new key:
  *   1. Add it to `Messages` below in en first.
  *   2. Add the same key to `hi` and `mr`. Use a Marathi/Hindi translator
- *      for any new copy — do NOT machine-translate without review.
+ *      for any new copy - do NOT machine-translate without review.
  *   3. Reference via `t('key.path')` in components.
  */
 
@@ -25,7 +25,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
 };
 
 // Each top-level key is a logical area. Flat strings make the lookup
-// O(1) and avoid pluralisation library overhead — adequate for the
+// O(1) and avoid pluralisation library overhead - adequate for the
 // short, action-oriented copy on the staff PWA.
 
 export interface Messages {
