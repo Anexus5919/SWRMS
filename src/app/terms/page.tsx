@@ -10,8 +10,10 @@ export default function TermsPage() {
       <PublicHeader />
 
       <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
-        {/* Etched BMC seal watermark — consistent across all public pages. */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[140%] aspect-square pointer-events-none opacity-20 mix-blend-screen">
+        {/* Etched BMC seal — fixed pixel size so all four public pages
+            render an identically-sized watermark regardless of how tall
+            their individual hero bands happen to be. */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] pointer-events-none opacity-20 mix-blend-screen">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/bmc_logo_sketch.png"

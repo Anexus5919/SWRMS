@@ -30,9 +30,11 @@ export default async function AboutPage() {
       {/* Page header */}
       <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
         {/* Etched BMC seal as a heritage watermark on the right side.
-            Square aspect preserved with object-contain. The fade gradient
-            below keeps the heading readable on top of the artwork. */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[140%] aspect-square pointer-events-none opacity-20 mix-blend-screen">
+            Fixed pixel size (not % of hero height) so the seal renders
+            at exactly the same dimensions on every public page —
+            previously `h-[140%]` made the seal larger on tall heroes
+            (/about) and smaller on short ones (/privacy, /terms). */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] pointer-events-none opacity-20 mix-blend-screen">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/bmc_logo_sketch.png"
