@@ -33,9 +33,9 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-bmc-900 via-bmc-900/80 to-transparent pointer-events-none" />
 
         {/* max-w-7xl matches PublicHeader so the heading vertically aligns
-            with the BMC logo above it. The text content itself is then
-            capped at max-w-3xl on the left so the seal artwork on the
-            right has visible breathing room. */}
+            with the BMC logo above it. The text content is capped at
+            max-w-3xl so the seal artwork on the right has visible
+            breathing room. */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
           <div className="max-w-3xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">
@@ -53,26 +53,35 @@ export default function AboutPage() {
       </section>
 
       {/* Content — outer container matches PublicHeader's max-w-7xl so the
-          left edge aligns with the BMC logo above. Inner column is capped
-          at max-w-3xl so prose stays at a comfortable reading width while
-          starting flush-left under the hero heading. */}
+          left edge aligns with the BMC logo above AND the article extends
+          all the way to the same right edge. Justified paragraphs below
+          fill the column flush on both sides. */}
       <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <article className="prose-content space-y-8 max-w-3xl">
+        <article className="prose-content space-y-8">
           {/* Origin */}
           <div>
             <h2 className="font-display text-xl font-bold text-bmc-700 mb-3">Origin of the Project</h2>
-            <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
+            <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed text-justify">
               The Brihanmumbai Municipal Corporation (BMC) manages waste collection for over 20 million
-              residents through a network of routes serviced by dedicated vehicles and crews. Through
-              field visits to BMC ward offices in Chembur and direct interactions with Solid Waste
-              Management (SWM) supervisors and sanitation workers, three operational pain points emerged
-              repeatedly:
+              residents through a network of routes serviced by dedicated vehicles and crews. The Chembur
+              (M-East) ward alone handles roughly 30 sanitation workers spread across 10 active collection
+              routes, each with a defined start point, end point, and a target staffing level set by the
+              ward office. Through field visits to that ward office and direct interactions with Solid
+              Waste Management (SWM) supervisors and sanitation workers, three operational pain points
+              emerged repeatedly:
             </p>
             <ul className="mt-4 space-y-2 text-[15px] text-[var(--text-secondary)]">
-              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Attendance fraud - workers signing the register at the ward office without reporting to their assigned routes.</span></li>
-              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Late detection of route failures - supervisors had no way to detect understaffing until collections were already missed.</span></li>
+              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Attendance fraud — workers signing the register at the ward office without reporting to their assigned routes.</span></li>
+              <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Late detection of route failures — supervisors had no way to detect understaffing until collections were already missed.</span></li>
               <li className="flex gap-3"><span className="text-gold-600 font-bold">·</span><span>Idle workers on completed shorter routes while adjacent longer routes remained understaffed.</span></li>
             </ul>
+            <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed text-justify">
+              SWRMS was scoped specifically against these three pain points rather than as a general-purpose
+              municipal platform. Every feature in the system maps back to one of them: geo-fenced check-in
+              and face-verified field photos address attendance fraud; live GPS tracking and automatic
+              deviation alerts address late detection; and the workforce reallocation engine, surfaced on
+              the supervisor dashboard, addresses the idle-vs-understaffed imbalance during a shift.
+            </p>
           </div>
 
           {/* Solution */}
@@ -80,15 +89,26 @@ export default function AboutPage() {
             <h2 className="font-display text-xl font-bold text-bmc-700 mb-3">The Solution Architecture</h2>
             <div className="bg-white border border-[var(--border)] rounded-xl p-6 shadow-doc grid sm:grid-cols-[1fr_240px] gap-6 items-center">
               <div>
-                <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
+                <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed text-justify">
                   Geo-fenced attendance verification ensures workers can only mark attendance when
-                  physically within 200m of their assigned route start point. AI-verified field photos
-                  use 128-dimensional face embeddings to confirm worker identity. Real-time route
-                  progress tracking and automated reallocation suggestions complete the loop.
+                  physically within 200 m of their assigned route start point, calculated using the
+                  haversine formula against coordinates stored on the route record. AI-verified field
+                  photos use 128-dimensional face embeddings to confirm worker identity at shift start,
+                  checkpoint, and shift end. Routes are road-snapped via OSRM so deviation detection runs
+                  against the actual street network rather than a straight-line approximation. Real-time
+                  route progress tracking and automated reallocation suggestions complete the loop.
                 </p>
               </div>
               <GeofenceMap className="w-full" />
             </div>
+            <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed text-justify">
+              On top of the core verification flow, the system layers a multilingual staff PWA (English,
+              Hindi, and Marathi) for low-literacy field use, a tamper-evident audit log capturing every
+              supervisory action with actor identity and IP address, an opt-in browser push channel that
+              alerts supervisors within seconds of a route deviation, mock-GPS attempt, or missed shift,
+              and a workforce reliability score per worker that aggregates 30 days of attendance signals
+              into a single 0–100 figure for the ward office&apos;s monthly review.
+            </p>
           </div>
 
           {/* SDG */}
@@ -99,21 +119,28 @@ export default function AboutPage() {
             <h3 className="font-display text-lg font-bold text-bmc-900">
               Sustainable Cities &amp; Communities - Target 11.6
             </h3>
-            <p className="text-[14px] text-[var(--text-secondary)] mt-2 leading-relaxed">
+            <p className="text-[14px] text-[var(--text-secondary)] mt-2 leading-relaxed text-justify">
               SWRMS contributes to Target 11.6 by improving accountability and route completion
-              rates in municipal solid waste collection - directly addressing the per-capita
-              environmental impact of waste accumulation in densely populated urban areas.
+              rates in municipal solid waste collection — directly addressing the per-capita
+              environmental impact of waste accumulation in densely populated urban areas. The
+              system makes the daily collection cycle measurable and auditable, which is the
+              prerequisite for any subsequent operational reform.
             </p>
           </div>
 
           {/* Acknowledgments */}
           <div>
             <h2 className="font-display text-xl font-bold text-bmc-700 mb-3">Acknowledgments</h2>
-            <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
+            <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed text-justify">
               This pilot was developed by the Department of Information Technology at Vivekanand
               Education Society&apos;s Institute of Technology (V.E.S.I.T) under the guidance of
               Prof. Archana Kshirsagar, with field access generously provided by BMC officials
-              and Solid Waste Management staff at the Chembur Ward Office.
+              and Solid Waste Management staff at the Chembur Ward Office. The work draws on direct
+              shadowing of supervisors during morning shift and on the Department&apos;s own
+              operational records for the ward; no dataset was synthesised without ground-truth
+              counterparts. The codebase, route definitions, anti-fraud thresholds, and audit
+              schema are openly documented so the system remains transparent to BMC reviewers and
+              available for adaptation by other wards.
             </p>
           </div>
         </article>

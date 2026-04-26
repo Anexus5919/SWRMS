@@ -26,9 +26,11 @@ export default function TermsPage() {
         </div>
       </section>
 
-      {/* Body uses the same outer width as hero; card capped for reading. */}
+      {/* Body matches hero outer width so the card extends fully right.
+          Justified paragraphs flow flush on both sides for a consistent
+          government-document feel. */}
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <article className="max-w-4xl bg-white border border-[var(--border)] rounded-xl shadow-doc p-8 sm:p-10 space-y-6 text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
+        <article className="bg-white border border-[var(--border)] rounded-xl shadow-doc p-8 sm:p-10 space-y-6 text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
           <div className="bg-status-amber-light border-l-4 border-status-amber p-4 rounded-r">
             <p className="font-display text-sm font-bold text-status-amber-dark mb-1">Authorized Personnel Only</p>
             <p className="text-xs text-status-amber-dark/80">
@@ -39,10 +41,13 @@ export default function TermsPage() {
 
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">1. Acceptance of terms</h2>
-            <p>
+            <p className="text-justify">
               By signing in to SWRMS, you acknowledge that you are an authorized employee of the
               Brihanmumbai Municipal Corporation (BMC) and agree to use this system solely for
-              official Solid Waste Management duties.
+              official Solid Waste Management duties. These terms apply for as long as your account
+              remains active and continue to bind you with respect to data already submitted even
+              after deactivation. If you do not accept these terms in full, you must not sign in to
+              the system or attempt to access any of its endpoints.
             </p>
           </div>
 
@@ -71,36 +76,51 @@ export default function TermsPage() {
 
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">4. Account security</h2>
-            <p>
-              You are responsible for maintaining the confidentiality of your password and for all
-              activities under your account. Notify your ward administrator immediately if you suspect
-              unauthorized access.
+            <p className="text-justify">
+              You are responsible for maintaining the confidentiality of your password and for every
+              action taken under your account. Treat your sign-in credentials as you would your
+              official BMC identity card: do not write the password down where others can see it,
+              do not share it with co-workers even briefly, and do not allow anyone else to operate
+              the device while you are still signed in. Notify your ward administrator immediately
+              if you suspect unauthorised access — earlier notification limits the scope of any
+              audit-trail review that may follow.
             </p>
           </div>
 
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">5. Disciplinary action</h2>
-            <p>
+            <p className="text-justify">
               Violation of these terms may result in disciplinary action under BMC employment rules,
-              including but not limited to suspension, termination, and referral for criminal prosecution
-              under the IT Act 2000 and the Indian Penal Code.
+              including but not limited to suspension, termination, and referral for criminal
+              prosecution under the Information Technology Act 2000 and the Indian Penal Code.
+              Specific examples of conduct that the Department considers serious offences include
+              the submission of fabricated GPS data or photographs, attempts to defeat face
+              verification by presenting another person&apos;s image, and any unauthorised attempt to
+              access verification logs or administrator screens.
             </p>
           </div>
 
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">6. Audit &amp; monitoring</h2>
-            <p>
-              All actions in SWRMS - attendance check-ins, photo submissions, log resolutions,
-              reallocations, and administrative changes - are logged and auditable.
+            <p className="text-justify">
+              All actions in SWRMS — attendance check-ins, photo submissions, log resolutions,
+              reallocations, and administrative changes — are logged and auditable. Each entry
+              records the employee identifier of the actor, their role at the time of the action,
+              the device IP address, the browser user-agent string, and where applicable a
+              before-and-after diff of the modified record. Logs are retained for the duration
+              required by BMC records policy and are made available to authorised auditors on
+              request.
             </p>
           </div>
 
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">7. Pilot disclaimer</h2>
-            <p>
+            <p className="text-justify">
               SWRMS is a pilot deployment. The system is provided on an &quot;as-is&quot; basis during
-              the pilot phase. Operational outages, data loss during planned maintenance, and feature
-              changes may occur with prior notice via the supervisor channel.
+              the pilot phase, with the understanding that operational outages, data loss during
+              planned maintenance, and feature changes may occur. Material changes are announced
+              with prior notice through the supervisor channel and are reflected in the audit log
+              so the operational history of the system remains transparent to BMC reviewers.
             </p>
           </div>
         </article>
