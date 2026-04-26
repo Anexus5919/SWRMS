@@ -9,10 +9,9 @@ interface PrintHeaderProps {
  * PrintHeader - official BMC letterhead for printable reports.
  * Only visible when printing (uses .print-only utility).
  *
- * Uses the etched/sketch BMC seal (/bmc_logo_sketch.png) rather than the
- * colour logo because the sketch renders cleanly in monochrome ink-on-
- * paper, which is how printed government reports are typically produced
- * and filed. The colour seal would muddy when printed on a B&W laser.
+ * The colour BMC logo lives in the letterhead next to the department
+ * identifiers; the etched sketch is rendered as a corner "stamp" on
+ * every printed page via PrintCornerStamp.
  */
 export default function PrintHeader({ title, subtitle, reportDate, reportType }: PrintHeaderProps) {
   const generatedAt = new Date().toLocaleString('en-IN', {
@@ -30,8 +29,8 @@ export default function PrintHeader({ title, subtitle, reportDate, reportType }:
       <div className="flex items-start gap-4 pb-4 border-b-2 border-double border-bmc-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/bmc_logo_sketch.png"
-          alt="Brihanmumbai Municipal Corporation seal"
+          src="/bmc_logo.png"
+          alt="Brihanmumbai Municipal Corporation"
           width={72}
           height={72}
           className="flex-shrink-0"

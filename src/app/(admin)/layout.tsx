@@ -3,6 +3,7 @@ import DesktopNav from '@/components/layout/DesktopNav';
 import AppFooter from '@/components/layout/AppFooter';
 import PushToggle from '@/components/supervisor/PushToggle';
 import NotificationBell from '@/components/supervisor/NotificationBell';
+import PrintCornerStamp from '@/components/layout/PrintCornerStamp';
 
 const adminNav = [
   { href: '/staff', label: 'Staff Management' },
@@ -19,6 +20,8 @@ export default function AdminLayout({
 }) {
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Etched BMC seal stamp on every printed page (admin reports + audit). */}
+      <PrintCornerStamp />
       <BMCHeader />
       <DesktopNav items={adminNav} />
       <div className="bg-white border-b border-[var(--border)]">

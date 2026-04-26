@@ -15,6 +15,7 @@ import {
 import { Breadcrumbs, Button } from '@/components/ui';
 import PrintHeader from '@/components/layout/PrintHeader';
 import PrintFooter from '@/components/layout/PrintFooter';
+import PrintCornerStamp from '@/components/layout/PrintCornerStamp';
 
 type ReportTab = 'daily_summary' | 'attendance_trend' | 'route_performance' | 'verification_summary';
 
@@ -166,6 +167,8 @@ export default function ReportsPage() {
 
   return (
     <div>
+      {/* Print-only: etched seal stamp on every printed page (bottom-right). */}
+      <PrintCornerStamp />
       {/* Print-only letterhead */}
       <PrintHeader
         title={currentTabLabel}

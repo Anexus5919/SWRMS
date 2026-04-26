@@ -291,8 +291,28 @@ a:focus-visible {
   .bmc-paper { background: white !important; }
   .print-only { display: block !important; }
   @page { margin: 1.8cm; size: A4; }
+
+  /* Etched BMC seal "stamp" in the bottom-right corner of every
+     printed page. Most browsers (Chrome, Edge, Firefox) repeat
+     position: fixed elements on each page during print, which is
+     exactly what we want — the seal appears once per sheet of a
+     multi-page report, mimicking a physical rubber-stamped govt
+     document. opacity is toned down so the body content remains
+     readable if anything overlaps the corner. */
+  .print-stamp {
+    display: block !important;
+    position: fixed;
+    bottom: 0.6cm;
+    right: 0.6cm;
+    width: 2.4cm;
+    height: 2.4cm;
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 9999;
+  }
 }
 .print-only { display: none; }
+.print-stamp { display: none; }
 
 /* ── Utility: hide scrollbar but allow scroll ─────── */
 .scrollbar-hide::-webkit-scrollbar { display: none; }

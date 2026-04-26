@@ -32,17 +32,23 @@ export default function AboutPage() {
         {/* Fade gradient over the seal so left-side copy remains readable. */}
         <div className="absolute inset-0 bg-gradient-to-r from-bmc-900 via-bmc-900/80 to-transparent pointer-events-none" />
 
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">
-            About the program
-          </p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight text-white">
-            A purpose-built system for accountable municipal waste collection.
-          </h1>
-          <p className="text-base text-white/75 mt-4 max-w-2xl leading-relaxed">
-            SWRMS is the operational layer between paper attendance and missed collections.
-            It was designed in response to direct observation of BMC Chembur ward operations.
-          </p>
+        {/* max-w-7xl matches PublicHeader so the heading vertically aligns
+            with the BMC logo above it. The text content itself is then
+            capped at max-w-3xl on the left so the seal artwork on the
+            right has visible breathing room. */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">
+              About the program
+            </p>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight text-white">
+              A purpose-built system for accountable municipal waste collection.
+            </h1>
+            <p className="text-base text-white/75 mt-4 max-w-2xl leading-relaxed">
+              SWRMS is the operational layer between paper attendance and missed collections.
+              It was designed in response to direct observation of BMC Chembur ward operations.
+            </p>
+          </div>
         </div>
       </section>
 

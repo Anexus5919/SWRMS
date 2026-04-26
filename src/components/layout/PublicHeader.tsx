@@ -1,11 +1,29 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import BMCSeal from '@/components/brand/BMCSeal';
 
 /**
  * PublicHeader - used on About, Help, Privacy, Terms.
  * Slimmer than the landing-page header.
+ *
+ * The nav links highlight in BMC gold when the user is on that page,
+ * giving a clear "you are here" signal that matches the rest of the
+ * portal's brand palette.
  */
+
+const navItems: { href: string; label: string }[] = [
+  { href: '/about', label: 'About' },
+  { href: '/help', label: 'Help' },
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/terms', label: 'Terms' },
+];
+
 export default function PublicHeader() {
+  const pathname = usePathname();
+  const isActive = (href: string): boolean => pathname === href || pathname.startsWith(href + '/');
+
   return (
     <>
       <div className="bg-bmc-950 text-white text-[11px]">
@@ -38,10 +56,23 @@ export default function PublicHeader() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-xs">
-            <Link href="/about" className="text-white/80 hover:text-gold-300 transition-colors">About</Link>
-            <Link href="/help" className="text-white/80 hover:text-gold-300 transition-colors">Help</Link>
-            <Link href="/privacy" className="text-white/80 hover:text-gold-300 transition-colors">Privacy</Link>
-            <Link href="/terms" className="text-white/80 hover:text-gold-300 transition-colors">Terms</Link>
+            {navItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={
+                    active
+                      ? 'text-gold-300 font-semibold border-b-2 border-gold-400 pb-0.5 transition-colors'
+                      : 'text-white/80 hover:text-gold-300 transition-colors'
+                  }
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
         <div className="divider-gold" />

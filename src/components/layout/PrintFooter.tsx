@@ -4,9 +4,9 @@ interface PrintFooterProps {
 }
 
 /**
- * PrintFooter - matches PrintHeader's etched-sketch aesthetic. The
- * sketch renders cleanly on B&W laser printers and matches the
- * traditional government-document look.
+ * PrintFooter - one-line attribution that prints below the report
+ * content. The official BMC seal stamp on every page is rendered
+ * separately by PrintCornerStamp (fixed-positioned).
  */
 export default function PrintFooter({ generatedBy }: PrintFooterProps) {
   return (
@@ -15,12 +15,12 @@ export default function PrintFooter({ generatedBy }: PrintFooterProps) {
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/bmc_logo_sketch.png"
+            src="/bmc_logo.png"
             alt=""
             aria-hidden="true"
-            width={24}
-            height={24}
-            style={{ width: 24, height: 24, objectFit: 'contain' }}
+            width={20}
+            height={20}
+            style={{ width: 20, height: 20, objectFit: 'contain' }}
           />
           <span>SWRMS · BMC Confidential · Pilot Deployment</span>
         </div>

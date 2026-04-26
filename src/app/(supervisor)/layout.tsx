@@ -3,6 +3,7 @@ import DesktopNav from '@/components/layout/DesktopNav';
 import AppFooter from '@/components/layout/AppFooter';
 import PushToggle from '@/components/supervisor/PushToggle';
 import NotificationBell from '@/components/supervisor/NotificationBell';
+import PrintCornerStamp from '@/components/layout/PrintCornerStamp';
 
 const supervisorNav = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -20,6 +21,9 @@ export default function SupervisorLayout({
 }) {
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Etched BMC seal stamp on every printed page (attendance log,
+          verification log, GPS replay, etc. when printed/saved as PDF). */}
+      <PrintCornerStamp />
       <BMCHeader />
       <DesktopNav items={supervisorNav} />
       <div className="bg-white border-b border-[var(--border)]">

@@ -108,6 +108,23 @@ const UnavailabilitySchema = new mongoose.Schema({
 });
 UnavailabilitySchema.index({ userId: 1, date: 1 }, { unique: true });
 
+const AuditLogSchema = new mongoose.Schema({
+  action: { type: String, required: true, index: true },
+  category: { type: String, enum: ['user', 'route', 'reallocation', 'verification', 'auth', 'bulk'], required: true, index: true },
+  actorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  actorEmployeeId: { type: String, default: null },
+  actorRole: { type: String, enum: ['admin', 'supervisor', 'staff', 'system'], required: true },
+  targetType: { type: String, default: null },
+  targetId: { type: String, default: null, index: true },
+  targetLabel: { type: String, default: null },
+  changes: { type: mongoose.Schema.Types.Mixed, default: null },
+  metadata: { type: mongoose.Schema.Types.Mixed, default: null },
+  ipAddress: { type: String, default: null },
+  userAgent: { type: String, default: null },
+  ward: { type: String, default: 'Chembur', index: true },
+}, { timestamps: { createdAt: true, updatedAt: false } });
+AuditLogSchema.index({ createdAt: -1 });
+
 const GPSPingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', required: true, index: true },
@@ -135,6 +152,7 @@ const RouteProgress = mongoose.models.RouteProgress || mongoose.model('RouteProg
 const VerificationLog = mongoose.models.VerificationLog || mongoose.model('VerificationLog', VerificationLogSchema);
 const Unavailability = mongoose.models.Unavailability || mongoose.model('Unavailability', UnavailabilitySchema);
 const GPSPing = mongoose.models.GPSPing || mongoose.model('GPSPing', GPSPingSchema);
+const AuditLog = mongoose.models.AuditLog || mongoose.model('AuditLog', AuditLogSchema);
 
 // ── Chembur Ward Routes (realistic Mumbai coordinates) ──
 
@@ -1152,6 +1170,214 @@ async function seed() {
       }
       console.log(`Historical: ${histPings.length} pings across ${histDays} prior days (4 workers/day sample)`);
     }
+  }
+
+  // ── Sample audit-log entries ──
+  // The /audit page is otherwise empty after a fresh seed because real
+  // entries are only written when a supervisor or admin performs a
+  // write action through the running app. To make the audit log a
+  // demonstrable feature out of the box, we synthesise the entries
+  // that *would have been written* if the seed's setup had been done
+  // through the live UI: bulk staff import, route creation, supervisor
+  // creation, initial logins. With --with-history we additionally
+  // generate per-day login + verification-resolution entries for the
+  // past 30 days so the page has visibly varied activity.
+  console.log('\n--- Seeding audit log entries ---');
+
+  const adminUser = await User.findOne({ employeeId: 'BMC-CHB-ADMIN' });
+  const sup1 = await User.findOne({ employeeId: 'BMC-CHB-SUP01' });
+  const allSupervisors = await User.find({ role: 'supervisor' });
+
+  if (adminUser) {
+    const auditEntries: any[] = [];
+    const setupTime = new Date(Date.now() - 90 * 60 * 1000); // 90 min ago
+
+    // 1. Bulk staff import (one entry, with 30 employee IDs in metadata)
+    auditEntries.push({
+      action: 'bulk_import.staff',
+      category: 'bulk',
+      actorId: adminUser._id,
+      actorEmployeeId: 'BMC-CHB-ADMIN',
+      actorRole: 'admin',
+      targetType: 'staff_batch',
+      targetId: null,
+      targetLabel: '30 sanitation workers (Chembur)',
+      changes: null,
+      metadata: { count: 30, ward: 'Chembur', source: 'csv-import' },
+      ipAddress: '10.0.0.42',
+      userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0',
+      ward: 'Chembur',
+      createdAt: new Date(setupTime.getTime() + 5 * 60 * 1000),
+    });
+
+    // 2. Route creation (one per route)
+    for (let i = 0; i < createdRoutes.length; i++) {
+      const r = createdRoutes[i];
+      auditEntries.push({
+        action: 'route.created',
+        category: 'route',
+        actorId: adminUser._id,
+        actorEmployeeId: 'BMC-CHB-ADMIN',
+        actorRole: 'admin',
+        targetType: 'route',
+        targetId: r._id.toString(),
+        targetLabel: `${r.code} — ${r.name}`,
+        changes: null,
+        metadata: { requiredStaff: r.requiredStaff, geofenceRadius: r.geofenceRadius },
+        ipAddress: '10.0.0.42',
+        userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0',
+        ward: 'Chembur',
+        createdAt: new Date(setupTime.getTime() + (10 + i) * 60 * 1000),
+      });
+    }
+
+    // 3. Supervisor creation (3 entries)
+    for (let i = 0; i < allSupervisors.length; i++) {
+      const s = allSupervisors[i];
+      auditEntries.push({
+        action: 'user.created',
+        category: 'user',
+        actorId: adminUser._id,
+        actorEmployeeId: 'BMC-CHB-ADMIN',
+        actorRole: 'admin',
+        targetType: 'user',
+        targetId: s._id.toString(),
+        targetLabel: `${s.employeeId} ${s.name.first} ${s.name.last}`,
+        changes: null,
+        metadata: { role: 'supervisor', ward: 'Chembur' },
+        ipAddress: '10.0.0.42',
+        userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0',
+        ward: 'Chembur',
+        createdAt: new Date(setupTime.getTime() + (25 + i) * 60 * 1000),
+      });
+    }
+
+    // 4. Initial logins (admin + each supervisor)
+    auditEntries.push({
+      action: 'login.success',
+      category: 'auth',
+      actorId: adminUser._id,
+      actorEmployeeId: 'BMC-CHB-ADMIN',
+      actorRole: 'admin',
+      targetType: 'user',
+      targetId: adminUser._id.toString(),
+      targetLabel: `${adminUser.employeeId} ${adminUser.name.first} ${adminUser.name.last}`,
+      changes: null,
+      metadata: null,
+      ipAddress: '10.0.0.42',
+      userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0',
+      ward: 'Chembur',
+      createdAt: new Date(setupTime.getTime() + 60 * 60 * 1000),
+    });
+    for (const s of allSupervisors) {
+      auditEntries.push({
+        action: 'login.success',
+        category: 'auth',
+        actorId: s._id,
+        actorEmployeeId: s.employeeId,
+        actorRole: 'supervisor',
+        targetType: 'user',
+        targetId: s._id.toString(),
+        targetLabel: `${s.employeeId} ${s.name.first} ${s.name.last}`,
+        changes: null,
+        metadata: null,
+        ipAddress: `10.0.0.${50 + Math.floor(Math.random() * 50)}`,
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120.0',
+        ward: 'Chembur',
+        createdAt: new Date(setupTime.getTime() + (62 + Math.random() * 5) * 60 * 1000),
+      });
+    }
+
+    // 5. Optional historical activity (one login per supervisor per day,
+    //    a few photo approvals, a couple of reallocations spread out)
+    if (process.argv.includes('--with-history')) {
+      const todayMidnightUtcMs = new Date(`${today}T00:00:00.000Z`).getTime();
+      for (let dayOffset = 1; dayOffset <= 29; dayOffset++) {
+        const dayMs = todayMidnightUtcMs - dayOffset * 86_400_000;
+        // Each supervisor logs in once per past day
+        for (const s of allSupervisors) {
+          auditEntries.push({
+            action: 'login.success',
+            category: 'auth',
+            actorId: s._id,
+            actorEmployeeId: s.employeeId,
+            actorRole: 'supervisor',
+            targetType: 'user',
+            targetId: s._id.toString(),
+            targetLabel: `${s.employeeId} ${s.name.first} ${s.name.last}`,
+            changes: null,
+            metadata: null,
+            ipAddress: `10.0.0.${50 + Math.floor(Math.random() * 50)}`,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120.0',
+            ward: 'Chembur',
+            createdAt: new Date(dayMs + (5.5 * 60 + 30 + Math.floor(Math.random() * 60)) * 60_000),
+          });
+        }
+        // A photo approval per day on a random route by SUP01
+        if (sup1 && dayOffset % 2 === 0) {
+          const route = createdRoutes[dayOffset % createdRoutes.length];
+          auditEntries.push({
+            action: 'photo.approved',
+            category: 'verification',
+            actorId: sup1._id,
+            actorEmployeeId: sup1.employeeId,
+            actorRole: 'supervisor',
+            targetType: 'photo',
+            targetId: new mongoose.Types.ObjectId().toString(),
+            targetLabel: `Shift-start photo on ${route.code}`,
+            changes: { 'manualReview.status': { from: 'pending', to: 'approved' } },
+            metadata: { routeCode: route.code },
+            ipAddress: `10.0.0.${50 + Math.floor(Math.random() * 50)}`,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120.0',
+            ward: 'Chembur',
+            createdAt: new Date(dayMs + (8 * 60) * 60_000),
+          });
+        }
+        // A reallocation event every few days
+        if (sup1 && dayOffset % 7 === 0) {
+          const fromRoute = createdRoutes[0];
+          const toRoute = createdRoutes[4];
+          auditEntries.push({
+            action: 'reallocation.approved',
+            category: 'reallocation',
+            actorId: sup1._id,
+            actorEmployeeId: sup1.employeeId,
+            actorRole: 'supervisor',
+            targetType: 'reallocation',
+            targetId: new mongoose.Types.ObjectId().toString(),
+            targetLabel: `1 worker · ${fromRoute.code} → ${toRoute.code}`,
+            changes: { 'user.assignedRouteId': { from: fromRoute._id.toString(), to: toRoute._id.toString() } },
+            metadata: { reason: 'understaffed', distanceMeters: 1850 },
+            ipAddress: `10.0.0.${50 + Math.floor(Math.random() * 50)}`,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120.0',
+            ward: 'Chembur',
+            createdAt: new Date(dayMs + (10 * 60) * 60_000),
+          });
+        }
+        // A log resolution every couple of days
+        if (sup1 && dayOffset % 3 === 0) {
+          auditEntries.push({
+            action: 'log.resolved',
+            category: 'verification',
+            actorId: sup1._id,
+            actorEmployeeId: sup1.employeeId,
+            actorRole: 'supervisor',
+            targetType: 'verification_log',
+            targetId: new mongoose.Types.ObjectId().toString(),
+            targetLabel: 'Route deviation alert',
+            changes: { 'resolution.status': { from: 'open', to: 'resolved' } },
+            metadata: { notes: 'Worker confirmed legitimate detour for stuck vehicle.' },
+            ipAddress: `10.0.0.${50 + Math.floor(Math.random() * 50)}`,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120.0',
+            ward: 'Chembur',
+            createdAt: new Date(dayMs + (11 * 60) * 60_000),
+          });
+        }
+      }
+    }
+
+    await AuditLog.insertMany(auditEntries);
+    console.log(`Created ${auditEntries.length} audit log entries.`);
   }
 
   console.log('\n--- Seed Complete ---');

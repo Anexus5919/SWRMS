@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { rowsToCsv, downloadCsv, timestampSlug } from '@/lib/utils/csv';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -183,8 +184,38 @@ export default function AdminVerificationLogsPage() {
   };
 
   const handleExport = () => {
-    // Placeholder: in a real implementation this would trigger a CSV/Excel download
-    alert('Export functionality coming soon. This will download verification logs as CSV.');
+    if (logs.length === 0) {
+      alert('No logs in the current view to export.');
+      return;
+    }
+    // Flatten the populated VerificationLog into one CSV row per entry.
+    // Date formatting follows IST conventions so the file opens cleanly
+    // in Excel without locale guesswork. Coordinates split into two
+    // columns so they're sortable / map-importable.
+    const rows = logs.map((l) => ({
+      'When (IST)': new Date(l.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      Severity: l.severity,
+      Type: l.type.replace(/_/g, ' '),
+      Status: l.resolution.status,
+      'Worker ID': l.affectedUserId?.employeeId ?? '',
+      'Worker Name': l.affectedUserId
+        ? `${l.affectedUserId.name.first} ${l.affectedUserId.name.last}`.trim()
+        : '',
+      'Route Code': l.routeId?.code ?? '',
+      'Route Name': l.routeId?.name ?? '',
+      Ward: l.wardName ?? '',
+      Latitude: l.details.coordinates?.lat ?? '',
+      Longitude: l.details.coordinates?.lng ?? '',
+      'Face Distance': l.details.faceDistance ?? '',
+      Message: l.details.message,
+      'Resolved At': l.resolution.resolvedAt
+        ? new Date(l.resolution.resolvedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+        : '',
+      Notes: l.resolution.notes ?? '',
+    }));
+    const columns = Object.keys(rows[0]);
+    const csv = rowsToCsv(rows, columns);
+    downloadCsv(`verification-logs-${date}-${timestampSlug()}.csv`, csv);
   };
 
   /* ---------------------------------------------------------------- */
