@@ -359,6 +359,19 @@ async function seed() {
   // today's dashboard empty when the seed was re-run after ~18:30 UTC.
   const istNow = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
   const today = istNow.toISOString().split('T')[0];
+
+  // Construct a Date for "today at HH:MM IST". The KPI rollup classifies
+  // a route's completion time by the IST hour it crossed 100%, so demo
+  // completion stamps need to land in real morning/afternoon hours rather
+  // than "whatever wall-clock time the seed happened to run at" (which
+  // was the previous behaviour and caused all KPIs to read 0% when the
+  // seed ran late evening).
+  const istClock = (h: number, m: number): Date => {
+    const baseUtcMidnight = new Date(`${today}T00:00:00.000Z`).getTime();
+    const istMinutes = h * 60 + m;
+    return new Date(baseUtcMidnight + (istMinutes - 330) * 60_000);
+  };
+
   const attendanceRecords = [];
   const progressRecords = [];
 
@@ -390,62 +403,77 @@ async function seed() {
     let presentCount: number;
     let routeStatus: string;
     let completionPct: number;
+    // IST clock-time when the latest progress update was recorded.
+    // For completed routes this becomes the "finished by" timestamp the
+    // KPI rollup classifies into the 10am / 12pm / 2pm cutoff buckets.
+    let progressTime: Date;
 
     switch (i) {
-      case 0: // R01 - completed, full staff
+      case 0: // R01 - completed early (before 10am)
         presentCount = workers.length;
         routeStatus = 'completed';
         completionPct = 100;
+        progressTime = istClock(9, 30);
         break;
-      case 1: // R02 - completed, full staff
+      case 1: // R02 - completed mid-morning (before 12pm)
         presentCount = workers.length;
         routeStatus = 'completed';
         completionPct = 100;
+        progressTime = istClock(11, 30);
         break;
       case 2: // R03 - in progress, full
         presentCount = workers.length;
         routeStatus = 'in_progress';
         completionPct = 75;
+        progressTime = istClock(11, 0);
         break;
       case 3: // R04 - marginal
         presentCount = Math.max(1, workers.length - 1);
         routeStatus = 'in_progress';
         completionPct = 40;
+        progressTime = istClock(10, 30);
         break;
       case 4: // R05 - CRITICAL, only 1 of 5
         presentCount = 1;
         routeStatus = 'in_progress';
         completionPct = 10;
+        progressTime = istClock(8, 0);
         break;
       case 5: // R06 - CRITICAL, only 1 of 4
         presentCount = 1;
         routeStatus = 'stalled';
         completionPct = 5;
+        progressTime = istClock(7, 30);
         break;
       case 6: // R07 - adequate, in progress
         presentCount = workers.length;
         routeStatus = 'in_progress';
         completionPct = 50;
+        progressTime = istClock(11, 0);
         break;
-      case 7: // R08 - completed, full staff
+      case 7: // R08 - completed early afternoon (before 2pm)
         presentCount = workers.length;
         routeStatus = 'completed';
         completionPct = 100;
+        progressTime = istClock(13, 30);
         break;
       case 8: // R09 - marginal
         presentCount = Math.max(1, workers.length - 1);
         routeStatus = 'in_progress';
         completionPct = 30;
+        progressTime = istClock(10, 0);
         break;
       case 9: // R10 - adequate
         presentCount = workers.length;
         routeStatus = 'in_progress';
         completionPct = 25;
+        progressTime = istClock(9, 30);
         break;
       default:
         presentCount = workers.length;
         routeStatus = 'not_started';
         completionPct = 0;
+        progressTime = istClock(6, 0);
     }
 
     // Create attendance records for present workers
@@ -515,7 +543,7 @@ async function seed() {
         ratio: Math.round(ratio * 100) / 100,
       },
       updates: [{
-        time: new Date(),
+        time: progressTime,
         percentage: completionPct,
         note: routeStatus === 'completed' ? 'Route collection completed' :
               routeStatus === 'stalled' ? 'Insufficient staff, route stalled' :

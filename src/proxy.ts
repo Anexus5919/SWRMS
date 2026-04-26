@@ -24,11 +24,14 @@ const SUPERVISOR_PREFIXES = [
   '/reliability',
   '/replay',
   '/notifications',
+  // Reports are operational telemetry — supervisors need them too
+  // (the dashboard's "View report" link on the KPI card targets here).
+  // Admins still match because SUPERVISOR_PREFIXES allows admin role.
+  '/reports',
 ] as const;
 
 const ADMIN_PREFIXES = [
   '/staff',
-  '/reports',
   '/admin-logs',
   '/audit',
 ] as const;
