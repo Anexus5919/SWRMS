@@ -108,12 +108,33 @@ const UnavailabilitySchema = new mongoose.Schema({
 });
 UnavailabilitySchema.index({ userId: 1, date: 1 }, { unique: true });
 
+const GPSPingSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', required: true, index: true },
+  date: { type: String, required: true, index: true },
+  recordedAt: { type: Date, required: true, default: () => new Date() },
+  clientTime: { type: Date, default: null },
+  coordinates: {
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+    accuracy: { type: Number, default: null },
+    speedMps: { type: Number, default: null },
+    heading: { type: Number, default: null },
+  },
+  distanceFromRouteMeters: { type: Number, default: null },
+  isOffRoute: { type: Boolean, default: false },
+  mockLocation: { type: Boolean, default: false },
+}, { timestamps: false });
+GPSPingSchema.index({ userId: 1, date: 1, recordedAt: 1 });
+GPSPingSchema.index({ routeId: 1, recordedAt: -1 });
+
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Route = mongoose.models.Route || mongoose.model('Route', RouteSchema);
 const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', AttendanceSchema);
 const RouteProgress = mongoose.models.RouteProgress || mongoose.model('RouteProgress', RouteProgressSchema);
 const VerificationLog = mongoose.models.VerificationLog || mongoose.model('VerificationLog', VerificationLogSchema);
 const Unavailability = mongoose.models.Unavailability || mongoose.model('Unavailability', UnavailabilitySchema);
+const GPSPing = mongoose.models.GPSPing || mongoose.model('GPSPing', GPSPingSchema);
 
 // ── Chembur Ward Routes (realistic Mumbai coordinates) ──
 
@@ -863,13 +884,167 @@ async function seed() {
     console.log('KPI rollup will show meaningful by-cutoff percentages over the 14-day window.');
   }
 
+  // ── Optional: --with-pings synthesises GPS trails for /replay ──
+  // Without this, the GPS Replay page is empty because the seed doesn't
+  // create any GPSPing rows (those normally come from the live tracking
+  // hook on the staff PWA). The flag generates a realistic ping series
+  // along each attended worker's route for today, plus a sample for past
+  // days when --with-history is also enabled.
+  //
+  // Each ping series:
+  //   - ~80 pings spaced ~6 min apart over a notional 8-hour shift
+  //   - linear interpolation from startPoint to endPoint with GPS noise
+  //   - a few workers per day get a deliberate off-route excursion
+  //     (5–8 consecutive pings 130–330 m from the path) so deviation
+  //     detection has something to highlight in the replay map
+  //   - rare mock-location flags (~3% of workers) so the black-bordered
+  //     red dot rendering is visible in the replay UI
+  if (process.argv.includes('--with-pings')) {
+    console.log('\n--- Seeding GPS pings for /replay ---');
+
+    const PINGS_PER_SHIFT = 80;
+    const SHIFT_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours of motion
+
+    type RouteRef = { _id: mongoose.Types.ObjectId; startPoint: { lat: number; lng: number }; endPoint: { lat: number; lng: number } };
+    const routeById = new Map<string, RouteRef>(
+      createdRoutes.map((r) => [r._id.toString(), r as RouteRef])
+    );
+
+    // Generates the ping series for one (worker, date, checkInTime) tuple.
+    function buildPingSeries(
+      userId: mongoose.Types.ObjectId,
+      routeId: mongoose.Types.ObjectId,
+      dateStr: string,
+      checkInMs: number
+    ): unknown[] {
+      const route = routeById.get(routeId.toString());
+      if (!route) return [];
+
+      const intervalMs = SHIFT_DURATION_MS / PINGS_PER_SHIFT;
+
+      // ~15% of worker-days have a deviation episode in the middle of shift.
+      const hasDeviation = Math.random() < 0.15;
+      const devStart = hasDeviation
+        ? Math.floor(PINGS_PER_SHIFT * (0.3 + Math.random() * 0.4))
+        : -1;
+      const devEnd = devStart + 4 + Math.floor(Math.random() * 5);
+
+      // ~3% of worker-days have a single mock-location ping. Demonstrates
+      // the black-ring rendering in the replay map.
+      const hasMock = Math.random() < 0.03;
+      const mockIdx = hasMock ? Math.floor(Math.random() * PINGS_PER_SHIFT) : -1;
+
+      const out: unknown[] = [];
+      for (let i = 0; i < PINGS_PER_SHIFT; i++) {
+        const t = i / (PINGS_PER_SHIFT - 1);
+        const baseLat = route.startPoint.lat + (route.endPoint.lat - route.startPoint.lat) * t;
+        const baseLng = route.startPoint.lng + (route.endPoint.lng - route.startPoint.lng) * t;
+
+        const isOff = i >= devStart && i <= devEnd;
+        // Off-route pings: 0.002 deg ≈ 220 m offset, plenty to trip the
+        // 120 m default deviation threshold. On-route pings: ~10–50 m noise.
+        const offsetScale = isOff ? 0.002 : 0.00012;
+        const lat = baseLat + (Math.random() - 0.5) * offsetScale;
+        const lng = baseLng + (Math.random() - 0.5) * offsetScale;
+
+        const distanceMeters = isOff
+          ? 130 + Math.floor(Math.random() * 200)
+          : Math.floor(Math.random() * 50);
+
+        out.push({
+          userId,
+          routeId,
+          date: dateStr,
+          recordedAt: new Date(checkInMs + i * intervalMs),
+          clientTime: new Date(checkInMs + i * intervalMs),
+          coordinates: {
+            lat,
+            lng,
+            accuracy: 8 + Math.random() * 12,
+            speedMps: 1 + Math.random() * 2.5, // walking + occasional jogging speed
+            heading: null,
+          },
+          distanceFromRouteMeters: distanceMeters,
+          isOffRoute: isOff,
+          mockLocation: i === mockIdx,
+        });
+      }
+      return out;
+    }
+
+    // Today's pings: every verified attendance gets a full series.
+    const todayAttendance = await Attendance.find({ date: today, status: 'verified' })
+      .select('userId routeId checkInTime')
+      .lean();
+
+    let todayPings: unknown[] = [];
+    for (const att of todayAttendance) {
+      todayPings = todayPings.concat(
+        buildPingSeries(att.userId, att.routeId, today, new Date(att.checkInTime).getTime())
+      );
+    }
+    if (todayPings.length) {
+      // Insert in batches of 1000 to avoid a single oversized BSON document
+      // hitting Mongo's bulk-op size limit.
+      for (let i = 0; i < todayPings.length; i += 1000) {
+        await GPSPing.insertMany(todayPings.slice(i, i + 1000));
+      }
+    }
+    console.log(`Today: ${todayPings.length} pings across ${todayAttendance.length} workers`);
+
+    // Historical pings: only if --with-history was also passed. To keep
+    // volume manageable, we sample a SUBSET of the past days' attendance —
+    // 4 random workers per day — rather than every worker. That's enough
+    // to make the replay date-picker show data on most past dates.
+    if (process.argv.includes('--with-history')) {
+      const histAttendance = await Attendance.find({
+        date: { $ne: today },
+        status: 'verified',
+      })
+        .select('userId routeId date checkInTime')
+        .lean();
+
+      // Group by date, then pick a small subset per date.
+      const byDate = new Map<string, typeof histAttendance>();
+      for (const a of histAttendance) {
+        const list = byDate.get(a.date) ?? [];
+        list.push(a);
+        byDate.set(a.date, list);
+      }
+
+      let histPings: unknown[] = [];
+      let histDays = 0;
+      for (const [dateStr, list] of byDate) {
+        // Shuffle and take 4
+        const sample = [...list].sort(() => Math.random() - 0.5).slice(0, 4);
+        for (const att of sample) {
+          histPings = histPings.concat(
+            buildPingSeries(att.userId, att.routeId, dateStr, new Date(att.checkInTime).getTime())
+          );
+        }
+        histDays += 1;
+      }
+      if (histPings.length) {
+        for (let i = 0; i < histPings.length; i += 1000) {
+          await GPSPing.insertMany(histPings.slice(i, i + 1000));
+        }
+      }
+      console.log(`Historical: ${histPings.length} pings across ${histDays} prior days (4 workers/day sample)`);
+    }
+  }
+
   console.log('\n--- Seed Complete ---');
   console.log('Demo Credentials:');
   console.log('  Admin:      BMC-CHB-ADMIN / bmc123');
   console.log('  Supervisor: BMC-CHB-SUP01 / bmc123');
   console.log('  Staff:      BMC-CHB-001   / bmc123');
-  if (!process.argv.includes('--with-history')) {
-    console.log('\nTip: pass --with-history to backfill 29 days of varied data.');
+
+  const tips: string[] = [];
+  if (!process.argv.includes('--with-history')) tips.push('--with-history (29 days of varied attendance, unavailability, anomaly logs)');
+  if (!process.argv.includes('--with-pings')) tips.push('--with-pings (GPS trails so /replay is populated)');
+  if (tips.length) {
+    console.log('\nTip: pass these flags for a denser demo:');
+    for (const t of tips) console.log(`  ${t}`);
   }
 
   await mongoose.disconnect();
