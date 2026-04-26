@@ -29,7 +29,9 @@ export async function GET(req: NextRequest) {
     if (severity) filter.severity = severity;
     if (status) filter['resolution.status'] = status;
 
-    const [logs, total] = await Promise.all([
+    const today = todayIST();
+
+    const [logs, total, criticalOpen, warnings, resolvedToday] = await Promise.all([
       VerificationLog.find(filter)
         .populate('routeId', 'name code')
         .populate('affectedUserId', 'employeeId name')
@@ -39,24 +41,36 @@ export async function GET(req: NextRequest) {
         .limit(limit)
         .lean(),
       VerificationLog.countDocuments(filter),
-    ]);
-
-    // Summary counts
-    const summary = await VerificationLog.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: { severity: '$severity', status: '$resolution.status' },
-          count: { $sum: 1 },
+      VerificationLog.countDocuments({
+        ...filter,
+        severity: 'critical',
+        'resolution.status': 'open',
+      }),
+      VerificationLog.countDocuments({ ...filter, severity: 'warning' }),
+      // "Resolved today" is anchored to today's IST date regardless of the
+      // current date filter, so the counter shows progress today even when
+      // the user is reviewing logs from another date.
+      VerificationLog.countDocuments({
+        'resolution.status': 'resolved',
+        'resolution.resolvedAt': {
+          $gte: new Date(`${today}T00:00:00.000Z`),
+          $lte: new Date(`${today}T23:59:59.999Z`),
         },
-      },
+      }),
     ]);
 
     return NextResponse.json({
       success: true,
-      data: logs,
-      summary,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      // Wrapped under data.* so the page's expected shape works without
+      // needing to also peek at top-level fields.
+      data: {
+        logs,
+        summary: { total, criticalOpen, warnings, resolvedToday },
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     return NextResponse.json(
