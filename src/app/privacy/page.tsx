@@ -16,15 +16,21 @@ export default function PrivacyPage() {
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-bmc-900 via-bmc-900/80 to-transparent pointer-events-none" />
 
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">Legal</p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-white">Privacy Policy</h1>
-          <p className="text-sm text-white/70 mt-3">Effective date: April 2026 · Pilot Deployment</p>
+        {/* max-w-7xl matches PublicHeader so heading aligns left with logo. */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">Legal</p>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold text-white">Privacy Policy</h1>
+            <p className="text-sm text-white/70 mt-3">Effective date: April 2026 · Pilot Deployment</p>
+          </div>
         </div>
       </section>
 
-      <section className="py-12 max-w-4xl mx-auto px-4 sm:px-6 w-full">
-        <article className="bg-white border border-[var(--border)] rounded-xl shadow-doc p-8 sm:p-10 space-y-6 text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
+      {/* Body uses the same outer width as the hero so the white card's
+          left edge aligns under the header logo. The card itself is
+          capped at a comfortable reading width. */}
+      <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <article className="max-w-4xl bg-white border border-[var(--border)] rounded-xl shadow-doc p-8 sm:p-10 space-y-6 text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
           <div>
             <h2 className="font-display text-lg font-bold text-bmc-700 mb-3">1. Scope</h2>
             <p>

@@ -52,9 +52,12 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Content */}
-      <section className="py-12 sm:py-16 max-w-4xl mx-auto px-4 sm:px-6 w-full">
-        <article className="prose-content space-y-8">
+      {/* Content — outer container matches PublicHeader's max-w-7xl so the
+          left edge aligns with the BMC logo above. Inner column is capped
+          at max-w-3xl so prose stays at a comfortable reading width while
+          starting flush-left under the hero heading. */}
+      <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <article className="prose-content space-y-8 max-w-3xl">
           {/* Origin */}
           <div>
             <h2 className="font-display text-xl font-bold text-bmc-700 mb-3">Origin of the Project</h2>

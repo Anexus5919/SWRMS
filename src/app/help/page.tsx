@@ -47,15 +47,19 @@ export default function HelpPage() {
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-bmc-900 via-bmc-900/80 to-transparent pointer-events-none" />
 
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">Help &amp; support</p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight text-white">
-            We&apos;re here to help BMC field staff &amp; supervisors.
-          </h1>
+        {/* max-w-7xl matches PublicHeader so heading aligns with BMC logo
+            above; inner column kept narrow for reading comfort. */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-300 mb-3">Help &amp; support</p>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight text-white">
+              We&apos;re here to help BMC field staff &amp; supervisors.
+            </h1>
+          </div>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 max-w-4xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-[1fr_300px] gap-8">
+      <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-[minmax(0,_56rem)_300px] gap-8">
         {/* FAQs */}
         <div>
           <h2 className="font-display text-xl font-bold text-bmc-700 mb-5">Frequently asked questions</h2>
