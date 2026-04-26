@@ -905,12 +905,122 @@ async function seed() {
     const PINGS_PER_SHIFT = 80;
     const SHIFT_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours of motion
 
-    type RouteRef = { _id: mongoose.Types.ObjectId; startPoint: { lat: number; lng: number }; endPoint: { lat: number; lng: number } };
+    /**
+     * Decode a Google-encoded polyline string into [lat, lng] pairs.
+     * Inlined here so the seed remains a single self-contained file.
+     * Mirrors src/lib/routing/osrm.ts decodePolyline().
+     */
+    const decodePolyline = (encoded: string, precision = 5): Array<[number, number]> => {
+      const factor = Math.pow(10, precision);
+      let index = 0;
+      let lat = 0;
+      let lng = 0;
+      const coords: Array<[number, number]> = [];
+      while (index < encoded.length) {
+        let result = 0;
+        let shift = 0;
+        let byte: number;
+        do {
+          byte = encoded.charCodeAt(index++) - 63;
+          result |= (byte & 0x1f) << shift;
+          shift += 5;
+        } while (byte >= 0x20);
+        const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+        lat += dlat;
+        result = 0;
+        shift = 0;
+        do {
+          byte = encoded.charCodeAt(index++) - 63;
+          result |= (byte & 0x1f) << shift;
+          shift += 5;
+        } while (byte >= 0x20);
+        const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+        lng += dlng;
+        coords.push([lat / factor, lng / factor]);
+      }
+      return coords;
+    };
+
+    /**
+     * Walk a decoded polyline and return the [lat, lng] at fraction t∈[0,1]
+     * by cumulative *Euclidean* segment length (degree-space). The error
+     * vs proper haversine is irrelevant within a single ward — the path
+     * is a few km, not a continent — and this is ~50× faster.
+     */
+    const pointAlongPolyline = (
+      coords: Array<[number, number]>,
+      t: number
+    ): [number, number] => {
+      if (coords.length === 0) return [0, 0];
+      if (coords.length === 1) return coords[0];
+      if (t <= 0) return coords[0];
+      if (t >= 1) return coords[coords.length - 1];
+
+      const segLens: number[] = [];
+      let total = 0;
+      for (let i = 1; i < coords.length; i++) {
+        const dlat = coords[i][0] - coords[i - 1][0];
+        const dlng = coords[i][1] - coords[i - 1][1];
+        const len = Math.sqrt(dlat * dlat + dlng * dlng);
+        segLens.push(len);
+        total += len;
+      }
+      if (total === 0) return coords[0];
+
+      const target = t * total;
+      let acc = 0;
+      for (let i = 0; i < segLens.length; i++) {
+        if (acc + segLens[i] >= target) {
+          const segT = segLens[i] === 0 ? 0 : (target - acc) / segLens[i];
+          const lat = coords[i][0] + (coords[i + 1][0] - coords[i][0]) * segT;
+          const lng = coords[i][1] + (coords[i + 1][1] - coords[i][1]) * segT;
+          return [lat, lng];
+        }
+        acc += segLens[i];
+      }
+      return coords[coords.length - 1];
+    };
+
+    // OSRM snaps earlier in the seed update Route docs via Route.updateOne(),
+    // so the in-memory `createdRoutes` array has stale fields. Refetch fresh
+    // documents so routePolyline is actually populated when present.
+    type RouteRef = {
+      _id: mongoose.Types.ObjectId;
+      startPoint: { lat: number; lng: number };
+      endPoint: { lat: number; lng: number };
+      routePolyline?: string | null;
+    };
+    const freshRoutes = await Route.find({ _id: { $in: createdRoutes.map((r) => r._id) } })
+      .select('_id startPoint endPoint routePolyline')
+      .lean();
     const routeById = new Map<string, RouteRef>(
-      createdRoutes.map((r) => [r._id.toString(), r as RouteRef])
+      freshRoutes.map((r) => [r._id.toString(), r as RouteRef])
     );
 
-    // Generates the ping series for one (worker, date, checkInTime) tuple.
+    // Pre-decode each route's polyline once. Routes whose OSRM snap failed
+    // earlier in the seed will have routePolyline === null — those fall
+    // back to straight-line interpolation.
+    const decodedByRoute = new Map<string, Array<[number, number]> | null>();
+    for (const [rid, r] of routeById) {
+      if (r.routePolyline) {
+        try {
+          const decoded = decodePolyline(r.routePolyline);
+          decodedByRoute.set(rid, decoded.length >= 2 ? decoded : null);
+        } catch {
+          decodedByRoute.set(rid, null);
+        }
+      } else {
+        decodedByRoute.set(rid, null);
+      }
+    }
+    const routesWithoutPolyline = Array.from(decodedByRoute.values()).filter((v) => v === null).length;
+    if (routesWithoutPolyline > 0) {
+      console.log(
+        `  (${routesWithoutPolyline} of ${decodedByRoute.size} routes have no snapped polyline; those workers' trails fall back to straight-line interpolation.)`
+      );
+    }
+
+    /** Generate the ping series for one (worker, date, checkInTime) tuple. */
     function buildPingSeries(
       userId: mongoose.Types.ObjectId,
       routeId: mongoose.Types.ObjectId,
@@ -920,6 +1030,7 @@ async function seed() {
       const route = routeById.get(routeId.toString());
       if (!route) return [];
 
+      const decoded = decodedByRoute.get(routeId.toString()) ?? null;
       const intervalMs = SHIFT_DURATION_MS / PINGS_PER_SHIFT;
 
       // ~15% of worker-days have a deviation episode in the middle of shift.
@@ -929,20 +1040,30 @@ async function seed() {
         : -1;
       const devEnd = devStart + 4 + Math.floor(Math.random() * 5);
 
-      // ~3% of worker-days have a single mock-location ping. Demonstrates
-      // the black-ring rendering in the replay map.
+      // ~3% get a single mock-location ping (black-ring rendering in replay).
       const hasMock = Math.random() < 0.03;
       const mockIdx = hasMock ? Math.floor(Math.random() * PINGS_PER_SHIFT) : -1;
 
       const out: unknown[] = [];
       for (let i = 0; i < PINGS_PER_SHIFT; i++) {
         const t = i / (PINGS_PER_SHIFT - 1);
-        const baseLat = route.startPoint.lat + (route.endPoint.lat - route.startPoint.lat) * t;
-        const baseLng = route.startPoint.lng + (route.endPoint.lng - route.startPoint.lng) * t;
+
+        // The path point: walk the polyline if we have one, else linear
+        // interpolation between start and end.
+        let baseLat: number;
+        let baseLng: number;
+        if (decoded) {
+          const [pLat, pLng] = pointAlongPolyline(decoded, t);
+          baseLat = pLat;
+          baseLng = pLng;
+        } else {
+          baseLat = route.startPoint.lat + (route.endPoint.lat - route.startPoint.lat) * t;
+          baseLng = route.startPoint.lng + (route.endPoint.lng - route.startPoint.lng) * t;
+        }
 
         const isOff = i >= devStart && i <= devEnd;
-        // Off-route pings: 0.002 deg ≈ 220 m offset, plenty to trip the
-        // 120 m default deviation threshold. On-route pings: ~10–50 m noise.
+        // Off-route: 0.002 deg ≈ 220 m, well past the 120 m deviation threshold.
+        // On-route: 0.00012 deg ≈ 13 m, realistic GPS noise.
         const offsetScale = isOff ? 0.002 : 0.00012;
         const lat = baseLat + (Math.random() - 0.5) * offsetScale;
         const lng = baseLng + (Math.random() - 0.5) * offsetScale;
