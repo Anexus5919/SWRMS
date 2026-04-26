@@ -27,7 +27,7 @@ export default async function AboutPage() {
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      {/* Page header — min-h-[20rem] is just above /about's natural
+      {/* Page header - min-h-[20rem] is just above /about's natural
           rendered height so /about itself doesn't visibly grow, but
           /help, /privacy, /terms (which have less hero copy) get
           pulled up to the same dark-band size for visual consistency.
