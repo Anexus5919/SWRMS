@@ -98,11 +98,22 @@ const VerificationLogSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+const UnavailabilitySchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  date: { type: String, required: true },
+  reason: { type: String, enum: ['sick', 'personal', 'transport', 'other'], required: true },
+  notes: String,
+  declaredAt: { type: Date, default: Date.now },
+  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', default: null },
+});
+UnavailabilitySchema.index({ userId: 1, date: 1 }, { unique: true });
+
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Route = mongoose.models.Route || mongoose.model('Route', RouteSchema);
 const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', AttendanceSchema);
 const RouteProgress = mongoose.models.RouteProgress || mongoose.model('RouteProgress', RouteProgressSchema);
 const VerificationLog = mongoose.models.VerificationLog || mongoose.model('VerificationLog', VerificationLogSchema);
+const Unavailability = mongoose.models.Unavailability || mongoose.model('Unavailability', UnavailabilitySchema);
 
 // ── Chembur Ward Routes (realistic Mumbai coordinates) ──
 
@@ -648,11 +659,218 @@ async function seed() {
   console.log('  R03, R07, R10 - adequate, in progress');
   console.log('  Verification logs: missing photos, face mismatch, headcount issues');
 
+  // ── Optional: --with-history backfills 29 days of varied data ──
+  // Without this, /reliability shows every worker as POOR because there's
+  // no past attendance record (so all prior days look like "missed shifts"),
+  // and /reports KPI rollup only has today's 3 completions in a 14-day
+  // window. The flag synthesises a realistic pattern: per-worker reliability
+  // profiles drive attendance probability, which in turn produces a spread
+  // of route-day completions for the KPI cards.
+  if (process.argv.includes('--with-history')) {
+    console.log('\n--- Seeding 29 days of historical data (this may take a few seconds) ---');
+
+    const supervisor = await User.findOne({ role: 'supervisor', employeeId: 'BMC-CHB-SUP01' });
+
+    // 4 reliability tiers. Index ranges below decide who is in each.
+    const profiles = [
+      { type: 'excellent', attendRate: 0.97, anomalyRate: 0.01, lateRate: 0.02 },
+      { type: 'good',      attendRate: 0.90, anomalyRate: 0.04, lateRate: 0.08 },
+      { type: 'fair',      attendRate: 0.78, anomalyRate: 0.12, lateRate: 0.20 },
+      { type: 'poor',      attendRate: 0.60, anomalyRate: 0.25, lateRate: 0.35 },
+    ];
+    const profileFor = (i: number) => {
+      if (i < 6) return profiles[0];     // 6 excellent (~20%)
+      if (i < 15) return profiles[1];    // 9 good      (~30%)
+      if (i < 24) return profiles[2];    // 9 fair      (~30%)
+      return profiles[3];                // 6 poor      (~20%)
+    };
+
+    const histAttendance: any[] = [];
+    const histProgress: any[] = [];
+    const histUnavail: any[] = [];
+    const histLogs: any[] = [];
+
+    const todayMidnightUtcMs = new Date(`${today}T00:00:00.000Z`).getTime();
+
+    for (let dayOffset = 1; dayOffset <= 29; dayOffset++) {
+      const dayMs = todayMidnightUtcMs - dayOffset * 86_400_000;
+      const day = new Date(dayMs).toISOString().split('T')[0];
+
+      // IST clock helper anchored to this historical day.
+      const dayIstClock = (h: number, m: number) =>
+        new Date(dayMs + (h * 60 + m - 330) * 60_000);
+
+      // Per-route running tally so we can compute a realistic presentCount.
+      const presentByRoute: Record<string, number> = {};
+
+      for (let i = 0; i < createdStaff.length; i++) {
+        const worker = createdStaff[i];
+        const profile = profileFor(i);
+        const rid = worker.assignedRouteId.toString();
+        const route = createdRoutes.find((rt) => rt._id.toString() === rid)!;
+        if (!route) continue;
+
+        const r = Math.random();
+        if (r < profile.attendRate) {
+          // Attended. ~5% are rejected (wrong location / poor GPS).
+          const isRejected = Math.random() < 0.05;
+          const isLate = Math.random() < profile.lateRate;
+          const checkInH = isLate ? 6 + Math.floor(Math.random() * 2) : 5;
+          const checkInM = 30 + Math.floor(Math.random() * 30);
+
+          histAttendance.push({
+            userId: worker._id,
+            routeId: route._id,
+            date: day,
+            checkInTime: dayIstClock(checkInH, checkInM),
+            coordinates: {
+              lat: route.startPoint.lat + (Math.random() - 0.5) * 0.001,
+              lng: route.startPoint.lng + (Math.random() - 0.5) * 0.001,
+              accuracy: 8 + Math.random() * 12,
+            },
+            distanceFromRoute: isRejected
+              ? 350 + Math.floor(Math.random() * 200)
+              : Math.floor(Math.random() * 120),
+            status: isRejected ? 'rejected' : 'verified',
+            rejectionReason: isRejected ? 'Distance exceeds 200m geofence radius' : undefined,
+            attempts: 1 + Math.floor(Math.random() * 3),
+            deviceInfo: { userAgent: 'Android/Chrome', platform: 'Linux armv8l' },
+            mockLocation: false,
+            isOfflineSync: false,
+          });
+
+          if (!isRejected) {
+            presentByRoute[rid] = (presentByRoute[rid] ?? 0) + 1;
+          }
+
+          // Occasional anomaly log on attended days.
+          if (!isRejected && Math.random() < profile.anomalyRate) {
+            const kinds = ['route_deviation', 'idle', 'mock_location'] as const;
+            const kind = kinds[Math.floor(Math.random() * kinds.length)];
+            const severity = kind === 'mock_location' ? 'critical'
+              : kind === 'route_deviation' ? 'warning'
+              : 'info';
+            const message = kind === 'route_deviation'
+              ? `${worker.name.first} ${worker.name.last} drifted ~150m from snapped route`
+              : kind === 'idle'
+                ? `${worker.name.first} stationary for 12 minutes`
+                : `Mock-location flag detected on ${worker.name.first}'s device`;
+
+            histLogs.push({
+              type: 'location_anomaly',
+              severity,
+              routeId: route._id,
+              date: day,
+              affectedUserId: worker._id,
+              details: { kind, message },
+              // Older alerts more likely to be resolved.
+              resolution:
+                dayOffset > 7 && supervisor
+                  ? {
+                      status: 'resolved',
+                      resolvedBy: supervisor._id,
+                      resolvedAt: new Date(dayMs + 6 * 60 * 60 * 1000),
+                      notes: 'Reviewed and closed.',
+                    }
+                  : { status: 'open' },
+            });
+          }
+        } else {
+          // Not attended. 50% declared unavailable, 50% silently absent.
+          if (Math.random() < 0.5) {
+            const reasons = ['sick', 'personal', 'transport', 'other'] as const;
+            histUnavail.push({
+              userId: worker._id,
+              date: day,
+              reason: reasons[Math.floor(Math.random() * reasons.length)],
+              declaredAt: dayIstClock(5, 30 + Math.floor(Math.random() * 30)),
+              routeId: worker.assignedRouteId,
+            });
+          }
+        }
+      }
+
+      // RouteProgress per route for this historical day.
+      for (const route of createdRoutes) {
+        const rid = route._id.toString();
+        const presentCount = presentByRoute[rid] ?? 0;
+        const required = route.requiredStaff;
+        const ratio = required > 0 ? presentCount / required : 0;
+
+        let status: string;
+        let pct: number;
+        let progressTime: Date;
+
+        if (ratio >= 0.8) {
+          // Most likely completed. Distribute completion times so the
+          // KPI rollup card shows a realistic cutoff distribution:
+          //   ~40% by 10am, ~35% by 12pm, ~20% by 2pm, ~5% later.
+          status = Math.random() < 0.85 ? 'completed' : 'in_progress';
+          pct = status === 'completed' ? 100 : 70 + Math.floor(Math.random() * 25);
+          if (status === 'completed') {
+            const r = Math.random();
+            const [h, m] = r < 0.40
+              ? [8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60)]
+              : r < 0.75
+                ? [10 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60)]
+                : r < 0.95
+                  ? [12 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60)]
+                  : [14 + Math.floor(Math.random() * 3), Math.floor(Math.random() * 60)];
+            progressTime = dayIstClock(h, m);
+          } else {
+            progressTime = dayIstClock(11, 30);
+          }
+        } else if (ratio >= 0.5) {
+          status = 'in_progress';
+          pct = 40 + Math.floor(Math.random() * 35);
+          progressTime = dayIstClock(11, 0);
+        } else {
+          status = ratio < 0.3 ? 'stalled' : 'in_progress';
+          pct = Math.floor(Math.random() * 30);
+          progressTime = dayIstClock(9, 30);
+        }
+
+        histProgress.push({
+          routeId: route._id,
+          date: day,
+          status,
+          completionPercentage: pct,
+          staffingSnapshot: {
+            required,
+            present: presentCount,
+            ratio: Math.round(ratio * 100) / 100,
+          },
+          updates: [{
+            time: progressTime,
+            percentage: pct,
+            note: status === 'completed' ? 'Route collection completed'
+              : status === 'stalled' ? 'Insufficient staff, route stalled'
+              : `Progress update: ${pct}%`,
+          }],
+        });
+      }
+    }
+
+    if (histAttendance.length) await Attendance.insertMany(histAttendance);
+    if (histProgress.length) await RouteProgress.insertMany(histProgress);
+    if (histUnavail.length) await Unavailability.insertMany(histUnavail);
+    if (histLogs.length) await VerificationLog.insertMany(histLogs);
+
+    console.log(
+      `Historical: ${histAttendance.length} attendance, ${histProgress.length} progress, ${histUnavail.length} unavailability, ${histLogs.length} anomaly logs (29 days)`
+    );
+    console.log('Reliability scores will now show a realistic spread of Excellent/Good/Fair/Poor.');
+    console.log('KPI rollup will show meaningful by-cutoff percentages over the 14-day window.');
+  }
+
   console.log('\n--- Seed Complete ---');
   console.log('Demo Credentials:');
   console.log('  Admin:      BMC-CHB-ADMIN / bmc123');
   console.log('  Supervisor: BMC-CHB-SUP01 / bmc123');
   console.log('  Staff:      BMC-CHB-001   / bmc123');
+  if (!process.argv.includes('--with-history')) {
+    console.log('\nTip: pass --with-history to backfill 29 days of varied data.');
+  }
 
   await mongoose.disconnect();
   process.exit(0);
