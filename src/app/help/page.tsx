@@ -40,9 +40,7 @@ export default function HelpPage() {
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      {/* Uniform min-height matches /about so the seal watermark is the
-          same physical size on every public page. */}
-      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden min-h-[26rem] sm:min-h-[30rem] flex flex-col justify-center">
+      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
         {/* Etched BMC seal as a heritage watermark on the right side
             (matching /about, /privacy, /terms for consistency). */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[140%] aspect-square pointer-events-none opacity-20 mix-blend-screen">

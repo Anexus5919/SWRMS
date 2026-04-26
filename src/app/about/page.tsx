@@ -27,10 +27,8 @@ export default async function AboutPage() {
     <div className="min-h-screen flex flex-col bg-[var(--page-bg)]">
       <PublicHeader />
 
-      {/* Page header — uniform min-height + vertical-centering across all
-          four public pages (about, help, privacy, terms) so the seal
-          watermark renders at the same size regardless of content length. */}
-      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden min-h-[26rem] sm:min-h-[30rem] flex flex-col justify-center">
+      {/* Page header */}
+      <section className="relative bg-bmc-900 text-white py-12 sm:py-16 overflow-hidden">
         {/* Etched BMC seal as a heritage watermark on the right side.
             Square aspect preserved with object-contain. The fade gradient
             below keeps the heading readable on top of the artwork. */}
