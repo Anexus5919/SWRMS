@@ -24,6 +24,7 @@ import {
   pointsSpanMetres,
 } from '../geo/polyline';
 import { decodePolyline } from '../routing/osrm';
+import { recordAndPush } from '../push';
 
 const DEFAULT_DEVIATION_THRESHOLD_METRES = Number(
   process.env.TRACKING_DEVIATION_THRESHOLD_METERS ?? 120
@@ -123,6 +124,48 @@ export async function evaluateAnomaly(ctx: AnomalyContext): Promise<AnomalyOutco
           resolution: { status: 'open' },
         });
         deviationAlertCreated = true;
+
+        // Active escalation: write inbox rows + attempt push delivery to all
+        // supervisors and admins. Throttled by the 15-min VerificationLog
+        // cooldown above, so at most one push per (worker, deviation) per
+        // 15 min. Failures here (VAPID missing, push transport) are caught
+        // so a broken push pipeline cannot break GPS tracking.
+        try {
+          const [worker, route] = await Promise.all([
+            User.findById(ctx.userId).select('name employeeId').lean(),
+            Route.findById(ctx.routeId).select('code').lean(),
+          ]);
+          const workerName = worker
+            ? `${worker.name.first} ${worker.name.last}`.trim()
+            : 'A worker';
+          const routeCode = route?.code ?? 'their route';
+
+          await recordAndPush({
+            recipientsQuery: { $or: [{ role: 'admin' }, { role: 'supervisor' }] },
+            kind: 'route_deviation',
+            title: `${workerName} off route on ${routeCode}`,
+            body: `${Math.round(
+              distance ?? 0
+            )}m from path (threshold ${DEFAULT_DEVIATION_THRESHOLD_METRES}m). Two consecutive off-route pings.`,
+            tag: `deviation-${ctx.userId}-${ctx.date}`,
+            url: '/replay',
+            context: {
+              userId: ctx.userId,
+              employeeId: worker?.employeeId ?? null,
+              routeId: ctx.routeId,
+              routeCode,
+              distanceMeters: Math.round(distance ?? 0),
+              thresholdMeters: DEFAULT_DEVIATION_THRESHOLD_METRES,
+              coordinates: { lat: ctx.pingLat, lng: ctx.pingLng },
+              date: ctx.date,
+            },
+          });
+        } catch (e) {
+          console.warn(
+            'Route-deviation push delivery failed:',
+            e instanceof Error ? e.message : e
+          );
+        }
       }
     }
   }

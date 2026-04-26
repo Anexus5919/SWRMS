@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connection';
-import { Attendance, GPSPing, Route, RouteProgress, VerificationLog } from '@/lib/db/models';
+import { Attendance, GPSPing, Route, RouteProgress, User, VerificationLog } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 import { trackingPingSchema } from '@/lib/validators/tracking';
 import { todayIST } from '@/lib/utils/timezone';
 import { decodePolyline } from '@/lib/routing/osrm';
 import { evaluateAnomaly } from '@/lib/engine/anomaly';
 import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
+import { recordAndPush } from '@/lib/push';
 
 const ALERT_COOLDOWN_MS = 15 * 60 * 1000;
 
@@ -194,6 +195,43 @@ export async function POST(req: NextRequest) {
         },
         resolution: { status: 'open' },
       });
+
+      // Critical: also push to all supervisors + admins. Same 15-min
+      // cooldown via the VerificationLog dedupe gate above. Wrapped so
+      // a broken push pipeline (missing VAPID, network) cannot break
+      // ping handling.
+      try {
+        const [worker, route] = await Promise.all([
+          User.findById(userId).select('name employeeId').lean(),
+          Route.findById(assignedRouteId).select('code').lean(),
+        ]);
+        const workerName = worker
+          ? `${worker.name.first} ${worker.name.last}`.trim()
+          : 'A worker';
+        const routeCode = route?.code ?? 'their route';
+
+        await recordAndPush({
+          recipientsQuery: { $or: [{ role: 'admin' }, { role: 'supervisor' }] },
+          kind: 'mock_location',
+          title: `Mock-GPS detected on ${routeCode}`,
+          body: `${workerName}'s device reported a fake-location flag. Possible spoofing — review immediately.`,
+          tag: `mock-${userId}-${today}`,
+          url: '/supervisor-logs',
+          context: {
+            userId,
+            employeeId: worker?.employeeId ?? null,
+            routeId: assignedRouteId,
+            routeCode,
+            coordinates: { lat: coordinates.lat, lng: coordinates.lng },
+            date: today,
+          },
+        });
+      } catch (e) {
+        console.warn(
+          'Mock-location push delivery failed:',
+          e instanceof Error ? e.message : e
+        );
+      }
     }
   }
 
