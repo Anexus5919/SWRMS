@@ -220,6 +220,49 @@ export async function evaluateAnomaly(ctx: AnomalyContext): Promise<AnomalyOutco
             resolution: { status: 'open' },
           });
           idleAlertCreated = true;
+
+          // Idle push is OPT-IN via TRACKING_IDLE_PUSH=1. Some BMC
+          // departments treat lunch-break detection as a flag worth
+          // surfacing actively; others find it too noisy (workers stop
+          // in traffic, take legitimate breaks, etc.). Off by default —
+          // the inbox row + verification log are written regardless, so
+          // turning the env var on later doesn't lose history.
+          if (process.env.TRACKING_IDLE_PUSH === '1') {
+            try {
+              const [worker, route] = await Promise.all([
+                User.findById(ctx.userId).select('name employeeId').lean(),
+                Route.findById(ctx.routeId).select('code').lean(),
+              ]);
+              const workerName = worker
+                ? `${worker.name.first} ${worker.name.last}`.trim()
+                : 'A worker';
+              const routeCode = route?.code ?? 'their route';
+
+              await recordAndPush({
+                recipientsQuery: { $or: [{ role: 'admin' }, { role: 'supervisor' }] },
+                kind: 'idle_alert',
+                title: `${workerName} stationary on ${routeCode}`,
+                body: `No movement (${Math.round(span)}m) for ${DEFAULT_IDLE_THRESHOLD_MINUTES} minutes.`,
+                tag: `idle-${ctx.userId}-${ctx.date}`,
+                url: '/replay',
+                context: {
+                  userId: ctx.userId,
+                  employeeId: worker?.employeeId ?? null,
+                  routeId: ctx.routeId,
+                  routeCode,
+                  spanMeters: Math.round(span),
+                  windowMinutes: DEFAULT_IDLE_THRESHOLD_MINUTES,
+                  coordinates: { lat: ctx.pingLat, lng: ctx.pingLng },
+                  date: ctx.date,
+                },
+              });
+            } catch (e) {
+              console.warn(
+                'Idle-alert push delivery failed:',
+                e instanceof Error ? e.message : e
+              );
+            }
+          }
         }
       }
     }
