@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db/connection';
 import { Attendance, GeoPhoto, VerificationLog, User, Route } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
+import { notifyAboutWorker } from '@/lib/push';
 
 /**
  * POST /api/photos/missing - Detect workers who marked attendance but didn't submit photos.
@@ -65,6 +66,28 @@ export async function POST(req: NextRequest) {
         },
         resolution: { status: 'open' },
       });
+
+      // Push + inbox row. The VerificationLog dedupe above (existingLog
+      // check) ensures we never fire this twice for the same worker per day.
+      await notifyAboutWorker({
+        workerId: att.userId,
+        routeId: att.routeId,
+        kind: 'photo_missing',
+        tag: `nophoto-${att.userId}-${today}`,
+        url: '/verification',
+        template: (name, code) => ({
+          title: `${name} missing shift-start photo (${code})`,
+          body: `Attendance marked at ${new Date(att.checkInTime).toLocaleTimeString('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })} but no shift-start photo submitted yet.`,
+        }),
+        contextExtras: {
+          checkInTime: new Date(att.checkInTime).toISOString(),
+          date: today,
+        },
+      });
+
       created++;
     }
 

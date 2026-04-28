@@ -230,6 +230,33 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 0 2px var(--bmc-900), inset 0 1px 0 rgba(212, 169, 86, 0.2);
 }
 
+/* ── Text selection (on-brand, replaces default browser blue) ──
+   Soft gold wash with navy ink — reads like a highlighter mark
+   on an official document, matching the system's paper aesthetic.
+   On dark surfaces (hero bands, navy CTAs) we flip to a muted
+   gold-on-navy so selected text stays legible. */
+::selection {
+  background-color: var(--gold-200);
+  color: var(--bmc-900);
+}
+::-moz-selection {
+  background-color: var(--gold-200);
+  color: var(--bmc-900);
+}
+
+.bg-bmc-900 ::selection,
+.bg-bmc-800 ::selection,
+.bg-bmc-950 ::selection {
+  background-color: rgba(236, 209, 147, 0.35); /* gold-300 @ 35% */
+  color: #ffffff;
+}
+.bg-bmc-900 ::-moz-selection,
+.bg-bmc-800 ::-moz-selection,
+.bg-bmc-950 ::-moz-selection {
+  background-color: rgba(236, 209, 147, 0.35);
+  color: #ffffff;
+}
+
 /* ── Focus ring (accessibility) ──────────────────────── */
 *:focus-visible {
   outline: 2px solid var(--bmc-500);

@@ -21,13 +21,40 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
  *                      A clicked notification is implicitly read.
  */
 
+/**
+ * Closed set of notification kinds. Each kind maps to a specific staff
+ * action or system event that supervisors / admins should see.
+ *
+ * Naming: <subject>_<event>. The subject is what was acted on (the
+ * staff member, the photo, the route) and the event is what happened.
+ *
+ * Add new kinds here AND extend the enum on the schema below AND extend
+ * the kindLabels / kindBadgeVariant maps in src/app/notifications/page.tsx.
+ */
 export type NotificationKind =
-  | 'missed_shift'
-  | 'route_deviation'
-  | 'idle_alert'
-  | 'mock_location'
-  | 'reallocation_executed'
-  | 'manual';
+  // Attendance
+  | 'attendance_marked'         // Staff verified attendance (geofence pass)
+  | 'attendance_face_flag'      // Face-confidence below threshold (manual review)
+  | 'attendance_synced'         // Offline attendance backlog synced
+  // Photo verification
+  | 'photo_submitted'           // Shift-start / checkpoint / shift-end photo OK
+  | 'photo_face_flag'           // Photo's face match below threshold or no face detected
+  | 'photo_missing'             // 30+ min after attendance, no shift-start photo
+  // Route progress
+  | 'route_progress'            // Staff bumped progress (25/50/75%)
+  | 'route_completed'           // Staff marked route 100%
+  // Live tracking
+  | 'route_deviation'           // Two consecutive off-route pings
+  | 'idle_alert'                // Stationary 10+ min
+  | 'mock_location'             // Device flagged mock-GPS
+  | 'missed_shift'              // 06:30 IST - neither attendance nor unavailability
+  // Other staff actions
+  | 'unavailability_declared'   // Staff declared sick/personal/transport/other
+  | 'checkpoint_scanned'        // NFC / QR checkpoint hit
+  // Supervisor actions
+  | 'reallocation_executed'     // Supervisor reassigned worker mid-shift
+  // Generic
+  | 'manual';                   // Free-form admin broadcast
 
 export interface INotificationLog extends Document {
   _id: mongoose.Types.ObjectId;
@@ -62,10 +89,20 @@ const NotificationLogSchema = new Schema<INotificationLog>({
   kind: {
     type: String,
     enum: [
-      'missed_shift',
+      'attendance_marked',
+      'attendance_face_flag',
+      'attendance_synced',
+      'photo_submitted',
+      'photo_face_flag',
+      'photo_missing',
+      'route_progress',
+      'route_completed',
       'route_deviation',
       'idle_alert',
       'mock_location',
+      'missed_shift',
+      'unavailability_declared',
+      'checkpoint_scanned',
       'reallocation_executed',
       'manual',
     ],

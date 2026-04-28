@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { createReallocationSchema } from '@/lib/validators/schemas';
 import { logAudit } from '@/lib/audit';
 import { todayIST } from '@/lib/utils/timezone';
+import { notifyAboutWorker } from '@/lib/push';
 
 /**
  * POST /api/reallocation - Execute a reallocation (supervisor approves).
@@ -241,6 +242,38 @@ export async function POST(req: NextRequest) {
       },
       ward: toRoute?.ward,
       req,
+    });
+
+    // Inbox + push: notify admins and the moved worker themselves so they
+    // know their assignment changed before they show up at the wrong start
+    // point tomorrow. Other supervisors get the inbox row for visibility.
+    await notifyAboutWorker({
+      workerId,
+      routeId: toRouteId,
+      kind: 'reallocation_executed',
+      tag: `realloc-${workerId}-${today}`,
+      url: '/reallocation',
+      recipientsQuery: {
+        $or: [
+          { role: 'admin' },
+          { role: 'supervisor' },
+          { _id: workerId }, // the moved worker themselves
+        ],
+      },
+      template: (name) => ({
+        title: `${name} reassigned: ${fromRoute?.code ?? 'old'} → ${toRoute?.code ?? 'new'}`,
+        body: `Reason: ${reason}. New staffing ratio ${
+          newStaffingRatio !== undefined ? newStaffingRatio.toFixed(2) : 'n/a'
+        } on destination route.`,
+      }),
+      contextExtras: {
+        date: today,
+        fromRouteId,
+        toRouteId,
+        fromRouteCode: fromRoute?.code ?? null,
+        toRouteCode: toRoute?.code ?? null,
+        reason,
+      },
     });
   }
 

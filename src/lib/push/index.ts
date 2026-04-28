@@ -1,8 +1,10 @@
 import webpush from 'web-push';
+import mongoose from 'mongoose';
 import {
   PushSubscription as PushSubscriptionModel,
   NotificationLog,
   User,
+  Route,
 } from '../db/models';
 import type { IPushSubscription, NotificationKind } from '../db/models';
 
@@ -218,4 +220,70 @@ export async function recordAndPush(
     pushFailed,
     notificationIds: inserted.map((d) => d._id.toString()),
   };
+}
+
+/**
+ * Convenience wrapper for the canonical "staff did X, tell sup+admin" pattern.
+ *
+ * Resolves the worker name and route code in a single Promise.all then calls
+ * `recordAndPush`. Wraps everything in try/catch so a broken push pipeline
+ * (missing VAPID, transport error) cannot break the underlying staff action.
+ *
+ * Use this instead of copy-pasting the same ~10 lines across every endpoint.
+ */
+export async function notifyAboutWorker(opts: {
+  workerId: string | mongoose.Types.ObjectId;
+  routeId?: string | mongoose.Types.ObjectId | null;
+  kind: NotificationKind;
+  /** Receives (workerName, routeCode) and returns the user-facing copy. */
+  template: (workerName: string, routeCode: string) => { title: string; body: string };
+  url: string;
+  /** OS-level grouping; same tag replaces previous push at the OS layer. */
+  tag?: string;
+  /** Defaults to all supervisors + admins. */
+  recipientsQuery?: Record<string, unknown>;
+  /** Extra fields merged into the inbox row's `context`. */
+  contextExtras?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    const [worker, route] = await Promise.all([
+      User.findById(opts.workerId).select('name employeeId').lean(),
+      opts.routeId
+        ? Route.findById(opts.routeId).select('code').lean()
+        : Promise.resolve(null),
+    ]);
+
+    const workerName = worker
+      ? `${worker.name.first} ${worker.name.last}`.trim() || 'A worker'
+      : 'A worker';
+    const routeCode = route?.code ?? 'their route';
+    const { title, body } = opts.template(workerName, routeCode);
+
+    await recordAndPush({
+      recipientsQuery:
+        opts.recipientsQuery ?? { $or: [{ role: 'admin' }, { role: 'supervisor' }] },
+      kind: opts.kind,
+      title,
+      body,
+      tag: opts.tag,
+      url: opts.url,
+      context: {
+        userId:
+          typeof opts.workerId === 'string' ? opts.workerId : opts.workerId.toString(),
+        employeeId: worker?.employeeId ?? null,
+        routeId: opts.routeId
+          ? typeof opts.routeId === 'string'
+            ? opts.routeId
+            : opts.routeId.toString()
+          : null,
+        routeCode,
+        ...opts.contextExtras,
+      },
+    });
+  } catch (e) {
+    console.warn(
+      `Notification dispatch failed (${opts.kind}):`,
+      e instanceof Error ? e.message : e
+    );
+  }
 }

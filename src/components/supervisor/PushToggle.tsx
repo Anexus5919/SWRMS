@@ -155,13 +155,18 @@ export default function PushToggle() {
 
   if (state === 'unsupported') return null;
 
+  // Explainer used in tooltips so supervisors understand the bell icon
+  // works regardless of this toggle.
+  const inboxNote =
+    'The bell icon shows every alert no matter what. This toggle only controls whether your browser also pops up an OS-level notification.';
+
   if (state === 'pwa-required') {
     return (
       <span
         className="text-[11px] text-[var(--neutral-500)]"
-        title="On iOS, install this app to your Home Screen to enable push notifications."
+        title={`On iOS, install this app to your Home Screen to enable browser pop-ups. ${inboxNote}`}
       >
-        Push: install to Home Screen on iOS
+        OS alerts: install as PWA on iOS
       </span>
     );
   }
@@ -176,10 +181,10 @@ export default function PushToggle() {
           type="button"
           onClick={disable}
           className={`${baseBtn} border-status-green text-status-green bg-status-green-light hover:bg-emerald-100`}
-          title="Stop receiving push notifications on this device"
+          title={`Click to stop OS-level pop-ups on this device. ${inboxNote}`}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-status-green" />
-          Push: ON
+          OS alerts: ON
         </button>
       </div>
     );
@@ -187,8 +192,11 @@ export default function PushToggle() {
 
   if (state === 'denied') {
     return (
-      <span className="text-[11px] text-[var(--neutral-500)]" title="Allow notifications in your browser settings to enable.">
-        Push: blocked by browser
+      <span
+        className="text-[11px] text-[var(--neutral-500)]"
+        title={`Allow notifications in your browser settings to enable. ${inboxNote}`}
+      >
+        OS alerts: blocked by browser
       </span>
     );
   }
@@ -199,11 +207,18 @@ export default function PushToggle() {
         type="button"
         onClick={enable}
         disabled={state === 'busy'}
+        title={inboxNote}
         className={`${baseBtn} border-[var(--border-strong)] text-[var(--neutral-700)] hover:bg-[var(--neutral-50)] disabled:opacity-50`}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-[var(--neutral-300)]" />
-        {state === 'busy' ? 'Enabling…' : 'Enable push alerts'}
+        {state === 'busy' ? 'Enabling…' : 'Enable OS alerts'}
       </button>
+      <span
+        className="text-[9px] text-[var(--neutral-500)] max-w-[220px] text-right leading-tight"
+        aria-hidden
+      >
+        Optional · bell icon already shows all alerts
+      </span>
       {error && state === 'error' && (
         <span className="text-[10px] text-status-red max-w-[220px] text-right leading-tight">
           {error}

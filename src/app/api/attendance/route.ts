@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { markAttendanceSchema } from '@/lib/validators/schemas';
 import { todayIST } from '@/lib/utils/timezone';
 import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
+import { notifyAboutWorker } from '@/lib/push';
 
 const CLOCK_DRIFT_WARNING_SECONDS = 300; // 5 minutes
 
@@ -183,6 +184,53 @@ export async function POST(req: NextRequest) {
     clockDriftSeconds,
     isOfflineSync: false,
   });
+
+  // Inbox + push for supervisor/admin so they see live shift starts.
+  // Verified attendance is a "good news" event - tag is per-worker so a
+  // re-attempt on the same day replaces the prior notification at the OS.
+  if (geofenceResult.verified) {
+    await notifyAboutWorker({
+      workerId: userId,
+      routeId: route._id,
+      kind: 'attendance_marked',
+      tag: `attn-${userId}-${today}`,
+      url: '/attendance-log',
+      template: (name, code) => ({
+        title: `${name} on duty (${code})`,
+        body: `Verified attendance at ${serverNow.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })} · ${Math.round(geofenceResult.distance)}m from start point.`,
+      }),
+      contextExtras: {
+        date: today,
+        distanceMeters: Math.round(geofenceResult.distance),
+        attempts,
+      },
+    });
+  } else {
+    // Rejected attendance (geofence fail) - escalate to sup/admin so they
+    // can investigate before the worker walks off thinking they're checked in.
+    await notifyAboutWorker({
+      workerId: userId,
+      routeId: route._id,
+      kind: 'attendance_face_flag', // re-using kind for "manual review needed"
+      tag: `attn-rej-${userId}-${today}`,
+      url: '/attendance-log',
+      template: (name, code) => ({
+        title: `${name} attendance rejected (${code})`,
+        body: `${Math.round(geofenceResult.distance)}m from route start (limit ${
+          route.geofenceRadius
+        }m). Worker may need help locating start point.`,
+      }),
+      contextExtras: {
+        date: today,
+        distanceMeters: Math.round(geofenceResult.distance),
+        thresholdMeters: route.geofenceRadius,
+        rejectionReason: geofenceResult.message,
+      },
+    });
+  }
 
   return NextResponse.json({
     success: true,

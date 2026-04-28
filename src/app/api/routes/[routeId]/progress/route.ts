@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db/connection';
 import { RouteProgress, Attendance, Route } from '@/lib/db/models';
 import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
+import { notifyAboutWorker } from '@/lib/push';
 
 /**
  * GET /api/routes/[routeId]/progress - Get today's progress for a route
@@ -96,6 +97,10 @@ export async function PUT(
       });
     }
 
+    // Capture the previous percentage so we can emit a notification only
+    // when the worker actually crosses a milestone (25/50/75/100%).
+    const previousPct = progress.completionPercentage ?? 0;
+
     if (completionPercentage !== undefined) {
       const pct = Number(completionPercentage);
       if (isNaN(pct) || pct < 0 || pct > 100) {
@@ -127,6 +132,68 @@ export async function PUT(
     });
 
     await progress.save();
+
+    // Push a notification when the worker crosses a milestone (25/50/75/100)
+    // OR when they save a standalone note ("heavy rain", "vehicle breakdown",
+    // etc.) without bumping progress. The note-only path has its own tag so
+    // it doesn't replace a previous milestone push.
+    const newPct = progress.completionPercentage;
+    const milestones = [25, 50, 75, 100];
+    const crossed = milestones.find((m) => previousPct < m && newPct >= m);
+    const trimmedNote = typeof note === 'string' ? note.trim() : '';
+
+    if (crossed !== undefined) {
+      const kind = crossed === 100 ? 'route_completed' : 'route_progress';
+      await notifyAboutWorker({
+        workerId: session!.user.id,
+        routeId,
+        kind,
+        // One push per (worker, milestone, day) so re-saves don't duplicate.
+        tag: `progress-${session!.user.id}-${routeId}-${today}-${crossed}`,
+        url: '/dashboard',
+        template: (name, code) =>
+          crossed === 100
+            ? {
+                title: `${name} completed ${code}`,
+                body: `Route 100% complete${trimmedNote ? ` · ${trimmedNote.slice(0, 80)}` : ''}.`,
+              }
+            : {
+                title: `${name} reached ${crossed}% on ${code}`,
+                body: `Route progress now ${newPct}%${
+                  trimmedNote ? ` · ${trimmedNote.slice(0, 80)}` : ''
+                }.`,
+              },
+        contextExtras: {
+          date: today,
+          previousPercentage: previousPct,
+          newPercentage: newPct,
+          milestone: crossed,
+          note: trimmedNote || null,
+        },
+      });
+    } else if (trimmedNote) {
+      // Note-only save (no milestone crossed) - still ping the supervisor
+      // because the worker explicitly tapped "Send to supervisor". Tag uses
+      // the timestamp so multiple notes in the same shift each fire their
+      // own notification (unlike milestone tags which dedupe).
+      await notifyAboutWorker({
+        workerId: session!.user.id,
+        routeId,
+        kind: 'route_progress',
+        tag: `note-${session!.user.id}-${routeId}-${today}-${Date.now()}`,
+        url: '/dashboard',
+        template: (name, code) => ({
+          title: `${name} sent a note (${code})`,
+          body: `${trimmedNote.slice(0, 140)} · route at ${newPct}%.`,
+        }),
+        contextExtras: {
+          date: today,
+          currentPercentage: newPct,
+          note: trimmedNote,
+          isNoteOnly: true,
+        },
+      });
+    }
 
     return NextResponse.json({ success: true, data: progress });
   } catch (err) {

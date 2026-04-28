@@ -145,6 +145,37 @@ const GPSPingSchema = new mongoose.Schema({
 GPSPingSchema.index({ userId: 1, date: 1, recordedAt: 1 });
 GPSPingSchema.index({ routeId: 1, recordedAt: -1 });
 
+// NotificationLog mirrors src/lib/db/models/NotificationLog.ts. Kept in
+// sync manually because the seed is a standalone tsx script that cannot
+// import the project's Mongoose models (path-alias issues with bare tsx).
+const NotificationLogSchema = new mongoose.Schema({
+  recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  recipientRole: { type: String, enum: ['admin', 'supervisor', 'staff'], required: true },
+  kind: {
+    type: String,
+    enum: [
+      'attendance_marked', 'attendance_face_flag', 'attendance_synced',
+      'photo_submitted', 'photo_face_flag', 'photo_missing',
+      'route_progress', 'route_completed',
+      'route_deviation', 'idle_alert', 'mock_location', 'missed_shift',
+      'unavailability_declared', 'checkpoint_scanned',
+      'reallocation_executed', 'manual',
+    ],
+    required: true,
+    index: true,
+  },
+  title: { type: String, required: true },
+  body: { type: String, required: true },
+  url: { type: String, required: true },
+  tag: { type: String, default: null },
+  context: { type: mongoose.Schema.Types.Mixed, default: null },
+  pushDelivered: { type: Boolean, default: false },
+  pushAttemptedAt: { type: Date, default: () => new Date() },
+  readAt: { type: Date, default: null },
+  clickedAt: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now, index: true },
+});
+
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Route = mongoose.models.Route || mongoose.model('Route', RouteSchema);
 const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', AttendanceSchema);
@@ -153,6 +184,7 @@ const VerificationLog = mongoose.models.VerificationLog || mongoose.model('Verif
 const Unavailability = mongoose.models.Unavailability || mongoose.model('Unavailability', UnavailabilitySchema);
 const GPSPing = mongoose.models.GPSPing || mongoose.model('GPSPing', GPSPingSchema);
 const AuditLog = mongoose.models.AuditLog || mongoose.model('AuditLog', AuditLogSchema);
+const NotificationLog = mongoose.models.NotificationLog || mongoose.model('NotificationLog', NotificationLogSchema);
 
 // ── Chembur Ward Routes (realistic Mumbai coordinates) ──
 
@@ -275,6 +307,21 @@ async function seed() {
   }
   if ((await mongoose.connection.db!.listCollections({ name: 'verificationlogs' }).toArray()).length > 0) {
     await mongoose.connection.collection('verificationlogs').deleteMany({});
+  }
+  // Clear gpspings and notificationlogs so re-seeding doesn't accumulate
+  // stale rows. Push subscriptions are kept (browser endpoints can survive
+  // re-seeds) - they self-heal on first failed delivery via 410 cleanup.
+  if ((await mongoose.connection.db!.listCollections({ name: 'gpspings' }).toArray()).length > 0) {
+    await mongoose.connection.collection('gpspings').deleteMany({});
+  }
+  if ((await mongoose.connection.db!.listCollections({ name: 'notificationlogs' }).toArray()).length > 0) {
+    await mongoose.connection.collection('notificationlogs').deleteMany({});
+  }
+  if ((await mongoose.connection.db!.listCollections({ name: 'auditlogs' }).toArray()).length > 0) {
+    await mongoose.connection.collection('auditlogs').deleteMany({});
+  }
+  if ((await mongoose.connection.db!.listCollections({ name: 'unavailabilities' }).toArray()).length > 0) {
+    await mongoose.connection.collection('unavailabilities').deleteMany({});
   }
   console.log('Cleared existing data.');
 
@@ -425,6 +472,27 @@ async function seed() {
   const attendanceRecords = [];
   const progressRecords = [];
 
+  // ── Demo-reserved staff accounts ──────────────────────────────────
+  // These employee IDs are kept on a CLEAN slate today so a presenter can
+  // log in as them and demonstrate the staff workflow live: mark
+  // attendance → submit photo → update progress → declare unavailability,
+  // each step firing real notifications to the supervisor portal.
+  // Without this, every worker on R01 has today's attendance pre-marked
+  // and R01's progress is at 100%, leaving no account a judge can use to
+  // demo "what happens when a worker checks in".
+  //
+  // BMC-CHB-001..004 (all on R01) - full attendance + photo + progress demo
+  // BMC-CHB-005..007 (all on R02) - alternative demo route, fresh-start flows
+  // BMC-CHB-008      (on R03)     - "show up late and finish the route" demo
+  //                                  (R03 is at 75% with two co-workers attending)
+  //
+  // These accounts STILL get full historical attendance via --with-history
+  // so the /reliability page treats them as long-tenured staff.
+  const DEMO_RESERVED_IDS = new Set([
+    'BMC-CHB-001', 'BMC-CHB-002', 'BMC-CHB-003', 'BMC-CHB-004',
+    'BMC-CHB-005', 'BMC-CHB-006', 'BMC-CHB-007', 'BMC-CHB-008',
+  ]);
+
   // Build a map: routeId -> list of staff assigned to it
   const staffByRoute: Record<string, typeof createdStaff> = {};
   for (const s of createdStaff) {
@@ -459,17 +527,29 @@ async function seed() {
     let progressTime: Date;
 
     switch (i) {
-      case 0: // R01 - completed early (before 10am)
-        presentCount = workers.length;
-        routeStatus = 'completed';
-        completionPct = 100;
-        progressTime = istClock(9, 30);
+      case 0:
+        // R01 - reserved as the live-demo route. BMC-CHB-001/002/003 sit
+        // here and are skipped from today's attendance + progress so a
+        // presenter can demo the full staff flow (attendance → photo →
+        // progress 0→100%) without "already checked in" friction.
+        // BMC-CHB-004 still attends here so the route isn't completely
+        // empty in the supervisor dashboard.
+        presentCount = 1;
+        routeStatus = 'not_started';
+        completionPct = 0;
+        progressTime = istClock(6, 0);
         break;
-      case 1: // R02 - completed mid-morning (before 12pm)
-        presentCount = workers.length;
-        routeStatus = 'completed';
-        completionPct = 100;
-        progressTime = istClock(11, 30);
+      case 1:
+        // R02 - second live-demo route. All three of its workers
+        // (BMC-005/006/007) are demo-reserved, so this stays 0% / not_started
+        // for the same reason R01 does. The supervisor demo loses one of
+        // its "completed mid-morning" KPI rows for today, but the historical
+        // 14-day window still spreads completions across the morning/midday
+        // cutoff buckets so the KPI rollup card looks healthy.
+        presentCount = 0;
+        routeStatus = 'not_started';
+        completionPct = 0;
+        progressTime = istClock(6, 0);
         break;
       case 2: // R03 - in progress, full
         presentCount = workers.length;
@@ -526,8 +606,12 @@ async function seed() {
         progressTime = istClock(6, 0);
     }
 
-    // Create attendance records for present workers
-    const presentWorkers = workers.slice(0, presentCount);
+    // Create attendance records for present workers. Demo-reserved IDs
+    // are filtered out FIRST so they never receive today's attendance,
+    // even when their route's presentCount would otherwise include them.
+    const presentWorkers = workers
+      .filter((w) => !DEMO_RESERVED_IDS.has(w.employeeId))
+      .slice(0, presentCount);
     for (const worker of presentWorkers) {
       // Simulate GPS near the route start (within geofence)
       const jitterLat = (Math.random() - 0.5) * 0.001; // ~50m
@@ -580,8 +664,12 @@ async function seed() {
       }
     }
 
-    // Create route progress
-    const ratio = route.requiredStaff > 0 ? presentCount / route.requiredStaff : 0;
+    // Use the ACTUAL number of attendance rows created (after demo-reserved
+    // filter) for the staffing snapshot, not the original `presentCount`
+    // intent. Otherwise the supervisor dashboard shows e.g. "3 of 3 present"
+    // for R03 even though only 2 attendance rows exist (BMC-008 reserved).
+    const actualPresent = presentWorkers.length;
+    const ratio = route.requiredStaff > 0 ? actualPresent / route.requiredStaff : 0;
     progressRecords.push({
       routeId: route._id,
       date: today,
@@ -589,7 +677,7 @@ async function seed() {
       completionPercentage: completionPct,
       staffingSnapshot: {
         required: route.requiredStaff,
-        present: presentCount,
+        present: actualPresent,
         ratio: Math.round(ratio * 100) / 100,
       },
       updates: [{
@@ -692,11 +780,21 @@ async function seed() {
   console.log(`Created ${attendanceRecords.length} attendance records (${verified} verified, ${rejected} rejected)`);
   console.log(`Created ${progressRecords.length} route progress records`);
   console.log('\nDemo scenario:');
-  console.log('  R01, R02, R08 - completed with full staff (surplus workers available)');
+  console.log('  R01, R02      - LIVE DEMO routes (BMC-001..007 reserved, 0% progress)');
+  console.log('  R08           - completed with full staff (surplus workers available)');
   console.log('  R05, R06      - CRITICAL understaffing (reallocation needed!)');
   console.log('  R04, R09      - marginal staffing');
-  console.log('  R03, R07, R10 - adequate, in progress');
+  console.log('  R03, R07, R10 - adequate, in progress (R03 missing BMC-008 - demo)');
   console.log('  Verification logs: missing photos, face mismatch, headcount issues');
+  console.log('\nFor live judge demo, log in as ANY of these clean staff accounts:');
+  console.log('  BMC-CHB-001 / bmc123 (R01) - attendance + photo + progress flow');
+  console.log('  BMC-CHB-002 / bmc123 (R01) - declare unavailability flow');
+  console.log('  BMC-CHB-003 / bmc123 (R01) - backup');
+  console.log('  BMC-CHB-004 / bmc123 (R01) - backup');
+  console.log('  BMC-CHB-005 / bmc123 (R02) - alternative route demo');
+  console.log('  BMC-CHB-006 / bmc123 (R02) - backup');
+  console.log('  BMC-CHB-007 / bmc123 (R02) - backup');
+  console.log('  BMC-CHB-008 / bmc123 (R03 @ 75%) - "show up late and finish" demo');
 
   // ── Optional: --with-history backfills 29 days of varied data ──
   // Without this, /reliability shows every worker as POOR because there's
@@ -1038,12 +1136,16 @@ async function seed() {
       );
     }
 
-    /** Generate the ping series for one (worker, date, checkInTime) tuple. */
+    /** Generate the ping series for one (worker, date, checkInTime) tuple.
+     *  `forceDeviation` and `forceMock` make off-route / mock-GPS scenarios
+     *  deterministic for demo workers (otherwise random ~30% / 5%). */
     function buildPingSeries(
       userId: mongoose.Types.ObjectId,
       routeId: mongoose.Types.ObjectId,
       dateStr: string,
-      checkInMs: number
+      checkInMs: number,
+      forceDeviation = false,
+      forceMock = false
     ): unknown[] {
       const route = routeById.get(routeId.toString());
       if (!route) return [];
@@ -1051,16 +1153,20 @@ async function seed() {
       const decoded = decodedByRoute.get(routeId.toString()) ?? null;
       const intervalMs = SHIFT_DURATION_MS / PINGS_PER_SHIFT;
 
-      // ~15% of worker-days have a deviation episode in the middle of shift.
-      const hasDeviation = Math.random() < 0.15;
+      // 30% of worker-days have a deviation episode in the middle of shift,
+      // bumped from 15% so demo /replay reliably shows off-route behaviour.
+      // `forceDeviation` makes it certain (used for the first 3 workers/day
+      // so the judge always sees an off-route example regardless of which
+      // worker they pick from the dropdown).
+      const hasDeviation = forceDeviation || Math.random() < 0.30;
       const devStart = hasDeviation
         ? Math.floor(PINGS_PER_SHIFT * (0.3 + Math.random() * 0.4))
         : -1;
-      const devEnd = devStart + 4 + Math.floor(Math.random() * 5);
+      const devEnd = devStart + 6 + Math.floor(Math.random() * 5); // 6-10 pings off-route, longer for visibility
 
-      // ~3% get a single mock-location ping (black-ring rendering in replay).
-      const hasMock = Math.random() < 0.03;
-      const mockIdx = hasMock ? Math.floor(Math.random() * PINGS_PER_SHIFT) : -1;
+      // 5% mock-location, or forced for the demo's "worker 0".
+      const hasMock = forceMock || Math.random() < 0.05;
+      const mockIdx = hasMock ? Math.floor(PINGS_PER_SHIFT * 0.5) : -1; // mid-shift so it's easy to spot in replay
 
       const out: unknown[] = [];
       for (let i = 0; i < PINGS_PER_SHIFT; i++) {
@@ -1112,14 +1218,37 @@ async function seed() {
     }
 
     // Today's pings: every verified attendance gets a full series.
+    // Force the FIRST 3 verified workers (sorted by employeeId) to have
+    // an off-route excursion so a judge selecting a worker from the
+    // /replay dropdown reliably sees off-route behaviour, not a flat
+    // "On route" trace. Worker 0 also gets a forced mock-GPS ping.
     const todayAttendance = await Attendance.find({ date: today, status: 'verified' })
+      .populate('userId', 'employeeId')
       .select('userId routeId checkInTime')
       .lean();
 
+    todayAttendance.sort((a: any, b: any) =>
+      (a.userId?.employeeId ?? '').localeCompare(b.userId?.employeeId ?? '')
+    );
+
     let todayPings: unknown[] = [];
-    for (const att of todayAttendance) {
+    let todayForcedDeviations = 0;
+    let todayForcedMocks = 0;
+    for (let idx = 0; idx < todayAttendance.length; idx++) {
+      const att: any = todayAttendance[idx];
+      const forceDeviation = idx < 3; // first 3 workers always off-route
+      const forceMock = idx === 0;    // first worker also has mock-GPS
+      if (forceDeviation) todayForcedDeviations++;
+      if (forceMock) todayForcedMocks++;
       todayPings = todayPings.concat(
-        buildPingSeries(att.userId, att.routeId, today, new Date(att.checkInTime).getTime())
+        buildPingSeries(
+          att.userId._id ?? att.userId,
+          att.routeId,
+          today,
+          new Date(att.checkInTime).getTime(),
+          forceDeviation,
+          forceMock
+        )
       );
     }
     if (todayPings.length) {
@@ -1129,22 +1258,27 @@ async function seed() {
         await GPSPing.insertMany(todayPings.slice(i, i + 1000));
       }
     }
-    console.log(`Today: ${todayPings.length} pings across ${todayAttendance.length} workers`);
+    console.log(
+      `Today: ${todayPings.length} pings across ${todayAttendance.length} workers ` +
+      `(${todayForcedDeviations} forced off-route, ${todayForcedMocks} forced mock-GPS for demo visibility)`
+    );
 
-    // Historical pings: only if --with-history was also passed. To keep
-    // volume manageable, we sample a SUBSET of the past days' attendance -
-    // 4 random workers per day - rather than every worker. That's enough
-    // to make the replay date-picker show data on most past dates.
+    // Historical pings: only when --with-history was also passed. We now
+    // generate a series for *every* verified worker on every past day
+    // (not the 4-worker sample), so replay's date picker reliably shows
+    // dense data for any of the past 29 days. ~80 pings * ~25 workers *
+    // 29 days ~= 58k rows - well within Mongo's bulk-insert limits when
+    // batched at 1000. Plus 3 forced off-route excursions per day.
     if (process.argv.includes('--with-history')) {
       const histAttendance = await Attendance.find({
         date: { $ne: today },
         status: 'verified',
       })
+        .populate('userId', 'employeeId')
         .select('userId routeId date checkInTime')
         .lean();
 
-      // Group by date, then pick a small subset per date.
-      const byDate = new Map<string, typeof histAttendance>();
+      const byDate = new Map<string, any[]>();
       for (const a of histAttendance) {
         const list = byDate.get(a.date) ?? [];
         list.push(a);
@@ -1154,11 +1288,23 @@ async function seed() {
       let histPings: unknown[] = [];
       let histDays = 0;
       for (const [dateStr, list] of byDate) {
-        // Shuffle and take 4
-        const sample = [...list].sort(() => Math.random() - 0.5).slice(0, 4);
-        for (const att of sample) {
+        // Sort by employeeId for deterministic "first 3" off-route selection.
+        list.sort((a: any, b: any) =>
+          (a.userId?.employeeId ?? '').localeCompare(b.userId?.employeeId ?? '')
+        );
+        for (let idx = 0; idx < list.length; idx++) {
+          const att = list[idx];
+          const forceDeviation = idx < 3; // first 3 of the day always off-route
+          const forceMock = idx === 0 && histDays % 3 === 0; // mock-GPS every 3rd day on worker 0
           histPings = histPings.concat(
-            buildPingSeries(att.userId, att.routeId, dateStr, new Date(att.checkInTime).getTime())
+            buildPingSeries(
+              att.userId._id ?? att.userId,
+              att.routeId,
+              dateStr,
+              new Date(att.checkInTime).getTime(),
+              forceDeviation,
+              forceMock
+            )
           );
         }
         histDays += 1;
@@ -1168,8 +1314,343 @@ async function seed() {
           await GPSPing.insertMany(histPings.slice(i, i + 1000));
         }
       }
-      console.log(`Historical: ${histPings.length} pings across ${histDays} prior days (4 workers/day sample)`);
+      console.log(
+        `Historical: ${histPings.length} pings across ${histDays} prior days (every verified worker, 3 forced off-route per day)`
+      );
     }
+  }
+
+  // ── Synthesise NotificationLog rows for the inbox ──
+  // The /api/tracking/ping endpoint normally fires recordAndPush() when an
+  // off-route or mock-GPS ping arrives, but the seed inserts pings directly
+  // into Mongo and bypasses the API - so the inbox would otherwise be empty
+  // even when /replay shows red dots. We synthesise the rows that *would
+  // have been written* if those pings had come through the live endpoint,
+  // plus rows for the other staff actions seeded above (face flags, missing
+  // photos, unavailability, route progress, reallocations, missed shifts).
+  //
+  // One row per (alert, recipient) - i.e. each alert produces N rows where
+  // N = #supervisors + 1 admin. Matches the production behaviour of
+  // recordAndPush() in src/lib/push/index.ts.
+  console.log('\n--- Synthesising notification inbox rows ---');
+
+  const supervisorAndAdminUsers = await User.find({
+    $or: [{ role: 'admin' }, { role: 'supervisor' }],
+    isActive: true,
+  }).select('_id role').lean();
+
+  const notifyRecipients = supervisorAndAdminUsers.map((u: any) => ({
+    _id: u._id,
+    role: u.role as 'admin' | 'supervisor',
+  }));
+
+  /** Helper: create one NotificationLog row per recipient. */
+  function pushNotification(
+    rows: any[],
+    kind: string,
+    title: string,
+    body: string,
+    url: string,
+    createdAt: Date,
+    opts: { tag?: string; context?: any; pushDelivered?: boolean; readAt?: Date | null } = {}
+  ): void {
+    for (const r of notifyRecipients) {
+      rows.push({
+        recipientId: r._id,
+        recipientRole: r.role,
+        kind,
+        title,
+        body,
+        url,
+        tag: opts.tag ?? null,
+        context: opts.context ?? null,
+        // Random ~30% of older rows already pushed to a real browser
+        // (gives inbox UI something to render with the green check).
+        pushDelivered: opts.pushDelivered ?? Math.random() < 0.3,
+        pushAttemptedAt: createdAt,
+        readAt: opts.readAt ?? null,
+        clickedAt: null,
+        createdAt,
+      });
+    }
+  }
+
+  const notificationRows: any[] = [];
+
+  // Today's verified attendance → attendance_marked (first 6 only, oldest
+  // first - older rows marked read so the inbox shows a mix).
+  const todaysVerified = await Attendance.find({ date: today, status: 'verified' })
+    .populate('userId', 'name employeeId')
+    .populate('routeId', 'code name')
+    .sort({ checkInTime: 1 })
+    .limit(6)
+    .lean();
+  for (let i = 0; i < todaysVerified.length; i++) {
+    const att: any = todaysVerified[i];
+    const name = `${att.userId?.name?.first ?? ''} ${att.userId?.name?.last ?? ''}`.trim() || 'A worker';
+    const code = att.routeId?.code ?? 'route';
+    const t = new Date(att.checkInTime);
+    pushNotification(
+      notificationRows,
+      'attendance_marked',
+      `${name} on duty (${code})`,
+      `Verified attendance at ${t.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} · ${att.distanceFromRoute}m from start point.`,
+      '/attendance-log',
+      t,
+      {
+        tag: `attn-${att.userId?._id}-${today}`,
+        context: { userId: att.userId?._id, employeeId: att.userId?.employeeId, routeId: att.routeId?._id, routeCode: code, date: today },
+        readAt: i < 3 ? new Date(t.getTime() + 30 * 60 * 1000) : null,
+      }
+    );
+  }
+
+  // Today's rejected attendance → attendance_face_flag (geofence-rejected
+  // count as "manual review needed" for inbox purposes).
+  const todaysRejected = await Attendance.find({ date: today, status: 'rejected' })
+    .populate('userId', 'name employeeId')
+    .populate('routeId', 'code')
+    .lean();
+  for (const att of todaysRejected as any[]) {
+    const name = `${att.userId?.name?.first ?? ''} ${att.userId?.name?.last ?? ''}`.trim() || 'A worker';
+    const code = att.routeId?.code ?? 'route';
+    pushNotification(
+      notificationRows,
+      'attendance_face_flag',
+      `${name} attendance rejected (${code})`,
+      `${att.distanceFromRoute}m from route start (limit 200m). Worker may need help locating start point.`,
+      '/attendance-log',
+      new Date(att.checkInTime),
+      { tag: `attn-rej-${att.userId?._id}-${today}` }
+    );
+  }
+
+  // Today's verification logs → photo_face_flag / photo_missing
+  // depending on the log type.
+  const todayVerifLogs = await VerificationLog.find({ date: today }).populate('routeId', 'code').lean();
+  for (const v of todayVerifLogs as any[]) {
+    if (!v.affectedUserId) continue;
+    const worker = await User.findById(v.affectedUserId).select('name employeeId').lean() as any;
+    if (!worker) continue;
+    const name = `${worker.name?.first ?? ''} ${worker.name?.last ?? ''}`.trim() || 'A worker';
+    const code = v.routeId?.code ?? 'route';
+
+    if (v.type === 'missing_photo') {
+      pushNotification(
+        notificationRows,
+        'photo_missing',
+        `${name} missing shift-start photo (${code})`,
+        v.details?.message ?? 'Attendance marked but no shift-start photo submitted yet.',
+        '/verification',
+        new Date(v.createdAt),
+        { tag: `nophoto-${v.affectedUserId}-${today}` }
+      );
+    } else if (v.type === 'face_mismatch' || v.type === 'no_face_detected') {
+      pushNotification(
+        notificationRows,
+        'photo_face_flag',
+        `Face check failed: ${name} (${code})`,
+        v.details?.message ?? 'Manual review required.',
+        '/verification',
+        new Date(v.createdAt),
+        { tag: `photoflag-${v.affectedUserId}-${today}` }
+      );
+    } else if (v.type === 'location_anomaly' && v.details?.kind === 'route_deviation') {
+      pushNotification(
+        notificationRows,
+        'route_deviation',
+        `${name} off route on ${code}`,
+        v.details?.message ?? 'Two consecutive off-route pings detected.',
+        '/replay',
+        new Date(v.createdAt),
+        { tag: `deviation-${v.affectedUserId}-${today}` }
+      );
+    }
+  }
+
+  // Today's forced off-route pings (workers 0/1/2) → route_deviation rows.
+  // These are the headline notifications for the demo - one per worker.
+  // We re-fetch verified attendance + sort by employeeId so we hit the
+  // SAME workers the ping-generation block forced off-route above.
+  const todayAttForNotify = await Attendance.find({ date: today, status: 'verified' })
+    .populate('userId', 'employeeId name')
+    .populate('routeId', 'code')
+    .lean();
+  todayAttForNotify.sort((a: any, b: any) =>
+    (a.userId?.employeeId ?? '').localeCompare(b.userId?.employeeId ?? '')
+  );
+
+  for (let i = 0; i < Math.min(3, todayAttForNotify.length); i++) {
+    const att: any = todayAttForNotify[i];
+    const name = `${att.userId?.name?.first ?? ''} ${att.userId?.name?.last ?? ''}`.trim() || 'A worker';
+    const code = att.routeId?.code ?? 'their route';
+    const firedAt = new Date(new Date(att.checkInTime).getTime() + (3 + i) * 60 * 60 * 1000); // ~3-5h into shift
+    pushNotification(
+      notificationRows,
+      'route_deviation',
+      `${name} off route on ${code}`,
+      `~250m from path (threshold 120m). Two consecutive off-route pings.`,
+      '/replay',
+      firedAt,
+      {
+        tag: `deviation-${att.userId?._id}-${today}`,
+        context: { userId: att.userId?._id, routeCode: code, date: today, distanceMeters: 250, thresholdMeters: 120 },
+      }
+    );
+  }
+
+  // Today's worker 0 → mock_location notification (forced mock ping).
+  if (todayAttForNotify.length > 0) {
+    const att: any = todayAttForNotify[0];
+    const name = `${att.userId?.name?.first ?? ''} ${att.userId?.name?.last ?? ''}`.trim() || 'A worker';
+    const code = att.routeId?.code ?? 'route';
+    const firedAt = new Date(new Date(att.checkInTime).getTime() + 4 * 60 * 60 * 1000);
+    pushNotification(
+      notificationRows,
+      'mock_location',
+      `Mock-GPS detected on ${code}`,
+      `${name}'s device reported a fake-location flag. Possible spoofing - review immediately.`,
+      '/supervisor-logs',
+      firedAt,
+      { tag: `mock-${att.userId?._id}-${today}` }
+    );
+  }
+
+  // Today's unavailability declarations → unavailability_declared.
+  const todayUnavail = await Unavailability.find({ date: today })
+    .populate('userId', 'name employeeId')
+    .populate('routeId', 'code')
+    .lean();
+  for (const u of todayUnavail as any[]) {
+    const name = `${u.userId?.name?.first ?? ''} ${u.userId?.name?.last ?? ''}`.trim() || 'A worker';
+    const code = u.routeId?.code ?? 'unassigned';
+    const reasonLabels: Record<string, string> = {
+      sick: 'sick leave', personal: 'personal leave', transport: 'no transport', other: 'other reason',
+    };
+    pushNotification(
+      notificationRows,
+      'unavailability_declared',
+      `${name} unavailable today (${code})`,
+      `Reason: ${reasonLabels[u.reason] ?? u.reason}. Consider reallocation.`,
+      '/reallocation',
+      new Date(u.declaredAt),
+      { tag: `unavail-${u.userId?._id}-${today}` }
+    );
+  }
+
+  // Today's progress milestones → route_progress / route_completed.
+  const todayProgress = await RouteProgress.find({ date: today })
+    .populate('routeId', 'code')
+    .lean();
+  for (const p of todayProgress as any[]) {
+    if (p.completionPercentage >= 100) {
+      const code = p.routeId?.code ?? 'route';
+      const t = p.updates?.[0]?.time ? new Date(p.updates[0].time) : new Date();
+      pushNotification(
+        notificationRows,
+        'route_completed',
+        `Route ${code} completed`,
+        `All checkpoints scanned. Route 100% complete.`,
+        '/dashboard',
+        t,
+        { tag: `complete-${p.routeId?._id}-${today}`, readAt: t }
+      );
+    } else if (p.completionPercentage >= 50) {
+      const code = p.routeId?.code ?? 'route';
+      const t = p.updates?.[0]?.time ? new Date(p.updates[0].time) : new Date();
+      const milestone = p.completionPercentage >= 75 ? 75 : 50;
+      pushNotification(
+        notificationRows,
+        'route_progress',
+        `${code} reached ${milestone}%`,
+        `Route progress now ${p.completionPercentage}%.`,
+        '/dashboard',
+        t,
+        { tag: `progress-${p.routeId?._id}-${today}-${milestone}`, readAt: t }
+      );
+    }
+  }
+
+  // Past 7 days: synthesise a sample of historical notifications so the
+  // /notifications inbox shows scrollable history. Two per day:
+  //   - 1 missed_shift (for the morning cron output)
+  //   - 1 random kind from historical anomaly logs
+  if (process.argv.includes('--with-history')) {
+    const todayMidnightUtcMs = new Date(`${today}T00:00:00.000Z`).getTime();
+    for (let dayOffset = 1; dayOffset <= 7; dayOffset++) {
+      const dayMs = todayMidnightUtcMs - dayOffset * 86_400_000;
+      const dayStr = new Date(dayMs).toISOString().split('T')[0];
+
+      // Daily 06:30 IST missed-shift cron summary.
+      const histUnavailCount = await Unavailability.countDocuments({ date: dayStr });
+      const histAttCount = await Attendance.countDocuments({ date: dayStr, status: 'verified' });
+      const expectedTotal = 30; // 30 staff total
+      const missed = Math.max(0, expectedTotal - histAttCount - histUnavailCount);
+      if (missed > 0) {
+        const cronTime = new Date(dayMs + (6 * 60 + 30 - 330) * 60_000);
+        pushNotification(
+          notificationRows,
+          'missed_shift',
+          `Missed shift: ${missed} worker${missed === 1 ? '' : 's'} (${dayStr})`,
+          `${missed} of ${expectedTotal} staff have neither marked attendance nor declared unavailability by 06:30 IST.`,
+          '/staff',
+          cronTime,
+          { tag: `missed-${dayStr}`, readAt: dayOffset > 2 ? new Date(cronTime.getTime() + 60 * 60_000) : null }
+        );
+      }
+
+      // Pick one anomaly log from this day, if any.
+      const sampleLog = await VerificationLog.findOne({
+        date: dayStr,
+        type: 'location_anomaly',
+      }).populate('routeId', 'code').lean() as any;
+      if (sampleLog && sampleLog.affectedUserId) {
+        const worker = await User.findById(sampleLog.affectedUserId).select('name').lean() as any;
+        const name = worker ? `${worker.name?.first ?? ''} ${worker.name?.last ?? ''}`.trim() : 'A worker';
+        const code = sampleLog.routeId?.code ?? 'route';
+        const kind = sampleLog.details?.kind === 'mock_location' ? 'mock_location'
+          : sampleLog.details?.kind === 'idle' ? 'idle_alert'
+          : 'route_deviation';
+        const title = kind === 'mock_location' ? `Mock-GPS detected on ${code}`
+          : kind === 'idle_alert' ? `${name} stationary on ${code}`
+          : `${name} off route on ${code}`;
+        pushNotification(
+          notificationRows,
+          kind,
+          title,
+          sampleLog.details?.message ?? '',
+          kind === 'mock_location' ? '/supervisor-logs' : '/replay',
+          new Date(sampleLog.createdAt),
+          { tag: `${kind}-${sampleLog.affectedUserId}-${dayStr}`, readAt: new Date(sampleLog.createdAt.getTime() + 90 * 60_000) }
+        );
+      }
+    }
+
+    // A historical reallocation alert (3 days ago) so reallocation_executed
+    // appears in the inbox even before the user runs one through the UI.
+    const realloc3DaysAgo = new Date(todayMidnightUtcMs - 3 * 86_400_000 + 10 * 60 * 60_000);
+    pushNotification(
+      notificationRows,
+      'reallocation_executed',
+      `Worker reassigned: CHB-R05 → CHB-R01`,
+      `Reason: understaffed. New staffing ratio 1.20 on destination route.`,
+      '/reallocation',
+      realloc3DaysAgo,
+      { tag: `realloc-demo-${realloc3DaysAgo.toISOString().slice(0, 10)}`, readAt: new Date(realloc3DaysAgo.getTime() + 30 * 60_000) }
+    );
+  }
+
+  if (notificationRows.length) {
+    // Insert in batches to stay safely under Mongo's bulk-op size cap.
+    for (let i = 0; i < notificationRows.length; i += 500) {
+      await NotificationLog.insertMany(notificationRows.slice(i, i + 500));
+    }
+    const totalAlerts = notificationRows.length / Math.max(1, notifyRecipients.length);
+    console.log(
+      `Created ${notificationRows.length} notification rows (${Math.round(totalAlerts)} unique alerts × ${notifyRecipients.length} recipients).`
+    );
+  } else {
+    console.log('No notification rows synthesised (no recipients found).');
   }
 
   // ── Sample audit-log entries ──

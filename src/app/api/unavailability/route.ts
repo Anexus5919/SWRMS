@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 import { logAudit } from '@/lib/audit';
 import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
+import { notifyAboutWorker } from '@/lib/push';
 
 const declareUnavailabilitySchema = z.object({
   reason: z.enum(['sick', 'personal', 'transport', 'other']),
@@ -113,6 +114,34 @@ export async function POST(req: NextRequest) {
     targetLabel: `${user?.employeeId ?? userId} unavailable (${parsed.data.reason})`,
     metadata: { reason: parsed.data.reason, notes: parsed.data.notes ?? null, date: today },
     req,
+  });
+
+  // Push + inbox: this is high-priority for supervisors because the route
+  // they planned for today now has a staffing gap they may need to fill
+  // via reallocation. Per-worker tag so a worker can't spam by re-submitting.
+  const reasonLabels: Record<typeof parsed.data.reason, string> = {
+    sick: 'sick leave',
+    personal: 'personal leave',
+    transport: 'no transport',
+    other: 'other reason',
+  };
+  await notifyAboutWorker({
+    workerId: userId,
+    routeId: user?.assignedRouteId ?? null,
+    kind: 'unavailability_declared',
+    tag: `unavail-${userId}-${today}`,
+    url: '/reallocation',
+    template: (name, code) => ({
+      title: `${name} unavailable today (${code})`,
+      body: `Reason: ${reasonLabels[parsed.data.reason]}${
+        parsed.data.notes ? ` · ${parsed.data.notes.slice(0, 80)}` : ''
+      }. Consider reallocation.`,
+    }),
+    contextExtras: {
+      date: today,
+      reason: parsed.data.reason,
+      notes: parsed.data.notes ?? null,
+    },
   });
 
   return NextResponse.json({

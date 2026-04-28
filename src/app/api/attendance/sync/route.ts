@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db/connection';
 import { Attendance, Route, User } from '@/lib/db/models';
 import { verifyGeofence } from '@/lib/geo/geofence';
 import { requireRole } from '@/lib/auth/middleware';
+import { notifyAboutWorker } from '@/lib/push';
 
 /**
  * POST /api/attendance/sync - Bulk sync offline attendance records
@@ -79,6 +80,28 @@ export async function POST(req: NextRequest) {
       date,
       status: geofenceResult.verified ? 'verified' : 'rejected',
       distance: geofenceResult.distance,
+    });
+  }
+
+  // Single bundled notification for the whole backlog rather than one
+  // per record - a worker syncing 3 days of offline attendance shouldn't
+  // ping the supervisor 3 times.
+  const verifiedCount = results.filter((r) => r.status === 'verified').length;
+  if (verifiedCount > 0) {
+    await notifyAboutWorker({
+      workerId: userId,
+      routeId: route._id,
+      kind: 'attendance_synced',
+      tag: `sync-${userId}-${new Date().toISOString().slice(0, 10)}`,
+      url: '/attendance-log',
+      template: (name, code) => ({
+        title: `${name} synced offline attendance (${code})`,
+        body:
+          verifiedCount === 1
+            ? '1 offline attendance record uploaded after going back online.'
+            : `${verifiedCount} offline attendance records uploaded after going back online.`,
+      }),
+      contextExtras: { syncedCount: verifiedCount, total: results.length },
     });
   }
 

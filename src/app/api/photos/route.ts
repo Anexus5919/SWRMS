@@ -6,6 +6,7 @@ import { uploadPhotoSchema, MAX_PHOTO_BASE64_LENGTH } from '@/lib/validators/sch
 import { compareFaceDescriptors } from '@/lib/face/compare';
 import { todayIST } from '@/lib/utils/timezone';
 import { checkLimit, rateLimitResponse, LIMITS } from '@/lib/rate-limit';
+import { notifyAboutWorker } from '@/lib/push';
 
 /**
  * POST /api/photos - Upload a geotagged photo with face verification
@@ -184,6 +185,54 @@ export async function POST(req: NextRequest) {
           message: `Low confidence face match for ${user.name.first} ${user.name.last} (${user.employeeId}) - distance: ${verificationResult.distance}`,
           faceDistance: verificationResult.distance ?? undefined,
           coordinates: { lat: coordinates.lat, lng: coordinates.lng },
+        },
+      });
+    }
+
+    // Inbox + push for sup/admin. Two flavours:
+    //   - Successful submission with high/medium face match → 'photo_submitted'
+    //     (informational, supervisors care about completion of shift_start /
+    //     checkpoint / shift_end events)
+    //   - Anything that needs manual review (no face, low confidence,
+    //     no_match) → 'photo_face_flag' so it appears in the urgent stream
+    if (manualReviewStatus === 'pending') {
+      await notifyAboutWorker({
+        workerId: userId,
+        routeId: user.assignedRouteId,
+        kind: 'photo_face_flag',
+        tag: `photoflag-${userId}-${type}-${today}`,
+        url: '/verification',
+        template: (name, code) => ({
+          title: `Face check failed: ${name} (${code})`,
+          body:
+            verificationResult.confidence === 'no_face'
+              ? `${type.replace('_', ' ')} photo has no detectable face. Manual review required.`
+              : verificationResult.confidence === 'no_match'
+              ? `${type.replace('_', ' ')} photo did not match registered face. Manual review required.`
+              : `Low-confidence face match on ${type.replace('_', ' ')} photo. Manual review required.`,
+        }),
+        contextExtras: {
+          photoType: type,
+          confidence: verificationResult.confidence,
+          faceDistance: verificationResult.distance,
+          geoPhotoId: geoPhoto._id.toString(),
+        },
+      });
+    } else {
+      await notifyAboutWorker({
+        workerId: userId,
+        routeId: user.assignedRouteId,
+        kind: 'photo_submitted',
+        tag: `photo-${userId}-${type}-${today}`,
+        url: '/verification',
+        template: (name, code) => ({
+          title: `${name} submitted ${type.replace('_', ' ')} photo (${code})`,
+          body: `Face verified · confidence ${verificationResult.confidence}.`,
+        }),
+        contextExtras: {
+          photoType: type,
+          confidence: verificationResult.confidence,
+          geoPhotoId: geoPhoto._id.toString(),
         },
       });
     }

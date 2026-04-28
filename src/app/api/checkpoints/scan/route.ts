@@ -5,6 +5,7 @@ import { Checkpoint, CheckpointScan, RouteProgress, Attendance, User } from '@/l
 import { requireRole } from '@/lib/auth/middleware';
 import { todayIST } from '@/lib/utils/timezone';
 import { haversineDistance } from '@/lib/geo/haversine';
+import { notifyAboutWorker } from '@/lib/push';
 
 const TRUSTED_DISTANCE_METRES = 50;
 
@@ -204,6 +205,48 @@ export async function POST(req: NextRequest) {
     },
     { upsert: true }
   );
+
+  // Inbox + push: supervisors get a quiet positive signal each time a
+  // worker hits a checkpoint, plus one extra "completed" push if this
+  // scan finishes the route. Untrusted scans (QR from far away) are
+  // *not* pushed - they appear in the verification log but shouldn't
+  // claim "progress" until trusted via supervisor review.
+  if (trusted) {
+    await notifyAboutWorker({
+      workerId: userId,
+      routeId: checkpoint.routeId,
+      kind: 'checkpoint_scanned',
+      tag: `cp-${userId}-${checkpoint._id.toString()}-${today}`,
+      url: '/dashboard',
+      template: (name, code) => ({
+        title: `${name} hit checkpoint ${checkpoint.label} (${code})`,
+        body: `${trustedScansForWorker}/${totalCheckpoints} checkpoints · route ${percentage}% complete (via ${parsed.data.method.toUpperCase()}).`,
+      }),
+      contextExtras: {
+        date: today,
+        checkpointId: checkpoint._id.toString(),
+        checkpointLabel: checkpoint.label,
+        order: checkpoint.order,
+        method: parsed.data.method,
+        progress: { scanned: trustedScansForWorker, total: totalCheckpoints, percentage },
+      },
+    });
+
+    if (percentage >= 100) {
+      await notifyAboutWorker({
+        workerId: userId,
+        routeId: checkpoint.routeId,
+        kind: 'route_completed',
+        tag: `complete-${userId}-${checkpoint.routeId}-${today}`,
+        url: '/dashboard',
+        template: (name, code) => ({
+          title: `${name} completed ${code}`,
+          body: `All ${totalCheckpoints} checkpoints scanned. Route 100% complete.`,
+        }),
+        contextExtras: { date: today, checkpointsScanned: totalCheckpoints },
+      });
+    }
+  }
 
   return NextResponse.json({
     success: true,

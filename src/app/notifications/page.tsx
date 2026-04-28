@@ -18,20 +18,50 @@ interface NotificationItem {
   createdAt: string;
 }
 
+// Human label per kind. Keep in sync with NotificationKind in
+// src/lib/db/models/NotificationLog.ts. The notifications inbox renders
+// the label inside a coloured Badge using kindBadgeVariant below.
 const kindLabels: Record<string, string> = {
-  missed_shift: 'Missed Shift',
+  // Attendance
+  attendance_marked: 'On Duty',
+  attendance_face_flag: 'Face Flag',
+  attendance_synced: 'Synced',
+  // Photos
+  photo_submitted: 'Photo OK',
+  photo_face_flag: 'Photo Face Flag',
+  photo_missing: 'Photo Missing',
+  // Progress
+  route_progress: 'Progress',
+  route_completed: 'Completed',
+  // Tracking anomalies
   route_deviation: 'Route Deviation',
   idle_alert: 'Idle Alert',
   mock_location: 'Mock GPS',
+  missed_shift: 'Missed Shift',
+  // Other
+  unavailability_declared: 'Unavailable',
+  checkpoint_scanned: 'Checkpoint',
   reallocation_executed: 'Reallocation',
   manual: 'Manual',
 };
 
+// Visual severity by kind. red = urgent, amber = warning, green = positive,
+// blue = informational, neutral = generic.
 const kindBadgeVariant: Record<string, 'red' | 'amber' | 'blue' | 'green' | 'neutral'> = {
-  missed_shift: 'red',
+  attendance_marked: 'green',
+  attendance_face_flag: 'amber',
+  attendance_synced: 'blue',
+  photo_submitted: 'green',
+  photo_face_flag: 'amber',
+  photo_missing: 'amber',
+  route_progress: 'blue',
+  route_completed: 'green',
   route_deviation: 'amber',
   idle_alert: 'amber',
   mock_location: 'red',
+  missed_shift: 'red',
+  unavailability_declared: 'amber',
+  checkpoint_scanned: 'blue',
   reallocation_executed: 'green',
   manual: 'neutral',
 };
